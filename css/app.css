@@ -1,0 +1,14 @@
+#reactor {
+	display: table;
+}
+
+#reactor .tile {
+	padding: 0;
+	border: none;
+	box-shadow: none;
+	-webkit-appearance: none;
+	background: red;
+	height: 32px;
+	width: 32px;
+	float: left;
+}
