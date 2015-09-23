@@ -1,14 +1,102 @@
+@charset "UTF-8";
+
+#parts,
 #reactor {
 	display: table;
 }
 
+#parts .part,
 #reactor .tile {
 	padding: 0;
 	border: none;
 	box-shadow: none;
 	-webkit-appearance: none;
-	background: red;
-	height: 32px;
-	width: 32px;
+	background: #eee;
+	height: 64px;
+	width: 64px;
 	float: left;
+	position: relative;
+	overflow: hidden;
+}
+
+#parts .part.active {
+	outline: 2px dashed blue;
+	outline-offset: -2px;
+}
+
+#parts .part:after,
+#reactor .tile:after {
+	font-size: 24px;
+	line-height: 1;
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+}
+
+/* Uranium */
+#parts .part.part_uranium:after,
+#reactor .tile.part_uranium:after {
+	content: "\2598";
+	color: #00ff00;
+}
+
+#parts .part.part_uranium2:after,
+#reactor .tile.part_uranium2:after {
+	content: "▀";
+	color: #00ff00;
+}
+
+#parts .part.part_uranium3:after,
+#reactor .tile.part_uranium3:after {
+	content: "█";
+	color: #00ff00;
+}
+
+/* Plutonium */
+#parts .part.part_plutonium:after,
+#reactor .tile.part_plutonium:after {
+	content: "\2598";
+	color: #ffff00;
+}
+
+#parts .part.part_plutonium2:after,
+#reactor .tile.part_plutonium2:after {
+	content: "▀";
+	color: #ffff00;
+}
+
+#parts .part.part_plutonium3:after,
+#reactor .tile.part_plutonium3:after {
+	content: "█";
+	color: #ffff00;
+}
+
+/* Thorium */
+#parts .part.part_thorium:after,
+#reactor .tile.part_thorium:after {
+	content: "\2598";
+	color: #00ffff;
+}
+
+#parts .part.part_thorium2:after,
+#reactor .tile.part_thorium2:after {
+	content: "▀";
+	color: #00ffff;
+}
+
+#parts .part.part_thorium3:after,
+#reactor .tile.part_thorium3:after {
+	content: "█";
+	color: #00ffff;
+}
+
+#reactor .heat {
+	color: red;
+	pointer-events: none;
+}
+
+#reactor .power {
+	color: green;
+	pointer-events: none;
 }
