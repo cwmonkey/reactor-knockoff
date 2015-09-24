@@ -5,8 +5,11 @@
 var rows = 5;
 var cols = 5;
 var debug = true;
+var loop_wait = 1000;
 
 // Current
+var current_heat = 0;
+var current_power = 0;
 
 // For iteration
 var ri;
@@ -27,7 +30,32 @@ var parts = {
 		base_power: 1,
 		base_heat: 1,
 		base_power_multiplier: 1,
-		base_heat_multiplier: 4
+		base_heat_multiplier: 4,
+		location: 'cells'
+	},
+	uranium2: {
+		id: 'uranium2',
+		title: 'Dual Uranium Cell',
+		type: 'cell',
+		base_cost: 25,
+		base_ticks: 15,
+		base_power: 4,
+		base_heat: 8,
+		base_power_multiplier: 1,
+		base_heat_multiplier: 4,
+		location: 'cells'
+	},
+	uranium3: {
+		id: 'uranium3',
+		title: 'Quad Uranium Cell',
+		type: 'cell',
+		base_cost: 60,
+		base_ticks: 15,
+		base_power: 12,
+		base_heat: 36,
+		base_power_multiplier: 1,
+		base_heat_multiplier: 4,
+		location: 'cells'
 	},
 	plutonium: {
 		id: 'plutonium',
@@ -38,7 +66,8 @@ var parts = {
 		base_power: 150,
 		base_heat: 150,
 		base_power_multiplier: 1,
-		base_heat_multiplier: 4
+		base_heat_multiplier: 4,
+		location: 'cells'
 	},
 	thorium: {
 		id: 'thorium',
@@ -49,7 +78,8 @@ var parts = {
 		base_power: 7400,
 		base_heat: 7400,
 		base_power_multiplier: 1,
-		base_heat_multiplier: 4
+		base_heat_multiplier: 4,
+		location: 'cells'
 	}
 };
 
@@ -61,6 +91,7 @@ var Tile = function() {
 	this.part = null;
 	this.heat = 0;
 	this.power = 0;
+	this.ticks = 0;
 
 	if ( debug ) {
 		this.$heat = document.createElement('SPAN');
@@ -87,6 +118,7 @@ var Part = function(part) {
 	this.power = part.base_power;
 	this.heat_multiplier = part.base_heat_multiplier;
 	this.power_multiplier = part.base_power_multiplier;
+	this.ticks = part.base_ticks;
 };
 
 // Operations
@@ -160,6 +192,9 @@ var update_tiles = function() {
 // get dom nodes cached
 var $reactor = document.getElementById('reactor');
 var $parts = document.getElementById('parts');
+var $cells = document.getElementById('cells');
+var $current_heat = document.getElementById('current_heat');
+var $current_power = document.getElementById('current_power');
 
 // create tiles
 var $row;
@@ -183,7 +218,9 @@ var part;
 for ( pi in parts ) {
 	part = new Part(parts[pi]);
 
-	$parts.appendChild(part.$el);
+	if ( part.part.location === 'cells' ) {
+		$cells.appendChild(part.$el);
+	}
 }
 
 // Events
@@ -207,17 +244,72 @@ $parts.onclick = function(e) {
 };
 
 var tile_test = /^tile/;
-var part_replace = /[\b\s]part_[a-z0-9]+\b/
-$reactor.onclick = function(e) {
+var part_replace = /[\b\s]part_[a-z0-9]+\b/;
+var spent_replace = /[\b\s]spent\b/;
+var tile_mousedown = false;
+
+var apply_to_tile = function(e) {
 	if ( e.target.className.match(tile_test) ) {
 		tile = e.target.tile;
 
-		if ( clicked_part && tile.part !== clicked_part ) {
+		if ( clicked_part && ( tile.part !== clicked_part || tile.ticks === 0 ) ) {
 			tile.part = clicked_part;
-			e.target.className = e.target.className.replace(part_replace, '') + ' ' + clicked_part.className;
+			tile.ticks = clicked_part.ticks;
+			e.target.className = e.target.className.replace(part_replace, '').replace(spent_replace, '') + ' ' + clicked_part.className;
 			update_tiles();
 		}
 	}
 };
+
+var tile_mouseup_fn = function(e) {
+	tile_mousedown = false;
+};
+
+$reactor.onclick = apply_to_tile;
+
+$reactor.onmousedown = function(e) {
+	tile_mousedown = true;
+	e.preventDefault();
+	apply_to_tile(e);
+};
+
+$reactor.onmouseup = tile_mouseup_fn;
+$reactor.onmouseleave = tile_mouseup_fn;
+
+$reactor.onmousemove = function(e) {
+	if ( tile_mousedown ) {
+		apply_to_tile(e);
+	}
+};
+
+// Game loop
+var loop_interval;
+
+loop_interval = setInterval(function() {
+
+	for ( ri = 0; ri < rows; ri++ ) {
+		row = tiles[ri];
+
+		for ( ci = 0; ci < cols; ci++ ) {
+			tile = row[ci];
+			if ( tile.part ) {
+				if ( tile.part.type === 'cell' && tile.ticks !== 0 ) {
+					current_power += tile.power;
+					current_heat += tile.heat;
+					tile.ticks--;
+
+					if ( tile.ticks === 0 ) {
+						tile.$el.className += ' spent';
+					}
+				}
+			}
+		}
+	}
+
+	$current_heat.innerHTML = current_heat;
+	$current_power.innerHTML = current_power;
+
+}, loop_wait);
+
 
 })();

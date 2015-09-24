@@ -1,5 +1,15 @@
 @charset "UTF-8";
 
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
 #parts,
 #reactor {
 	display: table;
@@ -11,12 +21,20 @@
 	border: none;
 	box-shadow: none;
 	-webkit-appearance: none;
-	background: #eee;
-	height: 64px;
-	width: 64px;
+	height: 32px;
+	width: 32px;
 	float: left;
 	position: relative;
 	overflow: hidden;
+}
+
+#parts .part {
+	background: transparent;
+}
+
+
+#reactor .tile {
+	border: 2px solid #4b5167;
 }
 
 #parts .part.active {
@@ -26,69 +44,70 @@
 
 #parts .part:after,
 #reactor .tile:after {
-	font-size: 24px;
-	line-height: 1;
+	font-size: 32px;
+	height: 1em;
+	width: 1em;
+	content: " ";
 	position: absolute;
+	top: -2px;
+	left: -2px;
+	display: block;
+	background: url("../img/sprites.png") left top no-repeat;
+}
+
+#parts .part:after {
 	top: 0;
 	left: 0;
-	display: block;
+}
+
+
+#reactor .tile:after {
+}
+
+#reactor .tile.spent:after {
+	background-color: #000;
 }
 
 /* Uranium */
 #parts .part.part_uranium:after,
 #reactor .tile.part_uranium:after {
-	content: "\2598";
-	color: #00ff00;
+	background-position: 0 0;
 }
 
 #parts .part.part_uranium2:after,
 #reactor .tile.part_uranium2:after {
-	content: "▀";
-	color: #00ff00;
+	background-position: -32px 0;
 }
 
 #parts .part.part_uranium3:after,
 #reactor .tile.part_uranium3:after {
-	content: "█";
-	color: #00ff00;
+	background-position: -64px 0;
 }
 
 /* Plutonium */
 #parts .part.part_plutonium:after,
 #reactor .tile.part_plutonium:after {
-	content: "\2598";
-	color: #ffff00;
 }
 
 #parts .part.part_plutonium2:after,
 #reactor .tile.part_plutonium2:after {
-	content: "▀";
-	color: #ffff00;
 }
 
 #parts .part.part_plutonium3:after,
 #reactor .tile.part_plutonium3:after {
-	content: "█";
-	color: #ffff00;
 }
 
 /* Thorium */
 #parts .part.part_thorium:after,
 #reactor .tile.part_thorium:after {
-	content: "\2598";
-	color: #00ffff;
 }
 
 #parts .part.part_thorium2:after,
 #reactor .tile.part_thorium2:after {
-	content: "▀";
-	color: #00ffff;
 }
 
 #parts .part.part_thorium3:after,
 #reactor .tile.part_thorium3:after {
-	content: "█";
-	color: #00ffff;
 }
 
 #reactor .heat {
