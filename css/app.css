@@ -17,12 +17,13 @@ html {
 
 #parts .part,
 #reactor .tile {
+	font-size: 1px;
 	padding: 0;
 	border: none;
 	box-shadow: none;
 	-webkit-appearance: none;
-	height: 32px;
-	width: 32px;
+	height: 32em;
+	width: 32em;
 	float: left;
 	position: relative;
 	overflow: hidden;
@@ -34,23 +35,24 @@ html {
 
 
 #reactor .tile {
-	border: 2px solid #4b5167;
+	font-size: 2px;
+	border: 2em solid #4b5167;
 }
 
 #parts .part.active {
-	outline: 2px dashed blue;
-	outline-offset: -2px;
+	outline: 2em dashed blue;
+	outline-offset: -2em;
 }
 
 #parts .part:after,
 #reactor .tile:after {
-	font-size: 32px;
-	height: 1em;
-	width: 1em;
+	font-size: 1px;
+	height: 32em;
+	width: 32em;
 	content: " ";
 	position: absolute;
-	top: -2px;
-	left: -2px;
+	top: -2em;
+	left: -2em;
 	display: block;
 	background: url("../img/sprites.png") left top no-repeat;
 }
@@ -65,23 +67,28 @@ html {
 }
 
 #reactor .tile.spent:after {
-	background-color: #000;
+	filter: grayscale();
+	-webkit-filter: grayscale();
 }
+
+  /* //////////////////////////
+ // Cells
+////////////////////////// */
 
 /* Uranium */
 #parts .part.part_uranium:after,
 #reactor .tile.part_uranium:after {
-	background-position: 0 0;
+	background-position: 0 -32px;
 }
 
 #parts .part.part_uranium2:after,
 #reactor .tile.part_uranium2:after {
-	background-position: -32px 0;
+	background-position: -32px -32px;
 }
 
 #parts .part.part_uranium3:after,
 #reactor .tile.part_uranium3:after {
-	background-position: -64px 0;
+	background-position: -64px -32px;
 }
 
 /* Plutonium */
@@ -110,12 +117,28 @@ html {
 #reactor .tile.part_thorium3:after {
 }
 
+  /* //////////////////////////
+ // Cooling
+////////////////////////// */
+
+/* Vents */
+#parts .part.part_vent:after,
+#reactor .tile.part_vent:after {
+	background-position: -96px -32px;
+}
+
+
+  /* //////////////////////////
+ // Debug
+////////////////////////// */
 #reactor .heat {
 	color: red;
 	pointer-events: none;
+	font-size: 9px;
 }
 
 #reactor .power {
 	color: green;
 	pointer-events: none;
+	font-size: 9px;
 }
