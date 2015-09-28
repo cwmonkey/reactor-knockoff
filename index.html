@@ -14,14 +14,16 @@
 		<div id="secondary">
 			<section id="stats_section">
 				<h2 class="heading">Stats</h2>
-				<p id="heat">
-					<span id="current_heat">0</span>/<span id="total_heat">0</span>
-				</p>
-				<p id="power">
-					<span id="current_power">0</span>/<span id="total_power">0</span>
-				</p>
+				<section id="heat">
+					<h3 class="heading">Heat</h3>
+					<span id="current_heat">0</span>/<span id="max_heat">0</span>
+				</section>
+				<section id="power">
+					<h3 class="heading">Power</h3>
+					<span id="current_power">0</span>/<span id="max_power">0</span>
+				</section>
 				<button id="sell">Sell</button>
-				<p id="money">0</p>
+				<p id="money_wrapper">$<span id="money">0</span></p>
 				<button id="scrounge">Scrounge for Cash</button>
 			</section>
 
@@ -39,12 +41,54 @@
 			</section>
 		</div>
 
-		<section id="reactor_section">
-			<h2 class="heading">Reactor</h2>
-			<section id="reactor">
+		<div id="primary">
+			<menu id="nav">
+				<button id="save">Save</button>
+			</menu>
 
+			<section id="reactor_section">
+				<h2 class="heading">Reactor</h2>
+				<div id="reactor">
+
+				</div>
 			</section>
-		</section>
+
+			<section id="upgrades_section">
+				<h2 class="heading">Upgrades</h2>
+				<div id="upgrades">
+					<div id="cell_upgrades">
+						<div id="cell_tick_upgrades">
+
+						</div>
+						<div id="cell_power_upgrades">
+
+						</div>
+						<div id="cell_perpetual_upgrades">
+
+						</div>
+					</div>
+					<div id="other_upgrades">
+						<!-- div id="chronometer_upgrade" class="upgrade">
+							<button>
+								Upgrade
+								<span class="levels">0</span>
+							</button>
+							<div class="description">
+								<h3 class="headline">Improved Chronometers</h3>
+								<p>+1 ticket per level of upgrade.</p>
+								<p class="cost">0</p>
+							</div>
+						</div -->
+					</div>
+					<div id="vent_upgrades">
+
+					</div>
+					<div id="exchanger_upgrades">
+
+					</div>
+				</div>
+			</section>
+		</div>
 	</main>
 
 	<script src="js/app.js"></script>

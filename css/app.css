@@ -10,7 +10,17 @@ html {
   box-sizing: inherit;
 }
 
+body {
+	font-family: sans-serif, Arial;
+}
+
+#main {
+	display: flex;
+}
+
 #parts,
+#parts > menu,
+#parts > menu > menu,
 #reactor {
 	display: table;
 }
@@ -33,9 +43,11 @@ html {
 	background: transparent;
 }
 
+#parts .part.unaffordable {
+	opacity: .5;
+}
 
 #reactor .tile {
-	font-size: 2px;
 	border: 2em solid #4b5167;
 }
 
@@ -62,8 +74,8 @@ html {
 	left: 0;
 }
 
-
-#reactor .tile:after {
+#reactor .tile.disabled:after {
+	opacity: .5;
 }
 
 #reactor .tile.spent:after {
@@ -75,7 +87,19 @@ html {
  // Cells
 ////////////////////////// */
 
-/* Uranium */
+#cells {
+	max-width: 10em;
+}
+
+#cells .part {
+	margin-right: 32px;
+}
+
+#cells .part:nth-child(3n) {
+	margin-right: 0;
+}
+
+/* uranium */
 #parts .part.part_uranium:after,
 #reactor .tile.part_uranium:after {
 	background-position: 0 -32px;
@@ -91,30 +115,102 @@ html {
 	background-position: -64px -32px;
 }
 
-/* Plutonium */
-#parts .part.part_plutonium:after,
-#reactor .tile.part_plutonium:after {
+/* plutonium */
+#parts .part.part_plutonium1:after,
+#reactor .tile.part_plutonium1:after {
+	background-position: 0 -64px;
 }
 
 #parts .part.part_plutonium2:after,
 #reactor .tile.part_plutonium2:after {
+	background-position: -32px -64px;
 }
 
 #parts .part.part_plutonium3:after,
 #reactor .tile.part_plutonium3:after {
+	background-position: -64px -64px;
 }
 
-/* Thorium */
-#parts .part.part_thorium:after,
-#reactor .tile.part_thorium:after {
+/* thorium */
+#parts .part.part_thorium1:after,
+#reactor .tile.part_thorium1:after {
+	background-position: 0 -96px;
 }
 
 #parts .part.part_thorium2:after,
 #reactor .tile.part_thorium2:after {
+	background-position: -32px -96px;
 }
 
 #parts .part.part_thorium3:after,
 #reactor .tile.part_thorium3:after {
+	background-position: -64px -96px;
+}
+
+/* seaborgium */
+#parts .part.part_seaborgium1:after,
+#reactor .tile.part_seaborgium1:after {
+	background-position: 0 -128px;
+}
+
+#parts .part.part_seaborgium2:after,
+#reactor .tile.part_seaborgium2:after {
+	background-position: -32px -128px;
+}
+
+#parts .part.part_seaborgium3:after,
+#reactor .tile.part_seaborgium3:after {
+	background-position: -64px -128px;
+}
+
+/* dolorium */
+#parts .part.part_dolorium1:after,
+#reactor .tile.part_dolorium1:after {
+	background-position: 0 -160px;
+}
+
+#parts .part.part_dolorium2:after,
+#reactor .tile.part_dolorium2:after {
+	background-position: -32px -160px;
+}
+
+#parts .part.part_dolorium3:after,
+#reactor .tile.part_dolorium3:after {
+	background-position: -64px -160px;
+}
+
+/* nefastium */
+#parts .part.part_nefastium1:after,
+#reactor .tile.part_nefastium1:after {
+	background-position: 0 -192px;
+}
+
+#parts .part.part_nefastium2:after,
+#reactor .tile.part_nefastium2:after {
+	background-position: -32px -192px;
+}
+
+#parts .part.part_nefastium3:after,
+#reactor .tile.part_nefastium3:after {
+	background-position: -64px -192px;
+}
+
+  /* //////////////////////////
+ // Reflectors
+////////////////////////// */
+
+#parts .part.part_reflector1:after,
+#reactor .tile.part_reflector1:after {
+	background-position: 0 -224px;
+}
+
+  /* //////////////////////////
+ // Capacitors
+////////////////////////// */
+
+#parts .part.part_capacitor:after,
+#reactor .tile.part_capacitor:after {
+	background-position: 0 -256px;
 }
 
   /* //////////////////////////
@@ -122,9 +218,159 @@ html {
 ////////////////////////// */
 
 /* Vents */
-#parts .part.part_vent:after,
-#reactor .tile.part_vent:after {
-	background-position: -96px -32px;
+#parts .part.part_vent1:after,
+#reactor .tile.part_vent1:after {
+	background-position: 0 -288px;
+}
+
+#parts .part.part_vent2:after,
+#reactor .tile.part_vent2:after {
+	background-position: -32px -288px;
+}
+
+#parts .part.part_vent3:after,
+#reactor .tile.part_vent3:after {
+	background-position: -64px -288px;
+}
+
+#parts .part.part_vent4:after,
+#reactor .tile.part_vent4:after {
+	background-position: -96px -288px;
+}
+
+#parts .part.part_vent5:after,
+#reactor .tile.part_vent5:after {
+	background-position: -128px -288px;
+}
+
+/* Heat Exchangers */
+#parts .part.part_heat_exchanger:after,
+#reactor .tile.part_heat_exchanger:after {
+	background-position: 0 -320px;
+}
+
+#parts .part.part_heat_exchanger2:after,
+#reactor .tile.part_heat_exchanger2:after {
+	background-position: -32px -320px;
+}
+
+#parts .part.part_heat_exchanger3:after,
+#reactor .tile.part_heat_exchanger3:after {
+	background-position: -64px -320px;
+}
+
+#parts .part.part_heat_exchanger4:after,
+#reactor .tile.part_heat_exchanger4:after {
+	background-position: -96px -320px;
+}
+
+#parts .part.part_heat_exchanger5:after,
+#reactor .tile.part_heat_exchanger5:after {
+	background-position: -128px -320px;
+}
+
+/* Heat Inlets */
+#parts .part.part_heat_inlet:after,
+#reactor .tile.part_heat_inlet:after {
+	background-position: 0 -352px;
+}
+
+#parts .part.part_heat_inlet2:after,
+#reactor .tile.part_heat_inlet2:after {
+	background-position: -32px -352px;
+}
+
+#parts .part.part_heat_inlet3:after,
+#reactor .tile.part_heat_inlet3:after {
+	background-position: -64px -352px;
+}
+
+#parts .part.part_heat_inlet4:after,
+#reactor .tile.part_heat_inlet4:after {
+	background-position: -96px -352px;
+}
+
+#parts .part.part_heat_inlet5:after,
+#reactor .tile.part_heat_inlet5:after {
+	background-position: -128px -352px;
+}
+
+/* Heat Outlets */
+#parts .part.part_heat_outlet:after,
+#reactor .tile.part_heat_outlet:after {
+	background-position: 0 -384px;
+}
+
+#parts .part.part_heat_outlet2:after,
+#reactor .tile.part_heat_outlet2:after {
+	background-position: -32px -384px;
+}
+
+#parts .part.part_heat_outlet3:after,
+#reactor .tile.part_heat_outlet3:after {
+	background-position: -64px -384px;
+}
+
+#parts .part.part_heat_outlet4:after,
+#reactor .tile.part_heat_outlet4:after {
+	background-position: -96px -384px;
+}
+
+#parts .part.part_heat_outlet5:after,
+#reactor .tile.part_heat_outlet5:after {
+	background-position: -128px -384px;
+}
+
+/* Coolant Cells */
+#parts .part.part_coolant_cell:after,
+#reactor .tile.part_coolant_cell:after {
+	background-position: 0 -416px;
+}
+
+#parts .part.part_coolant_cell2:after,
+#reactor .tile.part_coolant_cell2:after {
+	background-position: -32px -416px;
+}
+
+#parts .part.part_coolant_cell3:after,
+#reactor .tile.part_coolant_cell3:after {
+	background-position: -64px -416px;
+}
+
+#parts .part.part_coolant_cell4:after,
+#reactor .tile.part_coolant_cell4:after {
+	background-position: -96px -416px;
+}
+
+#parts .part.part_coolant_cell5:after,
+#reactor .tile.part_coolant_cell5:after {
+	background-position: -128px -416px;
+}
+
+/* Platings */
+#parts .part.part_plating:after,
+#reactor .tile.part_plating:after {
+	background-position: 0 -416px;
+}
+
+#parts .part.part_plating2:after,
+#reactor .tile.part_plating2:after {
+	background-position: -32px -416px;
+}
+
+#parts .part.part_plating3:after,
+#reactor .tile.part_plating3:after {
+	background-position: -64px -416px;
+}
+
+#parts .part.part_plating4:after,
+#reactor .tile.part_plating4:after {
+	background-position: -96px -416px;
+}
+
+#parts .part.part_plating5:after,
+#reactor .tile.part_plating5:after {
+	background-position: -128px -416px;
 }
 
 
@@ -141,4 +387,8 @@ html {
 	color: green;
 	pointer-events: none;
 	font-size: 9px;
+}
+
+.debug #reactor .tile {
+	font-size: 2px;
 }
