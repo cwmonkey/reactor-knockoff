@@ -12,10 +12,27 @@ html {
 
 body {
 	font-family: sans-serif, Arial;
+	font-size: 16px;
+}
+
+button {
+	padding: 0;
+	border: none;
+	box-shadow: none;
+	-webkit-appearance: none;
 }
 
 #main {
 	display: flex;
+	position: relative;
+}
+
+#secondary {
+	width: 160px;
+}
+
+#primary {
+	width: 608px;
 }
 
 #parts,
@@ -25,18 +42,15 @@ body {
 	display: table;
 }
 
-#parts .part,
+#parts .part .image,
 #reactor .tile {
-	font-size: 1px;
-	padding: 0;
-	border: none;
-	box-shadow: none;
-	-webkit-appearance: none;
-	height: 32em;
-	width: 32em;
+	height: 32px;
+	width: 32px;
 	float: left;
 	position: relative;
 	overflow: hidden;
+	white-space: nowrap;
+	text-indent: 64px;
 }
 
 #parts .part {
@@ -56,15 +70,14 @@ body {
 	outline-offset: -2em;
 }
 
-#parts .part:after,
+#parts .part .image:after,
 #reactor .tile:after {
-	font-size: 1px;
-	height: 32em;
-	width: 32em;
+	height: 32px;
+	width: 32px;
 	content: " ";
 	position: absolute;
-	top: -2em;
-	left: -2em;
+	top: 0;
+	left: 0;
 	display: block;
 	background: url("../img/sprites.png") left top no-repeat;
 }
@@ -83,6 +96,17 @@ body {
 	-webkit-filter: grayscale();
 }
 
+#main :hover > .info {
+	width: 608px;
+	clip: auto;
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: 10;
+	background: #fff;
+	font-size: 16px;
+}
+
   /* //////////////////////////
  // Cells
 ////////////////////////// */
@@ -95,102 +119,107 @@ body {
 	margin-right: 32px;
 }
 
+.part .description {
+	position: absolute;
+	clip: rect(1px 1px 1px 1px);
+}
+
 #cells .part:nth-child(3n) {
 	margin-right: 0;
 }
 
 /* uranium */
-#parts .part.part_uranium:after,
+#parts .part.part_uranium .image:after,
 #reactor .tile.part_uranium:after {
 	background-position: 0 -32px;
 }
 
-#parts .part.part_uranium2:after,
+#parts .part.part_uranium2 .image:after,
 #reactor .tile.part_uranium2:after {
 	background-position: -32px -32px;
 }
 
-#parts .part.part_uranium3:after,
+#parts .part.part_uranium3 .image:after,
 #reactor .tile.part_uranium3:after {
 	background-position: -64px -32px;
 }
 
 /* plutonium */
-#parts .part.part_plutonium1:after,
+#parts .part.part_plutonium1 .image:after,
 #reactor .tile.part_plutonium1:after {
 	background-position: 0 -64px;
 }
 
-#parts .part.part_plutonium2:after,
+#parts .part.part_plutonium2 .image:after,
 #reactor .tile.part_plutonium2:after {
 	background-position: -32px -64px;
 }
 
-#parts .part.part_plutonium3:after,
+#parts .part.part_plutonium3 .image:after,
 #reactor .tile.part_plutonium3:after {
 	background-position: -64px -64px;
 }
 
 /* thorium */
-#parts .part.part_thorium1:after,
+#parts .part.part_thorium1 .image:after,
 #reactor .tile.part_thorium1:after {
 	background-position: 0 -96px;
 }
 
-#parts .part.part_thorium2:after,
+#parts .part.part_thorium2 .image:after,
 #reactor .tile.part_thorium2:after {
 	background-position: -32px -96px;
 }
 
-#parts .part.part_thorium3:after,
+#parts .part.part_thorium3 .image:after,
 #reactor .tile.part_thorium3:after {
 	background-position: -64px -96px;
 }
 
 /* seaborgium */
-#parts .part.part_seaborgium1:after,
+#parts .part.part_seaborgium1 .image:after,
 #reactor .tile.part_seaborgium1:after {
 	background-position: 0 -128px;
 }
 
-#parts .part.part_seaborgium2:after,
+#parts .part.part_seaborgium2 .image:after,
 #reactor .tile.part_seaborgium2:after {
 	background-position: -32px -128px;
 }
 
-#parts .part.part_seaborgium3:after,
+#parts .part.part_seaborgium3 .image:after,
 #reactor .tile.part_seaborgium3:after {
 	background-position: -64px -128px;
 }
 
 /* dolorium */
-#parts .part.part_dolorium1:after,
+#parts .part.part_dolorium1 .image:after,
 #reactor .tile.part_dolorium1:after {
 	background-position: 0 -160px;
 }
 
-#parts .part.part_dolorium2:after,
+#parts .part.part_dolorium2 .image:after,
 #reactor .tile.part_dolorium2:after {
 	background-position: -32px -160px;
 }
 
-#parts .part.part_dolorium3:after,
+#parts .part.part_dolorium3 .image:after,
 #reactor .tile.part_dolorium3:after {
 	background-position: -64px -160px;
 }
 
 /* nefastium */
-#parts .part.part_nefastium1:after,
+#parts .part.part_nefastium1 .image:after,
 #reactor .tile.part_nefastium1:after {
 	background-position: 0 -192px;
 }
 
-#parts .part.part_nefastium2:after,
+#parts .part.part_nefastium2 .image:after,
 #reactor .tile.part_nefastium2:after {
 	background-position: -32px -192px;
 }
 
-#parts .part.part_nefastium3:after,
+#parts .part.part_nefastium3 .image:after,
 #reactor .tile.part_nefastium3:after {
 	background-position: -64px -192px;
 }
@@ -199,7 +228,7 @@ body {
  // Reflectors
 ////////////////////////// */
 
-#parts .part.part_reflector1:after,
+#parts .part.part_reflector1 .image:after,
 #reactor .tile.part_reflector1:after {
 	background-position: 0 -224px;
 }
@@ -208,7 +237,7 @@ body {
  // Capacitors
 ////////////////////////// */
 
-#parts .part.part_capacitor:after,
+#parts .part.part_capacitor .image:after,
 #reactor .tile.part_capacitor:after {
 	background-position: 0 -256px;
 }
@@ -218,161 +247,220 @@ body {
 ////////////////////////// */
 
 /* Vents */
-#parts .part.part_vent1:after,
+#parts .part.part_vent1 .image:after,
 #reactor .tile.part_vent1:after {
 	background-position: 0 -288px;
 }
 
-#parts .part.part_vent2:after,
+#parts .part.part_vent2 .image:after,
 #reactor .tile.part_vent2:after {
 	background-position: -32px -288px;
 }
 
-#parts .part.part_vent3:after,
+#parts .part.part_vent3 .image:after,
 #reactor .tile.part_vent3:after {
 	background-position: -64px -288px;
 }
 
-#parts .part.part_vent4:after,
+#parts .part.part_vent4 .image:after,
 #reactor .tile.part_vent4:after {
 	background-position: -96px -288px;
 }
 
-#parts .part.part_vent5:after,
+#parts .part.part_vent5 .image:after,
 #reactor .tile.part_vent5:after {
 	background-position: -128px -288px;
 }
 
 /* Heat Exchangers */
-#parts .part.part_heat_exchanger:after,
+#parts .part.part_heat_exchanger .image:after,
 #reactor .tile.part_heat_exchanger:after {
 	background-position: 0 -320px;
 }
 
-#parts .part.part_heat_exchanger2:after,
+#parts .part.part_heat_exchanger2 .image:after,
 #reactor .tile.part_heat_exchanger2:after {
 	background-position: -32px -320px;
 }
 
-#parts .part.part_heat_exchanger3:after,
+#parts .part.part_heat_exchanger3 .image:after,
 #reactor .tile.part_heat_exchanger3:after {
 	background-position: -64px -320px;
 }
 
-#parts .part.part_heat_exchanger4:after,
+#parts .part.part_heat_exchanger4 .image:after,
 #reactor .tile.part_heat_exchanger4:after {
 	background-position: -96px -320px;
 }
 
-#parts .part.part_heat_exchanger5:after,
+#parts .part.part_heat_exchanger5 .image:after,
 #reactor .tile.part_heat_exchanger5:after {
 	background-position: -128px -320px;
 }
 
 /* Heat Inlets */
-#parts .part.part_heat_inlet:after,
+#parts .part.part_heat_inlet .image:after,
 #reactor .tile.part_heat_inlet:after {
 	background-position: 0 -352px;
 }
 
-#parts .part.part_heat_inlet2:after,
+#parts .part.part_heat_inlet2 .image:after,
 #reactor .tile.part_heat_inlet2:after {
 	background-position: -32px -352px;
 }
 
-#parts .part.part_heat_inlet3:after,
+#parts .part.part_heat_inlet3 .image:after,
 #reactor .tile.part_heat_inlet3:after {
 	background-position: -64px -352px;
 }
 
-#parts .part.part_heat_inlet4:after,
+#parts .part.part_heat_inlet4 .image:after,
 #reactor .tile.part_heat_inlet4:after {
 	background-position: -96px -352px;
 }
 
-#parts .part.part_heat_inlet5:after,
+#parts .part.part_heat_inlet5 .image:after,
 #reactor .tile.part_heat_inlet5:after {
 	background-position: -128px -352px;
 }
 
 /* Heat Outlets */
-#parts .part.part_heat_outlet:after,
+#parts .part.part_heat_outlet .image:after,
 #reactor .tile.part_heat_outlet:after {
 	background-position: 0 -384px;
 }
 
-#parts .part.part_heat_outlet2:after,
+#parts .part.part_heat_outlet2 .image:after,
 #reactor .tile.part_heat_outlet2:after {
 	background-position: -32px -384px;
 }
 
-#parts .part.part_heat_outlet3:after,
+#parts .part.part_heat_outlet3 .image:after,
 #reactor .tile.part_heat_outlet3:after {
 	background-position: -64px -384px;
 }
 
-#parts .part.part_heat_outlet4:after,
+#parts .part.part_heat_outlet4 .image:after,
 #reactor .tile.part_heat_outlet4:after {
 	background-position: -96px -384px;
 }
 
-#parts .part.part_heat_outlet5:after,
+#parts .part.part_heat_outlet5 .image:after,
 #reactor .tile.part_heat_outlet5:after {
 	background-position: -128px -384px;
 }
 
 /* Coolant Cells */
-#parts .part.part_coolant_cell:after,
+#parts .part.part_coolant_cell .image:after,
 #reactor .tile.part_coolant_cell:after {
 	background-position: 0 -416px;
 }
 
-#parts .part.part_coolant_cell2:after,
+#parts .part.part_coolant_cell2 .image:after,
 #reactor .tile.part_coolant_cell2:after {
 	background-position: -32px -416px;
 }
 
-#parts .part.part_coolant_cell3:after,
+#parts .part.part_coolant_cell3 .image:after,
 #reactor .tile.part_coolant_cell3:after {
 	background-position: -64px -416px;
 }
 
-#parts .part.part_coolant_cell4:after,
+#parts .part.part_coolant_cell4 .image:after,
 #reactor .tile.part_coolant_cell4:after {
 	background-position: -96px -416px;
 }
 
-#parts .part.part_coolant_cell5:after,
+#parts .part.part_coolant_cell5 .image:after,
 #reactor .tile.part_coolant_cell5:after {
 	background-position: -128px -416px;
 }
 
 /* Platings */
-#parts .part.part_plating:after,
+#parts .part.part_plating .image:after,
 #reactor .tile.part_plating:after {
 	background-position: 0 -416px;
 }
 
-#parts .part.part_plating2:after,
+#parts .part.part_plating2 .image:after,
 #reactor .tile.part_plating2:after {
 	background-position: -32px -416px;
 }
 
-#parts .part.part_plating3:after,
+#parts .part.part_plating3 .image:after,
 #reactor .tile.part_plating3:after {
 	background-position: -64px -416px;
 }
 
-#parts .part.part_plating4:after,
+#parts .part.part_plating4 .image:after,
 #reactor .tile.part_plating4:after {
 	background-position: -96px -416px;
 }
 
-#parts .part.part_plating5:after,
+#parts .part.part_plating5 .image:after,
 #reactor .tile.part_plating5:after {
 	background-position: -128px -416px;
 }
 
+
+  /* //////////////////////////
+ // Upgrades
+////////////////////////// */
+
+#upgrades .upgrade {
+	width: 2.5em;
+	height: 2.5em;
+	display: inline-block;
+	font-size: inherit;
+}
+
+#upgrades .upgrade .description {
+	position: absolute;
+	clip: rect(1px 1px 1px 1px);
+}
+
+#upgrades .upgrade .image {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	text-indent: 5em;
+	position: relative;
+	pointer-events: none;
+	white-space: nowrap;
+}
+
+#upgrades .upgrade .levels {
+	position: absolute;
+	text-indent: 0;
+	right: 2px;
+	bottom: 2px;
+	color: #fff;
+	font-size: 14px;
+	text-shadow:
+		1px 0 0 rgba(0, 0, 0, 1),
+		0 1px 0 rgba(0, 0, 0, 1),
+		-1px 0 0 rgba(0, 0, 0, 1),
+		0 -1px 0 rgba(0, 0, 0, 1),
+		1px 1px 0 rgba(0, 0, 0, 1),
+		-1px -1px 0 rgba(0, 0, 0, 1),
+		1px -1px 0 rgba(0, 0, 0, 1),
+		-1px 1px 0 rgba(0, 0, 0, 1)
+		;
+}
+
+#upgrades .upgrade .image:before {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	content: " ";
+	background: url("../img/sprites.png") left top no-repeat;
+	width: 32px;
+	height: 32px;
+}
+
+#chronometer.upgrade .image:before {
+	background-position: 0 -480px;
+}
 
   /* //////////////////////////
  // Debug
@@ -381,14 +469,22 @@ body {
 	color: red;
 	pointer-events: none;
 	font-size: 9px;
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	text-indent: 0;
 }
 
 #reactor .power {
 	color: green;
 	pointer-events: none;
 	font-size: 9px;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	text-indent: 0;
 }
 
 .debug #reactor .tile {
-	font-size: 2px;
+	font-size: 1px;
 }
