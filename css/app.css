@@ -96,17 +96,6 @@ button {
 	-webkit-filter: grayscale();
 }
 
-#main :hover > .info {
-	width: 608px;
-	clip: auto;
-	position: absolute;
-	right: 0;
-	top: 0;
-	z-index: 10;
-	background: #fff;
-	font-size: 16px;
-}
-
   /* //////////////////////////
  // Cells
 ////////////////////////// */
@@ -460,6 +449,21 @@ button {
 
 #chronometer.upgrade .image:before {
 	background-position: 0 -480px;
+}
+
+  /* //////////////////////////
+ // States
+////////////////////////// */
+
+#main :hover > .info {
+	width: 608px;
+	clip: auto;
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: 10;
+	background: #fff;
+	font-size: 16px;
 }
 
   /* //////////////////////////
