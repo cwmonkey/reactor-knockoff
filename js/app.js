@@ -44,6 +44,7 @@ var i;
 var l;
 var ri;
 var pi;
+var pl;
 var ci;
 var row;
 var tile;
@@ -51,8 +52,8 @@ var upgrade;
 
 // Other vars
 var tiles = [];
-var parts = {
-	uranium: {
+var parts = [
+	{
 		id: 'uranium',
 		type: 'uranium',
 		level: 1,
@@ -62,13 +63,13 @@ var parts = {
 		base_ticks: 15,
 		base_power: 1,
 		base_heat: 1,
-		enriched_upgrade_cost: 100,
-		enriched_upgrade_multiplier: 10,
-		potent_upgrade_cost: 500,
-		potent_upgrade_multiplier: 10,
-		perpetual_upgrade_cost: 10000
+		cell_tick_upgrade_cost: 100,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 500,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 10000
 	},
-	uranium2: {
+	{
 		id: 'uranium2',
 		type: 'uranium',
 		level: 2,
@@ -79,7 +80,7 @@ var parts = {
 		base_power: 4,
 		base_heat: 8
 	},
-	uranium3: {
+	{
 		id: 'uranium3',
 		type: 'uranium',
 		level: 3,
@@ -90,7 +91,7 @@ var parts = {
 		base_power: 12,
 		base_heat: 36
 	},
-	plutonium: {
+	{
 		id: 'plutonium',
 		type: 'plutonium',
 		levels: 3,
@@ -99,9 +100,14 @@ var parts = {
 		base_cost: 6000,
 		base_ticks: 60,
 		base_power: 150,
-		base_heat: 150
+		base_heat: 150,
+		cell_tick_upgrade_cost: 30000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 30000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 6000000
 	},
-	thorium: {
+	{
 		id: 'thorium',
 		type: 'thorium',
 		levels: 3,
@@ -110,9 +116,14 @@ var parts = {
 		base_cost: 4737000,
 		base_ticks: 900,
 		base_power: 7400,
-		base_heat: 7400
+		base_heat: 7400,
+		cell_tick_upgrade_cost: 25000000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 25000000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 4737000000
 	},
-	seaborgium: {
+	{
 		id: 'seaborgium',
 		type: 'seaborgium',
 		levels: 3,
@@ -121,9 +132,14 @@ var parts = {
 		base_cost: 3939000000,
 		base_ticks: 3600,
 		base_power: 1582000,
-		base_heat: 1582000
+		base_heat: 1582000,
+		cell_tick_upgrade_cost: 20000000000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 20000000000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 3989000000000
 	},
-	dolorium: {
+	{
 		id: 'dolorium',
 		type: 'dolorium',
 		levels: 3,
@@ -132,9 +148,14 @@ var parts = {
 		base_cost: 3922000000000,
 		base_ticks: 21600,
 		base_power: 226966000,
-		base_heat: 226966000
+		base_heat: 226966000,
+		cell_tick_upgrade_cost: 20000000000000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 20000000000000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 3922000000000000
 	},
-	nefastium: {
+	{
 		id: 'nefastium',
 		type: 'nefastium',
 		levels: 3,
@@ -143,9 +164,14 @@ var parts = {
 		base_cost: 3586000000000000,
 		base_ticks: 86400,
 		base_power: 51871000000,
-		base_heat: 51871000000
+		base_heat: 51871000000,
+		cell_tick_upgrade_cost: 17500000000000000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 17500000000000000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 3586000000000000000
 	},
-	vent: {
+	{
 		id: 'vent',
 		title: 'Heat Vent',
 		levels: 5,
@@ -157,7 +183,7 @@ var parts = {
 		base_vent: 8,
 		location: 'cooling'
 	}
-};
+];
 
 // Classes
 var Tile = function(row, col) {
@@ -500,7 +526,7 @@ var create_part = function(part, level) {
 	return part_obj;
 }
 
-for ( pi in parts ) {
+for ( pi = 0, pl = parts.length; pi < pl; pi++ ) {
 	part_settings = parts[pi];
 	if ( part_settings.levels ) {
 		for ( i = 0, l = part_settings.levels; i < l; i++ ) {
@@ -731,9 +757,9 @@ Upgrade.prototype.setLevel = function(level) {
 }
 
 var upgrade_locations = {
-	ticks: document.getElementById('cell_tick_upgrades'),
-	powers: document.getElementById('cell_power_upgrades'),
-	perpetuals: document.getElementById('cell_perpetual_upgrades'),
+	cell_tick_upgrades: document.getElementById('cell_tick_upgrades'),
+	cell_power_upgrades: document.getElementById('cell_power_upgrades'),
+	cell_perpetual_upgrades: document.getElementById('cell_perpetual_upgrades'),
 	other: document.getElementById('other_upgrades'),
 	vents: document.getElementById('vent_upgrades'),
 	exchangers: document.getElementById('exchanger_upgrades')
@@ -748,6 +774,58 @@ var create_upgrade = function(u) {
 	upgrade_objects_array.push(upgrade);
 	upgrade_objects[upgrade.upgrade.id] = upgrade;
 };
+
+var types = [
+	{
+		type: 'cell_power',
+		title: 'Potent ',
+		description: ' cells produce 100% more power per level of upgrade.',
+		onclick: function(upgrade) {
+
+		}
+	},
+	{
+		type: 'cell_tick',
+		title: 'Enriched ',
+		description: ' cells last twice as long per level of upgrade.',
+		onclick: function(upgrade) {
+			
+		}
+	},
+	{
+		type: 'cell_perpetual',
+		title: 'Perpetual ',
+		description: ' cells are automatically replaced when they become depleted.',
+		onclick: function(upgrade) {
+			
+		}
+	}
+];
+
+var type;
+var part;
+
+for ( var i = 0, l = types.length; i < l; i++ ) {
+	type = types[i];
+
+	for ( var pi = 0, pl = parts.length; pi < pl; pi++ ) {
+		part = parts[pi];
+
+		if ( part.cell_tick_upgrade_cost ) {
+			upgrade = {
+				id: type.type + '_' + part.id,
+				type: type.type + '_upgrades',
+				title: type.title + ' ' + part.title,
+				description: part.title + ' ' + type.description,
+				cost: part[type.type + '_upgrade_cost'],
+				multiplier: part[type.type + '_upgrade_multiplier'],
+				onclick: type.onclick
+			};
+
+			create_upgrade(upgrade);
+		}
+	}
+}
 
 for ( var i = 0, l = upgrades.length; i < l; i++ ) {
 	create_upgrade(upgrades[i]);
