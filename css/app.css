@@ -43,6 +43,7 @@ button {
 }
 
 #parts .part .image,
+#upgrades .image,
 #reactor .tile {
 	height: 32px;
 	width: 32px;
@@ -57,12 +58,11 @@ button {
 	background: transparent;
 }
 
-#parts .part.unaffordable {
+#parts .part.unaffordable .image {
 	opacity: .5;
 }
 
 #reactor .tile {
-	border: 2em solid #4b5167;
 }
 
 #parts .part.active {
@@ -71,6 +71,8 @@ button {
 }
 
 #parts .part .image:after,
+#upgrades .image:before,
+#upgrades .image:after,
 #reactor .tile:after {
 	height: 32px;
 	width: 32px;
@@ -118,8 +120,9 @@ button {
 }
 
 /* uranium */
-#parts .part.part_uranium .image:after,
-#reactor .tile.part_uranium:after {
+#parts .part.part_uranium1 .image:after,
+#reactor .tile.part_uranium1:after,
+#upgrades .uranium .image:after {
 	background-position: 0 -32px;
 }
 
@@ -135,7 +138,8 @@ button {
 
 /* plutonium */
 #parts .part.part_plutonium1 .image:after,
-#reactor .tile.part_plutonium1:after {
+#reactor .tile.part_plutonium1:after,
+#upgrades .plutonium .image:after {
 	background-position: 0 -64px;
 }
 
@@ -151,7 +155,8 @@ button {
 
 /* thorium */
 #parts .part.part_thorium1 .image:after,
-#reactor .tile.part_thorium1:after {
+#reactor .tile.part_thorium1:after,
+#upgrades .thorium .image:after {
 	background-position: 0 -96px;
 }
 
@@ -167,7 +172,8 @@ button {
 
 /* seaborgium */
 #parts .part.part_seaborgium1 .image:after,
-#reactor .tile.part_seaborgium1:after {
+#reactor .tile.part_seaborgium1:after,
+#upgrades .seaborgium .image:after {
 	background-position: 0 -128px;
 }
 
@@ -183,7 +189,8 @@ button {
 
 /* dolorium */
 #parts .part.part_dolorium1 .image:after,
-#reactor .tile.part_dolorium1:after {
+#reactor .tile.part_dolorium1:after,
+#upgrades .dolorium .image:after {
 	background-position: 0 -160px;
 }
 
@@ -199,7 +206,8 @@ button {
 
 /* nefastium */
 #parts .part.part_nefastium1 .image:after,
-#reactor .tile.part_nefastium1:after {
+#reactor .tile.part_nefastium1:after,
+#upgrades .nefastium .image:after {
 	background-position: 0 -192px;
 }
 
@@ -227,7 +235,9 @@ button {
 ////////////////////////// */
 
 #parts .part.part_capacitor .image:after,
-#reactor .tile.part_capacitor:after {
+#reactor .tile.part_capacitor:after,
+#active_venting .image:after,
+#active_exchangers .image:after {
 	background-position: 0 -256px;
 }
 
@@ -237,7 +247,8 @@ button {
 
 /* Vents */
 #parts .part.part_vent1 .image:after,
-#reactor .tile.part_vent1:after {
+#reactor .tile.part_vent1:after,
+#improved_heat_vents .image:after {
 	background-position: 0 -288px;
 }
 
@@ -263,7 +274,8 @@ button {
 
 /* Heat Exchangers */
 #parts .part.part_heat_exchanger .image:after,
-#reactor .tile.part_heat_exchanger:after {
+#reactor .tile.part_heat_exchanger:after,
+#improved_heat_exchangers .image:after {
 	background-position: 0 -320px;
 }
 
@@ -367,8 +379,10 @@ button {
 
 /* Platings */
 #parts .part.part_plating .image:after,
-#reactor .tile.part_plating:after {
-	background-position: 0 -416px;
+#reactor .tile.part_plating:after,
+#improved_heatsinks .image:after,
+#reinforced_heat_exchangers .image:after {
+	background-position: 0 -448px;
 }
 
 #parts .part.part_plating2 .image:after,
@@ -408,18 +422,24 @@ button {
 	clip: rect(1px 1px 1px 1px);
 }
 
-#upgrades .upgrade .image {
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-	text-indent: 5em;
-	position: relative;
-	pointer-events: none;
-	white-space: nowrap;
+#upgrades .cell_tick .image:before {
+	background-position: -32px 0;
+	z-index: 2;
+}
+
+#upgrades .cell_power .image:before {
+	background-position: -64px 0;
+	z-index: 2;
+}
+
+#upgrades .cell_perpetual .image:before {
+	background-position: -96px 0;
+	z-index: 2;
 }
 
 #upgrades .upgrade .levels {
 	position: absolute;
+	z-index: 3;
 	text-indent: 0;
 	right: 2px;
 	bottom: 2px;
@@ -437,7 +457,7 @@ button {
 		;
 }
 
-#upgrades .upgrade .image:before {
+/*#upgrades .upgrade .image:before {
 	position: absolute;
 	top: 4px;
 	left: 4px;
@@ -445,7 +465,7 @@ button {
 	background: url("../img/sprites.png") left top no-repeat;
 	width: 32px;
 	height: 32px;
-}
+}*/
 
 #chronometer.upgrade .image:before {
 	background-position: 0 -480px;

@@ -24,7 +24,7 @@ var fmt = function(num) {
 // settings
 var cols = 19;
 var rows = 16;
-var debug = true;
+var debug = false;
 var base_loop_wait = 1000;
 var base_power_multiplier = 1;
 var base_heat_multiplier = 4;
@@ -49,141 +49,11 @@ var ci;
 var row;
 var tile;
 var upgrade;
+var single_cell_description = 'Produces %power power and %heat heat per tick.';
+var multi_cell_description = 'Acts as %count %type cells. Produces %power power and %heat heat per tick.';
 
 // Other vars
 var tiles = [];
-var parts = [
-	{
-		id: 'uranium',
-		type: 'uranium',
-		level: 1,
-		title: 'Uranium Cell',
-		category: 'cell',
-		base_cost: 10,
-		base_ticks: 15,
-		base_power: 1,
-		base_heat: 1,
-		cell_tick_upgrade_cost: 100,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 500,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 10000
-	},
-	{
-		id: 'uranium2',
-		type: 'uranium',
-		level: 2,
-		title: 'Dual Uranium Cell',
-		category: 'cell',
-		base_cost: 25,
-		base_ticks: 15,
-		base_power: 4,
-		base_heat: 8
-	},
-	{
-		id: 'uranium3',
-		type: 'uranium',
-		level: 3,
-		title: 'Quad Uranium Cell',
-		category: 'cell',
-		base_cost: 60,
-		base_ticks: 15,
-		base_power: 12,
-		base_heat: 36
-	},
-	{
-		id: 'plutonium',
-		type: 'plutonium',
-		levels: 3,
-		title: 'Plutonium Cell',
-		category: 'cell',
-		base_cost: 6000,
-		base_ticks: 60,
-		base_power: 150,
-		base_heat: 150,
-		cell_tick_upgrade_cost: 30000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 30000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 6000000
-	},
-	{
-		id: 'thorium',
-		type: 'thorium',
-		levels: 3,
-		title: 'Thorium Cell',
-		category: 'cell',
-		base_cost: 4737000,
-		base_ticks: 900,
-		base_power: 7400,
-		base_heat: 7400,
-		cell_tick_upgrade_cost: 25000000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 25000000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 4737000000
-	},
-	{
-		id: 'seaborgium',
-		type: 'seaborgium',
-		levels: 3,
-		title: 'Seaborgium Cell',
-		category: 'cell',
-		base_cost: 3939000000,
-		base_ticks: 3600,
-		base_power: 1582000,
-		base_heat: 1582000,
-		cell_tick_upgrade_cost: 20000000000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 20000000000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 3989000000000
-	},
-	{
-		id: 'dolorium',
-		type: 'dolorium',
-		levels: 3,
-		title: 'Dolorium Cell',
-		category: 'cell',
-		base_cost: 3922000000000,
-		base_ticks: 21600,
-		base_power: 226966000,
-		base_heat: 226966000,
-		cell_tick_upgrade_cost: 20000000000000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 20000000000000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 3922000000000000
-	},
-	{
-		id: 'nefastium',
-		type: 'nefastium',
-		levels: 3,
-		title: 'Nefastium Cell',
-		category: 'cell',
-		base_cost: 3586000000000000,
-		base_ticks: 86400,
-		base_power: 51871000000,
-		base_heat: 51871000000,
-		cell_tick_upgrade_cost: 17500000000000000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 17500000000000000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 3586000000000000000
-	},
-	{
-		id: 'vent',
-		title: 'Heat Vent',
-		levels: 5,
-		category: 'vent',
-		level: 1,
-		base_cost: 50,
-		cost_multiplier: 250,
-		base_containment: 80,
-		base_vent: 8,
-		location: 'cooling'
-	}
-];
 
 // Classes
 var Tile = function(row, col) {
@@ -211,58 +81,6 @@ var Tile = function(row, col) {
 		this.$power.innerHTML = fmt(this.power);
 		this.$el.appendChild(this.$power);
 	}
-};
-
-var Part = function(part) {
-	this.className = 'part_' + part.id;
-	this.$el = document.createElement('BUTTON');
-	this.$el.className = 'part ' + this.className;
-	this.$el.part = this;
-
-	this.part = part;
-	this.id = part.id;
-	this.category = part.category;
-	this.heat = part.base_heat;
-	this.power = part.base_power;
-	this.heat_multiplier = part.base_heat_multiplier;
-	this.power_multiplier = part.base_power_multiplier;
-	this.ticks = part.base_ticks;
-	this.containment = part.base_containment;
-	this.vent = part.base_vent;
-	this.cost = part.base_cost;
-	this.affordable = true;
-
-	var $image = document.createElement('DIV');
-	$image.className = 'image';
-	$image.innerHTML = 'Click to Select';
-
-	//this.$levels = document.createElement('SPAN');
-	//this.$levels.className = 'levels';
-
-	var $description = document.createElement('DIV');
-	$description.className = 'description info';
-
-	var $headline = document.createElement('DIV');
-	$headline.className = 'headline';
-	$headline.innerHTML = part.title;
-
-	//var $p = document.createElement('P');
-	//$p.className = 'text';
-	//$p.id = upgrade.id + 'text';
-	//$p.innerHTML = upgrade.description;*/
-
-	this.$cost = document.createElement('P');
-	this.$cost.className = 'cost';
-	this.$cost.innerHTML = fmt(this.cost);
-
-	//$image.appendChild(this.$levels);
-
-	$description.appendChild($headline);
-	//$description.appendChild($p);
-	$description.appendChild(this.$cost);
-
-	this.$el.appendChild($image);
-	this.$el.appendChild($description);
 };
 
 // Operations
@@ -478,8 +296,211 @@ for ( ri = 0; ri < rows; ri++ ) {
 }
 
   /////////////////////////////
- // Create Parts
+ // Parts
 /////////////////////////////
+
+var parts = [
+	{
+		id: 'uranium1',
+		type: 'uranium',
+		level: 1,
+		title: 'Uranium Cell',
+		base_description: single_cell_description,
+		category: 'cell',
+		base_cost: 10,
+		base_ticks: 15,
+		base_power: 1,
+		base_heat: 1,
+		cell_tick_upgrade_cost: 100,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 500,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 10000
+	},
+	{
+		id: 'uranium2',
+		type: 'uranium',
+		level: 2,
+		title: 'Dual Uranium Cell',
+		base_description: multi_cell_description,
+		category: 'cell',
+		base_cost: 25,
+		base_ticks: 15,
+		base_power: 4,
+		base_heat: 8
+	},
+	{
+		id: 'uranium3',
+		type: 'uranium',
+		level: 3,
+		title: 'Quad Uranium Cell',
+		base_description: multi_cell_description,
+		category: 'cell',
+		base_cost: 60,
+		base_ticks: 15,
+		base_power: 12,
+		base_heat: 36
+	},
+	{
+		id: 'plutonium',
+		type: 'plutonium',
+		levels: 3,
+		title: 'Plutonium Cell',
+		base_description: single_cell_description,
+		category: 'cell',
+		base_cost: 6000,
+		base_ticks: 60,
+		base_power: 150,
+		base_heat: 150,
+		cell_tick_upgrade_cost: 30000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 30000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 6000000
+	},
+	{
+		id: 'thorium',
+		type: 'thorium',
+		levels: 3,
+		title: 'Thorium Cell',
+		base_description: single_cell_description,
+		category: 'cell',
+		base_cost: 4737000,
+		base_ticks: 900,
+		base_power: 7400,
+		base_heat: 7400,
+		cell_tick_upgrade_cost: 25000000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 25000000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 4737000000
+	},
+	{
+		id: 'seaborgium',
+		type: 'seaborgium',
+		levels: 3,
+		title: 'Seaborgium Cell',
+		base_description: single_cell_description,
+		category: 'cell',
+		base_cost: 3939000000,
+		base_ticks: 3600,
+		base_power: 1582000,
+		base_heat: 1582000,
+		cell_tick_upgrade_cost: 20000000000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 20000000000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 3989000000000
+	},
+	{
+		id: 'dolorium',
+		type: 'dolorium',
+		levels: 3,
+		title: 'Dolorium Cell',
+		base_description: single_cell_description,
+		category: 'cell',
+		base_cost: 3922000000000,
+		base_ticks: 21600,
+		base_power: 226966000,
+		base_heat: 226966000,
+		cell_tick_upgrade_cost: 20000000000000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 20000000000000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 3922000000000000
+	},
+	{
+		id: 'nefastium',
+		type: 'nefastium',
+		levels: 3,
+		title: 'Nefastium Cell',
+		base_description: single_cell_description,
+		category: 'cell',
+		base_cost: 3586000000000000,
+		base_ticks: 86400,
+		base_power: 51871000000,
+		base_heat: 51871000000,
+		cell_tick_upgrade_cost: 17500000000000000,
+		cell_tick_upgrade_multiplier: 10,
+		cell_power_upgrade_cost: 17500000000000000,
+		cell_power_upgrade_multiplier: 10,
+		cell_perpetual_upgrade_cost: 3586000000000000000
+	},
+	{
+		id: 'vent',
+		type: 'vent',
+		title: 'Heat Vent',
+		base_description: single_cell_description,
+		levels: 5,
+		category: 'vent',
+		level: 1,
+		base_cost: 50,
+		cost_multiplier: 250,
+		base_containment: 80,
+		base_vent: 8,
+		location: 'cooling'
+	}
+];
+
+var Part = function(part) {
+	this.className = 'part_' + part.id;
+	this.$el = document.createElement('BUTTON');
+	this.$el.className = 'part ' + this.className;
+	this.$el.part = this;
+
+	this.part = part;
+	this.id = part.id;
+	this.category = part.category;
+	this.heat = part.base_heat;
+	this.power = part.base_power;
+	this.heat_multiplier = part.base_heat_multiplier;
+	this.power_multiplier = part.base_power_multiplier;
+	this.ticks = part.base_ticks;
+	this.containment = part.base_containment;
+	this.vent = part.base_vent;
+	this.cost = part.base_cost;
+	this.affordable = true;
+
+	var $image = document.createElement('DIV');
+	$image.className = 'image';
+	$image.innerHTML = 'Click to Select';
+
+	var $description = document.createElement('DIV');
+	$description.className = 'description info';
+
+	var $headline = document.createElement('DIV');
+	$headline.className = 'headline';
+	$headline.innerHTML = part.title;
+
+	this.$text = document.createElement('P');
+	this.$text.className = 'text';
+
+	this.$cost = document.createElement('P');
+	this.$cost.className = 'cost';
+
+	$description.appendChild($headline);
+	$description.appendChild(this.$text);
+	$description.appendChild(this.$cost);
+
+	this.$el.appendChild($image);
+	this.$el.appendChild($description);
+};
+
+Part.prototype.updateHtml = function() {
+	var description = this.part.base_description
+		.replace(/%power/, this.power)
+		.replace(/%heat/, this.heat)
+		.replace(/%count/, [1, 2, 4][this.part.level - 1])
+		;
+
+	if ( this.part.level > 1 ) {
+		description = description.replace(/%type/, part_objects[this.part.type + 1].part.title);
+	}
+
+	this.$text.innerHTML = description;
+
+	this.$cost.innerHTML = fmt(this.cost);
+};
 
 var part_obj;
 var part_settings;
@@ -501,10 +522,11 @@ var create_part = function(part, level) {
 			part.title = cell_prefixes[level -1] + part.title;
 			part.base_cost = part.base_cost
 			if ( level > 1 ) {
-				part.base_cost *= Math.pow(22, level - 1) / 10;
+				part.base_cost *= Math.pow(2.2, level - 1);
+				part.base_description = multi_cell_description;
 			}
-			part.base_power = part.base_power * cell_power_multipliers[level];
-			part.base_heat = part.base_heat * cell_heat_multipliers[level];
+			part.base_power = part.base_power * cell_power_multipliers[level - 1];
+			part.base_heat = part.base_heat * cell_heat_multipliers[level - 1];
 		} else {
 			part.id = part.category + level;
 			part.title = prefixes[level -1] + part.title;
@@ -516,6 +538,8 @@ var create_part = function(part, level) {
 
 	part_objects[part.id] = part_obj;
 	part_objects_array.push(part_obj);
+
+	part_obj.updateHtml();
 
 	if ( part.category === 'cell' ) {
 		$cells.appendChild(part_obj.$el);
@@ -770,6 +794,9 @@ var upgrade_objects_array = [];
 var create_upgrade = function(u) {
 	var upgrade = new Upgrade(u);
 	upgrade.$el.upgrade = upgrade;
+	if ( u.className ) {
+		upgrade.$el.className += ' ' + u.className;
+	}
 	upgrade_locations[u.type].appendChild(upgrade.$el);
 	upgrade_objects_array.push(upgrade);
 	upgrade_objects[upgrade.upgrade.id] = upgrade;
@@ -819,7 +846,8 @@ for ( var i = 0, l = types.length; i < l; i++ ) {
 				description: part.title + ' ' + type.description,
 				cost: part[type.type + '_upgrade_cost'],
 				multiplier: part[type.type + '_upgrade_multiplier'],
-				onclick: type.onclick
+				onclick: type.onclick,
+				className: part.type + ' ' + type.type
 			};
 
 			create_upgrade(upgrade);
