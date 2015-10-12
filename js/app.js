@@ -2,6 +2,43 @@
 'use strict';
 
   /////////////////////////////
+ // Delegate
+/////////////////////////////
+
+Element.prototype.delegate = function(className, type, fn) {
+	var test = new RegExp('\\b' + className + '\\b');
+
+	this['on' + type] = function(event) {
+		event = event || window.event;
+		var $target = event.target || event.srcElement;
+
+		while( $target != $upgrades ) {
+			if ( $target.className.match(test) ) {
+				return fn.call($target, event);
+			}
+
+			$target = $target.parentNode;
+		}
+	}
+}
+
+  /////////////////////////////
+ // fauxQuery
+/////////////////////////////
+
+var _div = document.createElement('div');
+var $ = function(a1) {
+	if ( typeof a1 === 'string' ) {
+		if ( a1.match(/^<[^>]+>$/) ) {
+			_div.innerHTML = a1;
+			return _div.firstChild;
+		} else if ( a1.match(/^#[^ ]+$/) ) {
+			return document.getElementById(a1.substring(1))
+		}
+	}
+}
+
+  /////////////////////////////
  // Number formatting
 /////////////////////////////
 
@@ -24,10 +61,11 @@ var fmt = function(num) {
 // settings
 var cols = 19;
 var rows = 16;
-var debug = false;
+var debug = true;
 var base_loop_wait = 1000;
 var base_power_multiplier = 1;
 var base_heat_multiplier = 4;
+var upgrade_max_level = 32;
 
 // Current
 var current_heat = 0;
@@ -49,16 +87,16 @@ var ci;
 var row;
 var tile;
 var upgrade;
-var single_cell_description = 'Produces %power power and %heat heat per tick.';
+var single_cell_description = 'Produces %power power and %heat heat per tick. Lasts for %ticks ticks.';
 var multi_cell_description = 'Acts as %count %type cells. Produces %power power and %heat heat per tick.';
 
 // Other vars
 var tiles = [];
+var unaffordable_replace = /[\s\b]unaffordable\b/;
 
 // Classes
 var Tile = function(row, col) {
-	this.$el = document.createElement('BUTTON');
-	this.$el.className = 'tile';
+	this.$el = $('<button class="tile">');
 	this.$el.tile = this;
 	this.part = null;
 	this.heat = 0;
@@ -71,13 +109,11 @@ var Tile = function(row, col) {
 	this.col = col;
 
 	if ( debug ) {
-		this.$heat = document.createElement('SPAN');
-		this.$heat.className = 'heat';
+		this.$heat = $('<span class="heat">');
 		this.$heat.innerHTML = fmt(this.heat);
 		this.$el.appendChild(this.$heat);
 
-		this.$power = document.createElement('SPAN');
-		this.$power.className = 'power';
+		this.$power = $('<span class="power">');
 		this.$power.innerHTML = fmt(this.power);
 		this.$el.appendChild(this.$power);
 	}
@@ -256,20 +292,20 @@ var update_tiles = function() {
 };
 
 // get dom nodes cached
-var $reactor = document.getElementById('reactor');
-var $parts = document.getElementById('parts');
-var $cells = document.getElementById('cells');
-var $sell = document.getElementById('sell');
-var $money = document.getElementById('money');
-var $scrounge = document.getElementById('scrounge');
-var $cooling = document.getElementById('cooling');
-var $current_heat = document.getElementById('current_heat');
-var $current_power = document.getElementById('current_power');
-var $max_heat = document.getElementById('max_heat');
-var $max_power = document.getElementById('max_power');
-var $save = document.getElementById('save');
-var $main = document.getElementById('main');
-var $upgrades = document.getElementById('upgrades');
+var $reactor = $('#reactor');
+var $parts = $('#parts');
+var $cells = $('#cells');
+var $sell = $('#sell');
+var $money = $('#money');
+var $scrounge = $('#scrounge');
+var $cooling = $('#cooling');
+var $current_heat = $('#current_heat');
+var $current_power = $('#current_power');
+var $max_heat = $('#max_heat');
+var $max_power = $('#max_power');
+var $save = $('#save');
+var $main = $('#main');
+var $upgrades = $('#upgrades');
 
 if ( debug ) {
 	$main.className += ' debug';
@@ -281,8 +317,7 @@ $max_power.innerHTML = fmt(max_power);
 // create tiles
 var $row;
 for ( ri = 0; ri < rows; ri++ ) {
-	$row = document.createElement('DIV');
-	$row.className = 'row';
+	$row = $('<div class="row">');
 	$reactor.appendChild($row);
 	row = [];
 
@@ -460,27 +495,28 @@ var Part = function(part) {
 	this.vent = part.base_vent;
 	this.cost = part.base_cost;
 	this.affordable = true;
+	this.perpetual = false;
 
-	var $image = document.createElement('DIV');
-	$image.className = 'image';
+	var $image = $('<div class="image">');
 	$image.innerHTML = 'Click to Select';
 
-	var $description = document.createElement('DIV');
-	$description.className = 'description info';
+	var $description = $('<div class="description info">');
 
-	var $headline = document.createElement('DIV');
-	$headline.className = 'headline';
+	var $headline = $('<div class="headline">');
 	$headline.innerHTML = part.title;
 
-	this.$text = document.createElement('P');
-	this.$text.className = 'text';
+	this.$text = $('<p class="text">');
 
-	this.$cost = document.createElement('P');
-	this.$cost.className = 'cost';
+	var $cost_wrapper = $('<p class="cost_wrapper">');
+	$cost_wrapper.innerHTML = 'Cost: ';
+
+	this.$cost = $('<span class="cost">');
+
+	$cost_wrapper.appendChild(this.$cost);
 
 	$description.appendChild($headline);
 	$description.appendChild(this.$text);
-	$description.appendChild(this.$cost);
+	$description.appendChild($cost_wrapper);
 
 	this.$el.appendChild($image);
 	this.$el.appendChild($description);
@@ -488,8 +524,9 @@ var Part = function(part) {
 
 Part.prototype.updateHtml = function() {
 	var description = this.part.base_description
-		.replace(/%power/, this.power)
-		.replace(/%heat/, this.heat)
+		.replace(/%power/, fmt(this.power))
+		.replace(/%heat/, fmt(this.heat))
+		.replace(/%ticks/, fmt(this.ticks))
 		.replace(/%count/, [1, 2, 4][this.part.level - 1])
 		;
 
@@ -733,38 +770,37 @@ var Upgrade = function(upgrade) {
 	this.upgrade = upgrade;
 	this.level = null;
 	this.cost = null;
-	this.$el = document.createElement('BUTTON');
-	this.$el.className = 'upgrade';
+	this.part = upgrade.part || null;
+	this.$el = $('<button class="upgrade">');
 	this.$el.id = upgrade.id;
+	this.$el.upgrade = upgrade;
 
-	var $image = document.createElement('DIV');
-	$image.className = 'image';
+	var $image = $('<div class="image">');
 	$image.innerHTML = 'Click to Upgrade';
 
-	this.$levels = document.createElement('SPAN');
-	this.$levels.className = 'levels';
+	this.$levels = $('<span class="levels">');
 
-	var $description = document.createElement('DIV');
-	$description.className = 'description info';
+	var $description = $('<div class="description info">');
 
-	var $headline = document.createElement('DIV');
-	$headline.className = 'headline';
+	var $headline = $('<div class="headline">');
 	$headline.id = upgrade.id + 'headline';
 	$headline.innerHTML = upgrade.title;
 
-	var $p = document.createElement('P');
-	$p.className = 'text';
-	$p.id = upgrade.id + 'text';
-	$p.innerHTML = upgrade.description;
+	var $text = $('<p class="text">');
+	$text.innerHTML = upgrade.description;
 
-	this.$cost = document.createElement('P');
-	this.$cost.className = 'cost';
+	var $cost_wrapper = $('<p class="cost_wrapper">');
+	$cost_wrapper.innerHTML = 'Cost: ';
+
+	this.$cost = $('<span class="cost">');
+
+	$cost_wrapper.appendChild(this.$cost);
 
 	$image.appendChild(this.$levels);
 
 	$description.appendChild($headline);
-	$description.appendChild($p);
-	$description.appendChild(this.$cost);
+	$description.appendChild($text);
+	$description.appendChild($cost_wrapper);
 
 	this.$el.appendChild($image);
 	this.$el.appendChild($description);
@@ -776,22 +812,27 @@ Upgrade.prototype.setLevel = function(level) {
 	this.level = level;
 	this.$levels.innerHTML = level;
 	this.cost = this.upgrade.cost * Math.pow(this.upgrade.multiplier, this.level);
-	this.$cost.innerHTML = fmt(this.cost);
+	if ( this.upgrade.level >= this.upgrade.max_level ) {
+		this.$cost.innerHTML = '--';
+	} else {
+		this.$cost.innerHTML = fmt(this.cost);
+	}
 	this.upgrade.onclick(this);
 }
 
 var upgrade_locations = {
-	cell_tick_upgrades: document.getElementById('cell_tick_upgrades'),
-	cell_power_upgrades: document.getElementById('cell_power_upgrades'),
-	cell_perpetual_upgrades: document.getElementById('cell_perpetual_upgrades'),
-	other: document.getElementById('other_upgrades'),
-	vents: document.getElementById('vent_upgrades'),
-	exchangers: document.getElementById('exchanger_upgrades')
+	cell_tick_upgrades: $('#cell_tick_upgrades'),
+	cell_power_upgrades: $('#cell_power_upgrades'),
+	cell_perpetual_upgrades: $('#cell_perpetual_upgrades'),
+	other: $('#other_upgrades'),
+	vents: $('#vent_upgrades'),
+	exchangers: $('#exchanger_upgrades')
 };
 
 var upgrade_objects = {};
 var upgrade_objects_array = [];
 var create_upgrade = function(u) {
+	u.max_level = u.max_level || upgrade_max_level;
 	var upgrade = new Upgrade(u);
 	upgrade.$el.upgrade = upgrade;
 	if ( u.className ) {
@@ -808,7 +849,12 @@ var types = [
 		title: 'Potent ',
 		description: ' cells produce 100% more power per level of upgrade.',
 		onclick: function(upgrade) {
-
+			var part;
+			for ( var i = 1; i <= 3; i++ ) {
+				part = part_objects[upgrade.part.type + i];
+				part.power = part.part.base_power * ( upgrade.level + 1 );
+				part.updateHtml();
+			}
 		}
 	},
 	{
@@ -816,15 +862,30 @@ var types = [
 		title: 'Enriched ',
 		description: ' cells last twice as long per level of upgrade.',
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 3; i++ ) {
+				part = part_objects[upgrade.part.type + i];
+				part.ticks = part.part.base_ticks * Math.pow(2, upgrade.level);
+				part.updateHtml();
+			}
 		}
 	},
 	{
 		type: 'cell_perpetual',
 		title: 'Perpetual ',
 		description: ' cells are automatically replaced when they become depleted.',
+		max_level: 1,
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 3; i++ ) {
+				part = part_objects[upgrade.part.type + i];
+				if ( upgrade.level ) {
+					part.perpetual = true;
+				} else {
+					part.perpetual = false;
+				}
+				part.updateHtml();
+			}
 		}
 	}
 ];
@@ -840,14 +901,15 @@ for ( var i = 0, l = types.length; i < l; i++ ) {
 
 		if ( part.cell_tick_upgrade_cost ) {
 			upgrade = {
-				id: type.type + '_' + part.id,
+				id: type.type + '_' + part.type,
 				type: type.type + '_upgrades',
 				title: type.title + ' ' + part.title,
 				description: part.title + ' ' + type.description,
 				cost: part[type.type + '_upgrade_cost'],
 				multiplier: part[type.type + '_upgrade_multiplier'],
 				onclick: type.onclick,
-				className: part.type + ' ' + type.type
+				className: part.type + ' ' + type.type,
+				part: part
 			};
 
 			create_upgrade(upgrade);
@@ -859,16 +921,30 @@ for ( var i = 0, l = upgrades.length; i < l; i++ ) {
 	create_upgrade(upgrades[i]);
 }
 
-// Upgrade event
-var upgrade_test = /^upgrade/;
-$upgrades.onclick = function(e) {
-	if ( e.target.className.match(upgrade) ) {
-		var upgrade = e.target.upgrade;
+// Upgrade delegate event
+$upgrades.delegate('upgrade', 'click', function(event) {
+	var upgrade = this.upgrade;
 
-		if ( upgrade && current_money >= upgrade.cost ) {
-			current_money -= upgrade.cost;
-			$money.innerHTML = fmt(current_money);
-			upgrade.setLevel(upgrade.level + 1);
+	if ( upgrade && current_money >= upgrade.cost ) {
+		current_money -= upgrade.cost;
+		$money.innerHTML = fmt(current_money);
+		upgrade.setLevel(upgrade.level + 1);
+	}
+});
+
+  /////////////////////////////
+ // Show Upgrades
+/////////////////////////////
+
+var $show_upgrades = $('#show_upgrades');
+
+$show_upgrades.onclick = function(event) {
+	for ( var i = 0, l = upgrade_objects_array.length, upgrade; i < l; i++ ) {
+		upgrade = upgrade_objects_array[i];
+		if ( current_money < upgrade.cost ) {
+			upgrade.$el.className += ' unaffordable';
+		} else {
+			upgrade.$el.className = upgrade.$el.className.replace(unaffordable_replace, '');
 		}
 	}
 };
@@ -941,23 +1017,21 @@ var save = function() {
 $save.onclick = save;
 
 // Select part
-var part_test = /^part/;
 var active_replace = /[\b\s]active\b/;
 var clicked_part = null;
-$parts.onclick = function(e) {
-	if ( e.target.className.match(part_test) ) {
-		if ( clicked_part && clicked_part === e.target.part ) {
-			clicked_part = null;
-			e.target.className = e.target.className.replace(active_replace, '');
-		} else {
-			if ( clicked_part ) {
-				clicked_part.$el.className = clicked_part.$el.className.replace(active_replace, '');
-			}
-			clicked_part = e.target.part;
-			e.target.className += ' active';
+
+$parts.delegate('part', 'click', function() {
+	if ( clicked_part && clicked_part === this.part ) {
+		clicked_part = null;
+		this.className = this.className.replace(active_replace, '');
+	} else {
+		if ( clicked_part ) {
+			clicked_part.$el.className = clicked_part.$el.className.replace(active_replace, '');
 		}
+		clicked_part = this.part;
+		this.className += ' active';
 	}
-};
+});
 
 // Add part to tile
 var tile_test = /^tile/;
@@ -1085,7 +1159,14 @@ if ( rks ) {
 	// Upgrades
 	for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
 		supgrade = rks.upgrades[i];
-		upgrade_objects[supgrade.id].setLevel(supgrade.level);
+		try {
+			upgrade_objects[supgrade.id].setLevel(supgrade.level);
+		} catch (err) {
+			if ( debug ) {
+				console.log(supgrade);
+				console.dir(err);
+			}
+		}
 	}
 }
 
@@ -1145,7 +1226,21 @@ $scrounge.onclick = function() {
   /////////////////////////////
  // Game Loop
 /////////////////////////////
+
 var loop_timeout;
+
+// auto replenish cell
+var replenish_cell = function(tile) {
+	if ( current_money >= tile.part.cost ) {
+		current_money -= tile.part.cost;
+		$money.innerHTML = fmt(current_money);
+		tile.ticks = tile.part.ticks;
+
+		return true;
+	} else {
+		return false;
+	}
+}
 
 var game_loop = function() {
 	for ( ri = 0; ri < rows; ri++ ) {
@@ -1160,8 +1255,12 @@ var game_loop = function() {
 					tile.ticks--;
 
 					if ( tile.ticks === 0 ) {
-						tile.$el.className += ' spent';
-						update_tiles();
+						if ( tile.part.perpetual && replenish_cell(tile) ) {
+
+						} else {
+							tile.$el.className += ' spent';
+							update_tiles();
+						}
 					}
 				}
 			}
@@ -1190,7 +1289,6 @@ var game_loop = function() {
 };
 
 // affordability loop
-var unaffordable_replace = /[\s\b]unaffordable\b/;
 var check_affordability = function() {
 	for ( i = 0, l = part_objects_array.length; i < l; i++ ) {
 		part = part_objects_array[i];

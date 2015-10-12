@@ -45,14 +45,24 @@ button {
 #parts .part .image,
 #upgrades .image,
 #reactor .tile {
-	height: 32px;
-	width: 32px;
-	float: left;
 	position: relative;
 	overflow: hidden;
 	white-space: nowrap;
 	text-indent: 64px;
+	vertical-align: top;
 }
+
+#parts .part .image,
+#reactor .tile {
+	height: 32px;
+	width: 32px;
+}
+
+#upgrades .image {
+	height: 100%;
+	width: 100%;
+}
+
 
 #parts .part {
 	background: transparent;
@@ -96,6 +106,16 @@ button {
 #reactor .tile.spent:after {
 	filter: grayscale();
 	-webkit-filter: grayscale();
+}
+
+  /* //////////////////////////
+ // Navs
+////////////////////////// */
+
+#nav button {
+	border: 2px solid #999;
+	padding: .25em 1em;
+	margin-right: .25em;
 }
 
   /* //////////////////////////
@@ -415,11 +435,24 @@ button {
 	height: 2.5em;
 	display: inline-block;
 	font-size: inherit;
+	vertical-align: top;
 }
 
 #upgrades .upgrade .description {
 	position: absolute;
 	clip: rect(1px 1px 1px 1px);
+}
+
+#upgrades .image:before {
+	top: auto;
+	bottom: 0;
+}
+
+#upgrades .image:after {
+	left: 50%;
+	margin-left: -16px;
+	top: 50%;
+	margin-top: -16px;
 }
 
 #upgrades .cell_tick .image:before {
@@ -467,8 +500,12 @@ button {
 	height: 32px;
 }*/
 
-#chronometer.upgrade .image:before {
+#chronometer.upgrade .image:after {
 	background-position: 0 -480px;
+}
+
+#upgrades .unaffordable .image {
+	opacity: .5;
 }
 
   /* //////////////////////////
