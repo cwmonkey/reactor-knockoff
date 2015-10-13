@@ -465,7 +465,7 @@ var parts = [
 		id: 'vent',
 		type: 'vent',
 		title: 'Heat Vent',
-		base_description: single_cell_description,
+		base_description: 'Lowers heat of itself by %vent per tick. Holds a maximum of %containment heat.',
 		levels: 5,
 		category: 'vent',
 		level: 1,
@@ -527,6 +527,8 @@ Part.prototype.updateHtml = function() {
 		.replace(/%power/, fmt(this.power))
 		.replace(/%heat/, fmt(this.heat))
 		.replace(/%ticks/, fmt(this.ticks))
+		.replace(/%vent/, fmt(this.vent))
+		.replace(/%containment/, fmt(this.containment))
 		.replace(/%count/, [1, 2, 4][this.part.level - 1])
 		;
 
@@ -738,7 +740,12 @@ var upgrades = [
 		cost: 250,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 5; i++ ) {
+				part = part_objects['vent' + i];
+				part.vent = part.part.base_vent * ( upgrade.level + 1 );
+				part.updateHtml();
+			}
 		}
 	},
 	{
@@ -930,6 +937,8 @@ $upgrades.delegate('upgrade', 'click', function(event) {
 		$money.innerHTML = fmt(current_money);
 		upgrade.setLevel(upgrade.level + 1);
 	}
+
+	check_upgrades_affordability();
 });
 
   /////////////////////////////
@@ -938,7 +947,7 @@ $upgrades.delegate('upgrade', 'click', function(event) {
 
 var $show_upgrades = $('#show_upgrades');
 
-$show_upgrades.onclick = function(event) {
+var check_upgrades_affordability = function(event) {
 	for ( var i = 0, l = upgrade_objects_array.length, upgrade; i < l; i++ ) {
 		upgrade = upgrade_objects_array[i];
 		if ( current_money < upgrade.cost ) {
@@ -948,6 +957,8 @@ $show_upgrades.onclick = function(event) {
 		}
 	}
 };
+
+$show_upgrades.onclick = check_upgrades_affordability;
 
   /////////////////////////////
  // Save game
