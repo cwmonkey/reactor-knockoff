@@ -515,7 +515,7 @@ button {
 #main :hover > .info {
 	width: 608px;
 	clip: auto;
-	position: absolute;
+	position: fixed;
 	right: 0;
 	top: 0;
 	z-index: 10;
