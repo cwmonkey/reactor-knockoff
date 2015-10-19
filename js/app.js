@@ -58,6 +58,10 @@ var fmt = function(num) {
   return fnum;
 };
 
+  /////////////////////////////
+ // General
+/////////////////////////////
+
 // settings
 var cols = 19;
 var rows = 16;
@@ -94,7 +98,10 @@ var multi_cell_description = 'Acts as %count %type cells. Produces %power power 
 var tiles = [];
 var unaffordable_replace = /[\s\b]unaffordable\b/;
 
-// Classes
+  /////////////////////////////
+ // Tiles
+/////////////////////////////
+
 var Tile = function(row, col) {
 	this.$el = $('<button class="tile">');
 	this.$el.tile = this;
@@ -107,6 +114,14 @@ var Tile = function(row, col) {
 	this.activated = false;
 	this.row = row;
 	this.col = col;
+
+	var $percent_wrapper_wrapper = $('<div class="percent_wrapper_wrapper">');
+	var $percent_wrapper = $('<div class="percent_wrapper">');
+	this.$percent = $('<p class="percent">');
+
+	$percent_wrapper_wrapper.appendChild($percent_wrapper);
+	$percent_wrapper.appendChild(this.$percent);
+	this.$el.appendChild($percent_wrapper_wrapper);
 
 	if ( debug ) {
 		this.$heat = $('<span class="heat">');
@@ -149,7 +164,7 @@ var update_tiles = function() {
 			tile = row[ci];
 			tile.vents.length = 0;
 
-			if ( tile.part && tile.activated ) {
+			if ( tile.part && tile.activated && (tile.part.category !== 'cell' || tile.ticks) ) {
 				if ( ci < cols - 1 ) {
 					tiler = row[ci + 1];
 					if ( tiler.part && tiler.part.category === 'vent' ) {
@@ -1045,10 +1060,11 @@ $parts.delegate('part', 'click', function() {
 });
 
 // Add part to tile
-var tile_test = /^tile/;
 var part_replace = /[\b\s]part_[a-z0-9]+\b/;
+var category_replace = /[\b\s]category_[a-z]+\b/;
 var spent_replace = /[\b\s]spent\b/;
 var disabled_replace = /[\b\s]disabled\b/;
+var exploding_replace = /[\b\s]exploding\b/;
 var tile_mousedown = false;
 var tile_mousedown_right = false;
 var tile_queue = [];
@@ -1059,13 +1075,20 @@ var apply_to_tile = function(tile, part) {
 	tile.part = part;
 	tile.$el.className = tile.$el.className
 		.replace(part_replace, '')
+		.replace(category_replace, '')
 		.replace(spent_replace, '')
 		.replace(disabled_replace, '')
+		.replace(exploding_replace, '')
 		+ ' ' + part.className
+		+ ' category_' + part.category
 		;
 
-	if ( part.ticks && !tile.ticks ) {
-		tile.$el.className += ' spent';
+	if ( part.ticks ) {
+		if ( !tile.ticks ) {
+			tile.$el.className += ' spent';
+		}
+
+		tile.$percent.style.width = tile.ticks / part.ticks * 100 + '%';
 	}
 
 	if ( !tile.activated ) {
@@ -1073,53 +1096,58 @@ var apply_to_tile = function(tile, part) {
 	}
 };
 
-var mouse_apply_to_tile = function(e) {
-	if ( e.target.className.match(tile_test) ) {
-		tile = e.target.tile;
+var remove_part = function(tile) {
+	tile.part = null;
+	tile.ticks = 0;
+	tile.heat_contained = 0;
+	tile.$percent.style.width = 0;
+	tile.$el.className = tile.$el.className
+		.replace(part_replace, '')
+		.replace(category_replace, '')
+		.replace(spent_replace, '')
+		.replace(disabled_replace, '')
+		;
+	update_tiles();
 
-		if ( tile_mousedown_right ) {
-			tile.part = null;
-			tile.ticks = 0;
-			e.target.className = e.target.className
-				.replace(part_replace, '')
-				.replace(spent_replace, '')
-				.replace(disabled_replace, '')
-				;
-			update_tiles();
-
-			l = tile_queue.length;
-			if ( l ) { 
-				for ( qi = 0; qi < l; qi++ ) {
-					tile2 = tile_queue[qi];
-					if ( !tile2.part ) {
-						tile_queue.splice(qi, 1);
-						qi--;
-						l--;
-					}
-				}
+	l = tile_queue.length;
+	if ( l ) { 
+		for ( qi = 0; qi < l; qi++ ) {
+			tile2 = tile_queue[qi];
+			if ( !tile2.part ) {
+				tile_queue.splice(qi, 1);
+				qi--;
+				l--;
 			}
-		} else if (
-			clicked_part
-			&& (
-				!tile.part
-				|| (tile.part === clicked_part && tile.ticks === 0)
-				|| (tile.part && tile.part.type === clicked_part.type && tile.part.part.level < clicked_part.part.level && current_money >= clicked_part.cost )
-			)
-		) {
-			if ( current_money < clicked_part.cost ) {
-				tile.activated = false;
-				tile_queue.push(tile);
-			} else {
-				tile.activated = true;
-				$money.innerHTML = fmt(current_money -= clicked_part.cost);
-			}
-
-			tile.ticks = clicked_part.ticks;
-
-			apply_to_tile(tile, clicked_part);
-
-			update_tiles();
 		}
+	}
+};
+
+var mouse_apply_to_tile = function(e) {
+	tile = this.tile;
+
+	if ( tile_mousedown_right ) {
+		remove_part(tile);
+	} else if (
+		clicked_part
+		&& (
+			!tile.part
+			|| (tile.part === clicked_part && tile.ticks === 0)
+			|| (tile.part && tile.part.type === clicked_part.type && tile.part.part.level < clicked_part.part.level && current_money >= clicked_part.cost )
+		)
+	) {
+		if ( current_money < clicked_part.cost ) {
+			tile.activated = false;
+			tile_queue.push(tile);
+		} else {
+			tile.activated = true;
+			$money.innerHTML = fmt(current_money -= clicked_part.cost);
+		}
+
+		tile.ticks = clicked_part.ticks;
+
+		apply_to_tile(tile, clicked_part);
+
+		update_tiles();
 	}
 };
 
@@ -1153,7 +1181,8 @@ if ( rks ) {
 					tile.ticks = stile.ticks;
 					tile.activated = stile.activated;
 					tile.heat_contained = stile.heat_contained;
-					apply_to_tile(tile, part_objects[stile.id]);
+					part = part_objects[stile.id];
+					apply_to_tile(tile, part);
 				}
 			}
 		}
@@ -1196,23 +1225,23 @@ document.oncontextmenu = function(e) {
 	}
 };
 
-$reactor.onclick = mouse_apply_to_tile;
+$reactor.delegate('tile', 'click', mouse_apply_to_tile);
 
-$reactor.onmousedown = function(e) {
+$reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown = true;
 	tile_mousedown_right = e.which === 3;
 	e.preventDefault();
-	mouse_apply_to_tile(e);
-};
+	mouse_apply_to_tile.call(this, e);
+});
 
 $reactor.onmouseup = tile_mouseup_fn;
 $reactor.onmouseleave = tile_mouseup_fn;
 
-$reactor.onmousemove = function(e) {
+$reactor.delegate('tile', 'mousemove', function(e) {
 	if ( tile_mousedown ) {
-		mouse_apply_to_tile(e);
+		mouse_apply_to_tile.call(this, e);
 	}
-};
+});
 
 // Sell power
 $sell.onclick = function() {
@@ -1240,19 +1269,6 @@ $scrounge.onclick = function() {
 
 var loop_timeout;
 
-// auto replenish cell
-var replenish_cell = function(tile) {
-	if ( current_money >= tile.part.cost ) {
-		current_money -= tile.part.cost;
-		$money.innerHTML = fmt(current_money);
-		tile.ticks = tile.part.ticks;
-
-		return true;
-	} else {
-		return false;
-	}
-}
-
 var game_loop = function() {
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
@@ -1266,12 +1282,31 @@ var game_loop = function() {
 					tile.ticks--;
 
 					if ( tile.ticks === 0 ) {
-						if ( tile.part.perpetual && replenish_cell(tile) ) {
-
+						if ( tile.part.perpetual && current_money >= tile.part.cost ) {
+							// auto replenish cell
+							current_money -= tile.part.cost;
+							$money.innerHTML = fmt(current_money);
+							tile.ticks = tile.part.ticks;
+							tile.$percent.style.width = '100%';
 						} else {
+							tile.$percent.style.width = '0';
 							tile.$el.className += ' spent';
 							update_tiles();
 						}
+					} else {
+						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
+					}
+
+				} else if ( tile.part.category === 'vent' ) {
+					tile.heat_contained += tile.heat;
+					if ( tile.heat_contained > tile.part.containment ) {
+						tile.$el.className += ' exploding';
+						remove_part(tile);
+					} else {
+						if ( tile.heat_contained < 0 ) {
+							tile.heat_contained = 0;
+						}
+						tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
 					}
 				}
 			}

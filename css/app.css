@@ -72,9 +72,6 @@ button {
 	opacity: .5;
 }
 
-#reactor .tile {
-}
-
 #parts .part.active {
 	outline: 2em dashed blue;
 	outline-offset: -2em;
@@ -99,6 +96,14 @@ button {
 	left: 0;
 }
 
+  /* //////////////////////////
+ // Reactor
+////////////////////////// */
+
+#reactor .tile {
+	background: url("../img/sprites.png") -128px top no-repeat;
+}
+
 #reactor .tile.disabled:after {
 	opacity: .5;
 }
@@ -106,6 +111,49 @@ button {
 #reactor .tile.spent:after {
 	filter: grayscale();
 	-webkit-filter: grayscale();
+}
+
+#reactor .percent_wrapper_wrapper {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	z-index: 2;
+}
+
+#reactor .category_vent .percent_wrapper,
+#reactor .category_cell .percent_wrapper {
+	border: 1px solid black;
+	position: absolute;
+	bottom: 1px;
+	left: 1px;
+	right: 1px;
+}
+
+#reactor .category_vent .percent,
+#reactor .category_cell .percent {
+	text-indent: 64px;
+	white-space: nowrap;
+	height: 2px;
+}
+
+#reactor .category_cell .percent {
+	background: #0f0;
+	width: 100%;
+}
+
+#reactor .category_vent .percent {
+	background: #f00;
+	width: 0;
+}
+
+@keyframes explosion {
+  0%   { background: url('../img/sprites.png') 0 -512px no-repeat; } 
+  100% { background: url('../img/sprites.png') -192px -512px no-repeat; }
+}
+
+#reactor .tile.exploding:after {
+  background: url('../img/sprites.png') -192px -512px no-repeat;
+  animation: explosion .6s steps(6);
 }
 
   /* //////////////////////////
@@ -534,6 +582,7 @@ button {
 	left: 0;
 	bottom: 0;
 	text-indent: 0;
+	z-index: 2;
 }
 
 #reactor .power {
@@ -544,6 +593,7 @@ button {
 	right: 0;
 	bottom: 0;
 	text-indent: 0;
+	z-index: 2;
 }
 
 .debug #reactor .tile {
