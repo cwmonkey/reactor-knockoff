@@ -7,12 +7,13 @@
 
 Element.prototype.delegate = function(className, type, fn) {
 	var test = new RegExp('\\b' + className + '\\b');
+	var $self = this;
 
 	this['on' + type] = function(event) {
 		event = event || window.event;
 		var $target = event.target || event.srcElement;
 
-		while( $target != $upgrades ) {
+		while( $target != $self ) {
 			if ( $target.className.match(test) ) {
 				return fn.call($target, event);
 			}
@@ -80,6 +81,7 @@ var max_power = 100;
 var loop_wait = base_loop_wait;
 var power_multiplier = base_power_multiplier;
 var heat_multiplier = base_heat_multiplier;
+var manual_heat_reduce = 1;
 
 // For iteration
 var i;
@@ -310,15 +312,12 @@ var update_tiles = function() {
 var $reactor = $('#reactor');
 var $parts = $('#parts');
 var $cells = $('#cells');
-var $sell = $('#sell');
 var $money = $('#money');
-var $scrounge = $('#scrounge');
 var $cooling = $('#cooling');
 var $current_heat = $('#current_heat');
 var $current_power = $('#current_power');
 var $max_heat = $('#max_heat');
 var $max_power = $('#max_power');
-var $save = $('#save');
 var $main = $('#main');
 var $upgrades = $('#upgrades');
 
@@ -979,6 +978,7 @@ $show_upgrades.onclick = check_upgrades_affordability;
  // Save game
 /////////////////////////////
 
+var $save = $('#save');
 var srows;
 var spart;
 var sstring;
@@ -1096,7 +1096,8 @@ var apply_to_tile = function(tile, part) {
 	}
 };
 
-var remove_part = function(tile) {
+var remove_part = function(tile, skip_update) {
+	skip_update = skip_update || false;
 	tile.part = null;
 	tile.ticks = 0;
 	tile.heat_contained = 0;
@@ -1107,7 +1108,10 @@ var remove_part = function(tile) {
 		.replace(spent_replace, '')
 		.replace(disabled_replace, '')
 		;
-	update_tiles();
+
+	if ( !skip_update ) {
+		update_tiles();
+	}
 
 	l = tile_queue.length;
 	if ( l ) { 
@@ -1152,6 +1156,21 @@ var mouse_apply_to_tile = function(e) {
 };
 
   /////////////////////////////
+ // Reduce Heat Manually
+/////////////////////////////
+
+var $reduce_heat = $('#reduce_heat');
+
+$reduce_heat.onclick = function() {
+	current_heat -= manual_heat_reduce;
+	$current_heat.innerHTML = fmt(current_heat);
+};
+
+var set_reduce_max_heat = function() {
+	$reduce_heat.innerHTML = '-' + fmt(manual_heat_reduce) + ' Heat (-' + (fmt(max_heat/10000)) + ' per tick)';
+}
+
+  /////////////////////////////
  // Load
 /////////////////////////////
 
@@ -1166,6 +1185,11 @@ if ( rks ) {
 	$current_heat.innerHTML = fmt(current_heat = rks.current_heat || current_heat);
 	$current_power.innerHTML = fmt(current_power = rks.current_power || current_power);
 	$money.innerHTML = fmt(current_money = rks.current_money || current_money);
+
+	max_heat = rks.max_heat || max_heat;
+	manual_heat_reduce = rks.manual_heat_reduce || manual_heat_reduce;
+
+	set_reduce_max_heat();
 
 	// Tiles
 	for ( ri = 0; ri < rows; ri++ ) {
@@ -1243,7 +1267,11 @@ $reactor.delegate('tile', 'mousemove', function(e) {
 	}
 });
 
-// Sell power
+  /////////////////////////////
+ // Sell
+/////////////////////////////
+var $sell = $('#sell');
+
 $sell.onclick = function() {
 	if ( current_power ) {
 		current_money += current_power;
@@ -1254,7 +1282,12 @@ $sell.onclick = function() {
 	}
 };
 
-// Scrounge
+  /////////////////////////////
+ // Scrounge
+/////////////////////////////
+
+var $scrounge = $('#scrounge');
+
 $scrounge.onclick = function() {
 	if ( current_money < 10 && current_power === 0 ) {
 		current_money += 1;
@@ -1268,7 +1301,7 @@ $scrounge.onclick = function() {
 /////////////////////////////
 
 var loop_timeout;
-
+var do_update;
 var game_loop = function() {
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
@@ -1328,8 +1361,43 @@ var game_loop = function() {
 		}
 	}
 
+	if ( current_heat ) {
+		if ( current_heat <= max_heat ) {
+			current_heat -= max_heat / 10000;
+		} else {
+			current_heat -= (current_heat - max_heat) / 20;
+		}
+	}
+
 	$current_heat.innerHTML = fmt(current_heat);
 	$current_power.innerHTML = fmt(current_power);
+
+	if ( current_heat <= max_heat ) {
+		$reactor.style.backgroundColor = 'rgb(255, 255, 255)';
+	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
+		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
+	} else {
+		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
+
+		do_update = false;
+		for ( ri = 0; ri < rows; ri++ ) {
+			row = tiles[ri];
+
+			for ( ci = 0; ci < cols; ci++ ) {
+				tile = row[ci];
+
+				if ( tile.part ) {
+					do_update = true;
+					tile.$el.className += ' exploding';
+					remove_part(tile, true);
+				}
+			}
+		}
+
+		if ( do_update ) {
+			update_tiles();
+		}
+	}
 
 	loop_timeout = setTimeout(game_loop, loop_wait);
 };

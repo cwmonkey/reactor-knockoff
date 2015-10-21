@@ -108,11 +108,6 @@ button {
 	opacity: .5;
 }
 
-#reactor .tile.spent:after {
-	filter: grayscale();
-	-webkit-filter: grayscale();
-}
-
 #reactor .percent_wrapper_wrapper {
 	position: relative;
 	height: 100%;
@@ -123,6 +118,7 @@ button {
 #reactor .category_vent .percent_wrapper,
 #reactor .category_cell .percent_wrapper {
 	border: 1px solid black;
+	background: black;
 	position: absolute;
 	bottom: 1px;
 	left: 1px;
@@ -194,14 +190,26 @@ button {
 	background-position: 0 -32px;
 }
 
+#reactor .tile.spent.part_uranium1:after {
+	background-position: -96px -32px;
+}
+
 #parts .part.part_uranium2 .image:after,
 #reactor .tile.part_uranium2:after {
 	background-position: -32px -32px;
 }
 
+#reactor .tile.part_uranium2.spent:after {
+	background-position: -128px -32px;
+}
+
 #parts .part.part_uranium3 .image:after,
 #reactor .tile.part_uranium3:after {
 	background-position: -64px -32px;
+}
+
+#reactor .tile.part_uranium3.spent:after {
+	background-position: -160px -32px;
 }
 
 /* plutonium */
