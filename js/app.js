@@ -312,6 +312,8 @@ var update_tiles = function() {
 var $reactor = $('#reactor');
 var $parts = $('#parts');
 var $cells = $('#cells');
+var $reflectors = $('#reflectors');
+var $capacitors = $('#capacitors');
 var $money = $('#money');
 var $cooling = $('#cooling');
 var $current_heat = $('#current_heat');
@@ -476,6 +478,36 @@ var parts = [
 		cell_perpetual_upgrade_cost: 3586000000000000000
 	},
 	{
+		id: 'reflector',
+		type: 'reflector',
+		title: 'Neutron Reflector',
+		base_description: 'Increases adjacent cell output by %power_increase% for %ticks ticks.',
+		levels: 5,
+		category: 'reflector',
+		level: 1,
+		base_cost: 500,
+		cost_multiplier: 10,
+		base_power_increase: 10,
+		power_increase_multiplier: 1,
+		base_ticks: 100,
+		ticks_multiplier: 12.5
+	},
+	{
+		id: 'capacitor',
+		type: 'capacitor',
+		title: 'Capacitor',
+		base_description: 'Increases the maximum power of the reactor by %reactor_power. Holds a maximum of %containment heat.',
+		levels: 5,
+		category: 'capacitor',
+		level: 1,
+		base_cost: 1000,
+		cost_multiplier: 160,
+		base_reactor_power: 100,
+		reactor_power_multiplier: 140,
+		base_containment: 10,
+		containment_multiplier: 100
+	},
+	{
 		id: 'vent',
 		type: 'vent',
 		title: 'Heat Vent',
@@ -487,6 +519,78 @@ var parts = [
 		cost_multiplier: 250,
 		base_containment: 80,
 		base_vent: 8,
+		location: 'cooling'
+	},
+	{
+		id: 'heat_exchanger',
+		type: 'heat_exchanger',
+		title: 'Heat Exchanger',
+		base_description: 'Attempts to balance the heat between itself and adjacent components by percentage. Transfers up to %transfer heat per tick for each adjacent component. Holds up to %containment heat.',
+		levels: 5,
+		category: 'heat_exchanger',
+		level: 1,
+		base_cost: 160,
+		cost_multiplier: 200,
+		base_containment: 320,
+		containment_multiplier: 75,
+		base_transfer: 16,
+		transfer_multiplier: 75,
+		location: 'cooling'
+	},
+	{
+		id: 'heat_inlet',
+		type: 'heat_inlet',
+		title: 'Heat Inlet',
+		base_description: 'Takes %transfer heat out of each adjacent component and puts it into the reactor each tick.',
+		levels: 5,
+		category: 'heat_inlet',
+		level: 1,
+		base_cost: 160,
+		cost_multiplier: 200,
+		base_transfer: 16,
+		transfer_multiplier: 75,
+		location: 'cooling'
+	},
+	{
+		id: 'heat_outlet',
+		type: 'heat_outlet',
+		title: 'Heat Outlet',
+		base_description: 'For each adjacent component %transfer is taken out of the reactor and put into the adjacent component.',
+		levels: 5,
+		category: 'heat_outlet',
+		level: 1,
+		base_cost: 160,
+		cost_multiplier: 200,
+		base_transfer: 16,
+		transfer_multiplier: 75,
+		location: 'cooling'
+	},
+	{
+		id: 'coolant_cell',
+		type: 'coolant_cell',
+		title: 'Coolant Cell',
+		base_description: 'Holds %containment heat before being destroyed.',
+		levels: 5,
+		category: 'coolant_cell',
+		level: 1,
+		base_cost: 500,
+		cost_multiplier: 200,
+		base_containment: 2000,
+		containment_multiplier: 180,
+		location: 'cooling'
+	},
+	{
+		id: 'reactor_plating',
+		type: 'reactor_plating',
+		title: 'Reactor Plating',
+		base_description: 'Increases maximum heat of the reactor by %reactor_heat.',
+		levels: 5,
+		category: 'reactor_plating',
+		level: 1,
+		base_cost: 1000,
+		cost_multiplier: 160,
+		base_reactor_heat: 100,
+		reactor_heat_multiplier: 140,
 		location: 'cooling'
 	}
 ];
@@ -596,7 +700,11 @@ var create_part = function(part, level) {
 
 	if ( part.category === 'cell' ) {
 		$cells.appendChild(part_obj.$el);
-	} else if ( part.category === 'vent' ) {
+	} else if ( part.category === 'reflector' ) {
+		$reflectors.appendChild(part_obj.$el);
+	} else if ( part.category === 'capacitor' ) {
+		$capacitors.appendChild(part_obj.$el);
+	} else if ( part.location === 'cooling' ) {
 		$cooling.appendChild(part_obj.$el);
 	}
 
@@ -663,6 +771,8 @@ var upgrades = [
 			
 		}
 	},
+
+	// Capacitors
 	{
 		id: 'improved_power_lines',
 		type: 'other',
@@ -678,7 +788,18 @@ var upgrades = [
 		id: 'improved_wiring',
 		type: 'other',
 		title: 'Improved Wiring',
-		description: 'Capacitors hld +100% power and heat per level of upgrade.',
+		description: 'Capacitors hold +100% power and heat per level of upgrade.',
+		cost: 5000,
+		multiplier: 5,
+		onclick: function(upgrade) {
+			
+		}
+	},
+	{
+		id: 'perpetual_capacitors',
+		type: 'other',
+		title: 'Perpetual Capacitors',
+		description: 'Capacitors are automatically replaced when they are destroyed if they are on a cool surface. The replacement part will cost 1.5 times the normal cost.',
 		cost: 5000,
 		multiplier: 5,
 		onclick: function(upgrade) {
@@ -698,13 +819,36 @@ var upgrades = [
 		}
 	},
 
+	// Reflectors
 	{
-		id: 'improved_reflectors',
+		id: 'improved_reflector_density',
 		type: 'other',
-		title: 'Improved Reflectors',
+		title: 'Improved Reflector Density',
 		description: 'Reflectors last 100% longer per level of upgrade.',
 		cost: 5000,
 		multiplier: 100,
+		onclick: function(upgrade) {
+			
+		}
+	},
+	{
+		id: 'improved_neutron_reflection',
+		type: 'other',
+		title: 'Improved Neutron Reflection',
+		description: 'Reflectors generate an additional 100% power per level of upgrade.',
+		cost: 5000,
+		multiplier: 100,
+		onclick: function(upgrade) {
+			
+		}
+	},
+	{
+		id: 'perpetual_reflectors',
+		type: 'other',
+		title: 'Perpetual Reflectors',
+		description: 'Reflectors are automtically replaced after being destroyed if they are on a cool surface. The replacement part will cost 1.5 times the normal cost.',
+		cost: 10000000000000000000,
+		max_level: 1,
 		onclick: function(upgrade) {
 			
 		}
@@ -894,7 +1038,7 @@ var types = [
 	{
 		type: 'cell_perpetual',
 		title: 'Perpetual ',
-		description: ' cells are automatically replaced when they become depleted.',
+		description: ' cells are automatically replaced when they become depleted. The replacement cell will cost 1.5 times the normal cost.',
 		max_level: 1,
 		onclick: function(upgrade) {
 			var part;
@@ -1361,7 +1505,7 @@ var game_loop = function() {
 		}
 	}
 
-	if ( current_heat ) {
+	if ( current_heat > 0 ) {
 		if ( current_heat <= max_heat ) {
 			current_heat -= max_heat / 10000;
 		} else {

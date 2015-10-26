@@ -101,7 +101,7 @@ button {
 ////////////////////////// */
 
 #reactor .tile {
-	background: url("../img/sprites.png") -128px top no-repeat;
+	background: url("../img/sprites.png") -160px top no-repeat;
 }
 
 #reactor .tile.disabled:after {
@@ -186,7 +186,8 @@ button {
 /* uranium */
 #parts .part.part_uranium1 .image:after,
 #reactor .tile.part_uranium1:after,
-#upgrades .uranium .image:after {
+#upgrades .uranium .image:after,
+#forceful_fusion .image:after {
 	background-position: 0 -32px;
 }
 
@@ -301,20 +302,66 @@ button {
  // Reflectors
 ////////////////////////// */
 
+#improved_neutron_reflection .image:after,
+#improved_reflector_density .image:after,
+#perpetual_reflectors .image:after,
 #parts .part.part_reflector1 .image:after,
 #reactor .tile.part_reflector1:after {
 	background-position: 0 -224px;
+}
+
+#parts .part.part_reflector2 .image:after,
+#reactor .tile.part_reflector2:after {
+	background-position: -32px -224px;
+}
+
+#parts .part.part_reflector3 .image:after,
+#reactor .tile.part_reflector3:after {
+	background-position: -64px -224px;
+}
+
+#parts .part.part_reflector4 .image:after,
+#reactor .tile.part_reflector4:after {
+	background-position: -96px -224px;
+}
+
+#parts .part.part_reflector5 .image:after,
+#reactor .tile.part_reflector5:after {
+	background-position: -128px -224px;
 }
 
   /* //////////////////////////
  // Capacitors
 ////////////////////////// */
 
-#parts .part.part_capacitor .image:after,
-#reactor .tile.part_capacitor:after,
+#parts .part.part_capacitor1 .image:after,
+#reactor .tile.part_capacitor1:after,
+#perpetual_capacitors .image:after,
 #active_venting .image:after,
-#active_exchangers .image:after {
+#active_exchangers .image:after,
+#improved_power_lines .image:after,
+#improved_wiring .image:after {
 	background-position: 0 -256px;
+}
+
+#parts .part.part_capacitor2 .image:after,
+#reactor .tile.part_capacitor2:after{
+	background-position: -32px -256px;
+}
+
+#parts .part.part_capacitor3 .image:after,
+#reactor .tile.part_capacitor3:after{
+	background-position: -64px -256px;
+}
+
+#parts .part.part_capacitor4 .image:after,
+#reactor .tile.part_capacitor4:after{
+	background-position: -96px -256px;
+}
+
+#parts .part.part_capacitor5 .image:after,
+#reactor .tile.part_capacitor5:after{
+	background-position: -128px -256px;
 }
 
   /* //////////////////////////
@@ -349,8 +396,8 @@ button {
 }
 
 /* Heat Exchangers */
-#parts .part.part_heat_exchanger .image:after,
-#reactor .tile.part_heat_exchanger:after,
+#parts .part.part_heat_exchanger1 .image:after,
+#reactor .tile.part_heat_exchanger1:after,
 #improved_heat_exchangers .image:after {
 	background-position: 0 -320px;
 }
@@ -376,8 +423,8 @@ button {
 }
 
 /* Heat Inlets */
-#parts .part.part_heat_inlet .image:after,
-#reactor .tile.part_heat_inlet:after {
+#parts .part.part_heat_inlet1 .image:after,
+#reactor .tile.part_heat_inlet1:after {
 	background-position: 0 -352px;
 }
 
@@ -402,8 +449,8 @@ button {
 }
 
 /* Heat Outlets */
-#parts .part.part_heat_outlet .image:after,
-#reactor .tile.part_heat_outlet:after {
+#parts .part.part_heat_outlet1 .image:after,
+#reactor .tile.part_heat_outlet1:after {
 	background-position: 0 -384px;
 }
 
@@ -428,8 +475,9 @@ button {
 }
 
 /* Coolant Cells */
-#parts .part.part_coolant_cell .image:after,
-#reactor .tile.part_coolant_cell:after {
+#improved_coolant_cells .image:after,
+#parts .part.part_coolant_cell1 .image:after,
+#reactor .tile.part_coolant_cell1:after {
 	background-position: 0 -416px;
 }
 
@@ -457,7 +505,9 @@ button {
 #parts .part.part_plating .image:after,
 #reactor .tile.part_plating:after,
 #improved_heatsinks .image:after,
-#reinforced_heat_exchangers .image:after {
+#reinforced_heat_exchangers .image:after,
+#upgrades #improved_piping .image:after,
+#upgrades #improved_alloys .image:after {
 	background-position: 0 -448px;
 }
 
@@ -511,16 +561,36 @@ button {
 	margin-top: -16px;
 }
 
+/* Time */
+#improved_reflector_density .image:before,
 #upgrades .cell_tick .image:before {
 	background-position: -32px 0;
 	z-index: 2;
 }
 
+/* Plus */
+#improved_heat_exchangers .image:before,
+#improved_heat_vents .image:before,
+#improved_coolant_cells .image:before,
+#forceful_fusion .image:before,
+#improved_wiring .image:before,
+#improved_alloys .image:before {
+	background-position: -128px 0;
+	z-index: 2;
+}
+
+/* Bolt */
+#improved_neutron_reflection .image:before,
+#improved_power_lines .image:before,
+#improved_piping .image:before,
 #upgrades .cell_power .image:before {
 	background-position: -64px 0;
 	z-index: 2;
 }
 
+/* Infinity */
+#perpetual_capacitors .image:before,
+#perpetual_reflectors .image:before,
 #upgrades .cell_perpetual .image:before {
 	background-position: -96px 0;
 	z-index: 2;
