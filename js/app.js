@@ -70,6 +70,7 @@ var debug = true;
 var base_loop_wait = 1000;
 var base_power_multiplier = 1;
 var base_heat_multiplier = 4;
+var base_manual_heat_reduce = 1;
 var upgrade_max_level = 32;
 
 // Current
@@ -81,7 +82,7 @@ var max_power = 100;
 var loop_wait = base_loop_wait;
 var power_multiplier = base_power_multiplier;
 var heat_multiplier = base_heat_multiplier;
-var manual_heat_reduce = 1;
+var manual_heat_reduce = base_manual_heat_reduce;
 
 // For iteration
 var i;
@@ -722,6 +723,33 @@ for ( pi = 0, pl = parts.length; pi < pl; pi++ ) {
 	}
 }
 
+
+  /////////////////////////////
+ // Reduce Heat Manually
+/////////////////////////////
+
+var $reduce_heat = $('#reduce_heat');
+var $manual_heat_reduce = $('#manual_heat_reduce');
+var $auto_heat_reduce = $('#auto_heat_reduce');
+
+$reduce_heat.onclick = function() {
+	current_heat -= manual_heat_reduce;
+
+	if ( current_heat < 0 ) {
+		current_heat = 0;
+	}
+
+	$current_heat.innerHTML = fmt(current_heat);
+};
+
+var set_manual_heat_reduce = function() {
+	$manual_heat_reduce.innerHTML = '-' + fmt(manual_heat_reduce);
+};
+
+var set_auto_heat_reduce = function() {
+	$auto_heat_reduce.innerHTML = '-' + (fmt(max_heat/10000));
+};
+
   /////////////////////////////
  // Upgrades
 /////////////////////////////
@@ -757,7 +785,9 @@ var upgrades = [
 		cost: 100,
 		multiplier: 20,
 		onclick: function(upgrade) {
-			
+			manual_heat_reduce = base_manual_heat_reduce * Math.pow(10, upgrade.level);
+			$manual_heat_reduce.innerHTML = '-' + manual_heat_reduce;
+			set_manual_heat_reduce();
 		}
 	},
 	{
@@ -1300,21 +1330,6 @@ var mouse_apply_to_tile = function(e) {
 };
 
   /////////////////////////////
- // Reduce Heat Manually
-/////////////////////////////
-
-var $reduce_heat = $('#reduce_heat');
-
-$reduce_heat.onclick = function() {
-	current_heat -= manual_heat_reduce;
-	$current_heat.innerHTML = fmt(current_heat);
-};
-
-var set_reduce_max_heat = function() {
-	$reduce_heat.innerHTML = '-' + fmt(manual_heat_reduce) + ' Heat (-' + (fmt(max_heat/10000)) + ' per tick)';
-}
-
-  /////////////////////////////
  // Load
 /////////////////////////////
 
@@ -1333,7 +1348,8 @@ if ( rks ) {
 	max_heat = rks.max_heat || max_heat;
 	manual_heat_reduce = rks.manual_heat_reduce || manual_heat_reduce;
 
-	set_reduce_max_heat();
+	set_manual_heat_reduce();
+	set_auto_heat_reduce();
 
 	// Tiles
 	for ( ri = 0; ri < rows; ri++ ) {
@@ -1446,6 +1462,7 @@ $scrounge.onclick = function() {
 
 var loop_timeout;
 var do_update;
+var reduce_heat;
 var game_loop = function() {
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
@@ -1507,10 +1524,13 @@ var game_loop = function() {
 
 	if ( current_heat > 0 ) {
 		if ( current_heat <= max_heat ) {
-			current_heat -= max_heat / 10000;
+			reduce_heat = max_heat / 10000;
 		} else {
-			current_heat -= (current_heat - max_heat) / 20;
+			reduce_heat = (current_heat - max_heat) / 20;
 		}
+
+		$auto_heat_reduce.innerHTML = '-' + fmt(reduce_heat);
+		current_heat -= reduce_heat;
 	}
 
 	$current_heat.innerHTML = fmt(current_heat);
