@@ -114,6 +114,7 @@ var Tile = function(row, col) {
 	this.power = 0;
 	this.ticks = 0;
 	this.vents = [];
+	this.cells = [];
 	this.activated = false;
 	this.row = row;
 	this.col = col;
@@ -143,6 +144,7 @@ var tileu;
 var tilel;
 var tiled;
 var tile_vent;
+var tile_cell;
 var heat_remove;
 var update_tiles = function() {
 	for ( ri = 0; ri < rows; ri++ ) {
@@ -166,12 +168,15 @@ var update_tiles = function() {
 		for ( ci = 0; ci < cols; ci++ ) {
 			tile = row[ci];
 			tile.vents.length = 0;
+			tile.cells.length = 0;
 
 			if ( tile.part && tile.activated && (tile.part.category !== 'cell' || tile.ticks) ) {
 				if ( ci < cols - 1 ) {
 					tiler = row[ci + 1];
 					if ( tiler.part && tiler.part.category === 'vent' ) {
 						tile.vents.push(tiler);
+					} else if ( tiler.part && tiler.part.category === 'cell' ) {
+						tile.cells.push(tiler);
 					}
 				}
 
@@ -180,6 +185,8 @@ var update_tiles = function() {
 					tilel = row[ci - 1];
 					if ( tilel.part && tilel.part.category === 'vent' ) {
 						tile.vents.push(tilel);
+					} else if ( tilel.part && tilel.part.category === 'cell' ) {
+						tile.cells.push(tilel);
 					}
 				}
 
@@ -188,6 +195,8 @@ var update_tiles = function() {
 					tiled = tiles[ri + 1][ci];
 					if ( tiled.part && tiled.part.category === 'vent' ) {
 						tile.vents.push(tiled);
+					} else if ( tiled.part && tiled.part.category === 'cell' ) {
+						tile.cells.push(tiled);
 					}
 				}
 
@@ -196,6 +205,8 @@ var update_tiles = function() {
 					tileu = tiles[ri - 1][ci];
 					if ( tileu.part && tileu.part.category === 'vent' ) {
 						tile.vents.push(tileu);
+					} else if ( tileu.part && tileu.part.category === 'cell' ) {
+						tile.cells.push(tileu);
 					}
 				}
 			}
@@ -267,7 +278,7 @@ var update_tiles = function() {
 		}
 	}
 
-	// alters
+	// Cells
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
 		tileu = null;
@@ -289,6 +300,32 @@ var update_tiles = function() {
 							tile_vent = tile.vents[i];
 							tile.heat -= heat_remove;
 							tile_vent.heat += heat_remove - tile_vent.part.vent;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Reflectors
+	for ( ri = 0; ri < rows; ri++ ) {
+		row = tiles[ri];
+		tileu = null;
+		tiler = null;
+		tiled = null;
+		tilel = null;
+
+		for ( ci = 0; ci < cols; ci++ ) {
+			tile = row[ci];
+
+			if ( tile.part && tile.activated ) {
+				if ( tile.part.category === 'reflector' ) {
+					l = tile.cells.length;
+
+					if ( l ) {
+						for ( i = 0; i < l; i++ ) {
+							tile_cell = tile.cells[i];
+							tile.power += tile_cell.power * ( tile.part.power_increase / 100 );
 						}
 					}
 				}
@@ -482,7 +519,7 @@ var parts = [
 		id: 'reflector',
 		type: 'reflector',
 		title: 'Neutron Reflector',
-		base_description: 'Increases adjacent cell output by %power_increase% for %ticks ticks.',
+		base_description: 'Increases adjacent cell power output by %power_increase% for %ticks total pulses.',
 		levels: 5,
 		category: 'reflector',
 		level: 1,
@@ -609,6 +646,7 @@ var Part = function(part) {
 	this.power = part.base_power;
 	this.heat_multiplier = part.base_heat_multiplier;
 	this.power_multiplier = part.base_power_multiplier;
+	this.power_increase = part.base_power_increase;
 	this.ticks = part.base_ticks;
 	this.containment = part.base_containment;
 	this.vent = part.base_vent;
@@ -643,6 +681,7 @@ var Part = function(part) {
 
 Part.prototype.updateHtml = function() {
 	var description = this.part.base_description
+		.replace(/%power_increase/, fmt(this.power_increase))
 		.replace(/%power/, fmt(this.power))
 		.replace(/%heat/, fmt(this.heat))
 		.replace(/%ticks/, fmt(this.ticks))
@@ -689,6 +728,10 @@ var create_part = function(part, level) {
 			part.id = part.category + level;
 			part.title = prefixes[level -1] + part.title;
 			part.base_cost = part.base_cost * Math.pow(part.cost_multiplier, level -1);
+
+			if ( part.base_ticks && part.ticks_multiplier ) {
+				part.base_ticks = part.base_ticks * Math.pow(part.ticks_multiplier, level - 1);
+			}
 		}
 	}
 
@@ -1337,6 +1380,7 @@ var stile;
 var supgrade;
 var rks = window.localStorage.getItem('rks');
 var srow;
+var supgrade_object;
 if ( rks ) {
 	rks = JSON.parse(window.atob(rks));
 
@@ -1383,13 +1427,10 @@ if ( rks ) {
 	// Upgrades
 	for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
 		supgrade = rks.upgrades[i];
-		try {
+		supgrade_object = upgrade_objects[supgrade.id];
+
+		if ( supgrade_object ) {
 			upgrade_objects[supgrade.id].setLevel(supgrade.level);
-		} catch (err) {
-			if ( debug ) {
-				console.log(supgrade);
-				console.dir(err);
-			}
 		}
 	}
 }
@@ -1490,7 +1531,6 @@ var game_loop = function() {
 					} else {
 						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
 					}
-
 				} else if ( tile.part.category === 'vent' ) {
 					tile.heat_contained += tile.heat;
 					if ( tile.heat_contained > tile.part.containment ) {
@@ -1502,7 +1542,27 @@ var game_loop = function() {
 						}
 						tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
 					}
+				} else if ( tile.part.category === 'reflector' ) {
+					current_power += tile.power;
+					tile.ticks -= tile.cells.length;
+
+					// TODO: dedupe this and cell ticks
+					if ( tile.ticks === 0 ) {
+						if ( tile.part.perpetual && current_money >= tile.part.cost ) {
+							// auto replenish reflector
+							current_money -= tile.part.cost;
+							$money.innerHTML = fmt(current_money);
+							tile.ticks = tile.part.ticks;
+							tile.$percent.style.width = '100%';
+						} else {
+							tile.$el.className += ' exploding';
+							remove_part(tile);
+						}
+					} else {
+						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
+					}
 				}
+
 			}
 		}
 	}
@@ -1527,6 +1587,9 @@ var game_loop = function() {
 			reduce_heat = max_heat / 10000;
 		} else {
 			reduce_heat = (current_heat - max_heat) / 20;
+			if ( reduce_heat < max_heat / 10000 ) {
+				reduce_heat = max_heat / 10000;
+			}
 		}
 
 		$auto_heat_reduce.innerHTML = '-' + fmt(reduce_heat);

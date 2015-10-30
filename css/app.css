@@ -115,6 +115,7 @@ button {
 	z-index: 2;
 }
 
+#reactor .category_reflector .percent_wrapper,
 #reactor .category_vent .percent_wrapper,
 #reactor .category_cell .percent_wrapper {
 	border: 1px solid black;
@@ -125,6 +126,7 @@ button {
 	right: 1px;
 }
 
+#reactor .category_reflector .percent,
 #reactor .category_vent .percent,
 #reactor .category_cell .percent {
 	text-indent: 64px;
@@ -132,6 +134,7 @@ button {
 	height: 2px;
 }
 
+#reactor .category_reflector .percent,
 #reactor .category_cell .percent {
 	background: #0f0;
 	width: 100%;
