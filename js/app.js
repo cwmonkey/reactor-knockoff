@@ -1533,15 +1533,6 @@ var game_loop = function() {
 					}
 				} else if ( tile.part.category === 'vent' ) {
 					tile.heat_contained += tile.heat;
-					if ( tile.heat_contained > tile.part.containment ) {
-						tile.$el.className += ' exploding';
-						remove_part(tile);
-					} else {
-						if ( tile.heat_contained < 0 ) {
-							tile.heat_contained = 0;
-						}
-						tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
-					}
 				} else if ( tile.part.category === 'reflector' ) {
 					current_power += tile.power;
 					tile.ticks -= tile.cells.length;
@@ -1590,11 +1581,44 @@ var game_loop = function() {
 			if ( reduce_heat < max_heat / 10000 ) {
 				reduce_heat = max_heat / 10000;
 			}
+
+			for ( ri = 0; ri < rows; ri++ ) {
+				row = tiles[ri];
+				for ( ci = 0; ci < cols; ci++ ) {
+					tile = row[ci];
+					if ( tile.activated && tile.part && tile.part.containment ) {
+						tile.heat_contained += reduce_heat / tiles.length;
+					}
+				}
+			}
 		}
 
 		$auto_heat_reduce.innerHTML = '-' + fmt(reduce_heat);
 		current_heat -= reduce_heat;
 	}
+
+	// Vents Cooling
+	for ( ri = 0; ri < rows; ri++ ) {
+		row = tiles[ri];
+
+		for ( ci = 0; ci < cols; ci++ ) {
+			tile = row[ci];
+			if ( tile.activated && tile.part && tile.part.category === 'vent' && tile.heat_contained > 0 ) {
+				tile.heat_contained -= tile.part.vent;
+				if ( tile.heat_contained > tile.part.containment ) {
+					tile.$el.className += ' exploding';
+					remove_part(tile);
+				} else {
+					if ( tile.heat_contained < 0 ) {
+						tile.heat_contained = 0;
+					}
+
+					tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
+				}
+			}
+		}
+	}
+
 
 	$current_heat.innerHTML = fmt(current_heat);
 	$current_power.innerHTML = fmt(current_power);
