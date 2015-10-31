@@ -35,6 +35,38 @@ button {
 	width: 608px;
 }
 
+#power_indicator,
+#heat_indicator {
+	border: 2px solid #000;
+	position: relative;
+	font-size: .8em;
+	text-align: center;
+	padding: .75em 1em;
+}
+
+#power_text,
+#heat_text {
+	position: relative;
+	z-index: 2;
+}
+
+#power_percentage,
+#heat_percentage {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	z-index: 1;
+}
+
+#heat_percentage {
+	background-color: red;
+}
+
+#power_percentage {
+	background-color: #0F0;
+}
+
 #parts,
 #parts > menu,
 #parts > menu > menu,

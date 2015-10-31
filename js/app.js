@@ -336,7 +336,7 @@ var update_tiles = function() {
 		}
 	}
 
-	// Capacitors
+	// Capacitors/Plating
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
 
@@ -345,10 +345,15 @@ var update_tiles = function() {
 			if ( tile.part && tile.activated && tile.part.reactor_power ) {
 				max_power += tile.part.reactor_power;
 			}
+
+			if ( tile.part && tile.activated && tile.part.reactor_heat ) {
+				max_heat += tile.part.reactor_heat;
+			}
 		}
 	}
 
 	$max_power.innerHTML = fmt(max_power);
+	$max_heat.innerHTML = fmt(max_heat);
 
 	if ( debug ) {
 		for ( ri = 0; ri < rows; ri++ ) {
@@ -668,6 +673,8 @@ var Part = function(part) {
 	this.containment = part.base_containment;
 	this.vent = part.base_vent;
 	this.reactor_power = part.base_reactor_power;
+	this.reactor_heat = part.base_reactor_heat;
+	this.transfer = part.base_transfer;
 	this.cost = part.base_cost;
 	this.affordable = true;
 	this.perpetual = false;
@@ -701,6 +708,8 @@ Part.prototype.updateHtml = function() {
 	var description = this.part.base_description
 		.replace(/%power_increase/, fmt(this.power_increase))
 		.replace(/%reactor_power/, fmt(this.reactor_power))
+		.replace(/%reactor_heat/, fmt(this.reactor_heat))
+		.replace(/%transfer/, fmt(this.transfer))
 		.replace(/%power/, fmt(this.power))
 		.replace(/%heat/, fmt(this.heat))
 		.replace(/%ticks/, fmt(this.ticks))
@@ -758,6 +767,14 @@ var create_part = function(part, level) {
 
 			if ( part.base_reactor_power && part.reactor_power_multiplier ) {
 				part.base_reactor_power = part.base_reactor_power * Math.pow(part.reactor_power_multiplier, level - 1);
+			}
+
+			if ( part.base_reactor_heat && part.reactor_heat_multiplier ) {
+				part.base_reactor_heat = part.base_reactor_heat * Math.pow(part.reactor_heat_multiplier, level - 1);
+			}
+
+			if ( part.base_transfer && part.transfer_multiplier ) {
+				part.base_transfer = part.base_transfer * Math.pow(part.transfer_multiplier, level - 1);
 			}
 		}
 	}
@@ -1528,9 +1545,13 @@ $scrounge.onclick = function() {
  // Game Loop
 /////////////////////////////
 
+var $heat_percentage = $('#heat_percentage');
+var $power_percentage = $('#power_percentage');
+
 var loop_timeout;
 var do_update;
 var reduce_heat;
+var shared_heat;
 var game_loop = function() {
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
@@ -1585,6 +1606,29 @@ var game_loop = function() {
 		}
 	}
 
+	// Reduce reactor heat parts
+	for ( ri = 0; ri < rows; ri++ ) {
+		row = tiles[ri];
+
+		for ( ci = 0; ci < cols; ci++ ) {
+			tile = row[ci];
+			if ( tile.activated && tile.part && tile.part.transfer && tile.containments ) {
+				l = tile.containments.length;
+				shared_heat = tile.part.transfer;
+
+				if ( current_heat < shared_heat * l ) {
+					shared_heat = current_heat / l;
+				}
+
+				for ( pi = 0; pi < l; pi++ ) {
+					tile_containment = tile.containments[pi];
+					tile_containment.heat_contained += shared_heat;
+					current_heat -= shared_heat;
+				}
+			}
+		}
+	}
+
 	// Try to place parts in the queue
 	if ( tile_queue.length ) {
 		tile = tile_queue[0];
@@ -1632,7 +1676,7 @@ var game_loop = function() {
 		for ( ci = 0; ci < cols; ci++ ) {
 			tile = row[ci];
 			if ( tile.activated && tile.part && tile.part.containment ) {
-				if ( tile.part.category === 'vent' ) {
+				if ( tile.part.vent ) {
 					tile.heat_contained -= tile.part.vent;
 					if ( tile.heat_contained < 0 ) {
 						tile.heat_contained = 0;
@@ -1654,7 +1698,14 @@ var game_loop = function() {
 	}
 
 	$current_heat.innerHTML = fmt(current_heat);
+	if ( current_heat < max_heat ) {
+		$heat_percentage.style.width = current_heat / max_heat * 100 + '%';
+	} else {
+		$heat_percentage.style.width = '100%';
+	}
+
 	$current_power.innerHTML = fmt(current_power);
+	$power_percentage.style.width = current_power / max_power * 100 + '%';
 
 	if ( current_heat <= max_heat ) {
 		$reactor.style.backgroundColor = 'rgb(255, 255, 255)';
