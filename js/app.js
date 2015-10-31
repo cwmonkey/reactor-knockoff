@@ -78,7 +78,8 @@ var current_heat = 0;
 var current_power = 0;
 var current_money = 0;
 var max_heat = 1000;
-var max_power = 100;
+var base_max_power = 100;
+var max_power = base_max_power;
 var loop_wait = base_loop_wait;
 var power_multiplier = base_power_multiplier;
 var heat_multiplier = base_heat_multiplier;
@@ -147,6 +148,8 @@ var tile_containment;
 var tile_cell;
 var heat_remove;
 var update_tiles = function() {
+	max_power = base_max_power;
+
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
 
@@ -332,6 +335,20 @@ var update_tiles = function() {
 			}
 		}
 	}
+
+	// Capacitors
+	for ( ri = 0; ri < rows; ri++ ) {
+		row = tiles[ri];
+
+		for ( ci = 0; ci < cols; ci++ ) {
+			tile = row[ci];
+			if ( tile.part && tile.activated && tile.part.reactor_power ) {
+				max_power += tile.part.reactor_power;
+			}
+		}
+	}
+
+	$max_power.innerHTML = fmt(max_power);
 
 	if ( debug ) {
 		for ( ri = 0; ri < rows; ri++ ) {
@@ -650,6 +667,7 @@ var Part = function(part) {
 	this.ticks = part.base_ticks;
 	this.containment = part.base_containment;
 	this.vent = part.base_vent;
+	this.reactor_power = part.base_reactor_power;
 	this.cost = part.base_cost;
 	this.affordable = true;
 	this.perpetual = false;
@@ -682,6 +700,7 @@ var Part = function(part) {
 Part.prototype.updateHtml = function() {
 	var description = this.part.base_description
 		.replace(/%power_increase/, fmt(this.power_increase))
+		.replace(/%reactor_power/, fmt(this.reactor_power))
 		.replace(/%power/, fmt(this.power))
 		.replace(/%heat/, fmt(this.heat))
 		.replace(/%ticks/, fmt(this.ticks))
@@ -731,6 +750,14 @@ var create_part = function(part, level) {
 
 			if ( part.base_ticks && part.ticks_multiplier ) {
 				part.base_ticks = part.base_ticks * Math.pow(part.ticks_multiplier, level - 1);
+			}
+
+			if ( part.base_containment && part.containment_multiplier ) {
+				part.base_containment = part.base_containment * Math.pow(part.containment_multiplier, level - 1);
+			}
+
+			if ( part.base_reactor_power && part.reactor_power_multiplier ) {
+				part.base_reactor_power = part.base_reactor_power * Math.pow(part.reactor_power_multiplier, level - 1);
 			}
 		}
 	}
@@ -1622,6 +1649,9 @@ var game_loop = function() {
 		}
 	}
 
+	if ( current_power > max_power ) {
+		current_power = max_power;
+	}
 
 	$current_heat.innerHTML = fmt(current_heat);
 	$current_power.innerHTML = fmt(current_power);
