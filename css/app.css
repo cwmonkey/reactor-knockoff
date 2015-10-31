@@ -505,8 +505,8 @@ button {
 }
 
 /* Platings */
-#parts .part.part_plating .image:after,
-#reactor .tile.part_plating:after,
+#parts .part.part_reactor_plating1 .image:after,
+#reactor .tile.part_reactor_plating1:after,
 #improved_heatsinks .image:after,
 #reinforced_heat_exchangers .image:after,
 #upgrades #improved_piping .image:after,
@@ -514,24 +514,24 @@ button {
 	background-position: 0 -448px;
 }
 
-#parts .part.part_plating2 .image:after,
-#reactor .tile.part_plating2:after {
-	background-position: -32px -416px;
+#parts .part.part_reactor_plating2 .image:after,
+#reactor .tile.part_reactor_plating2:after {
+	background-position: -32px -448px;
 }
 
-#parts .part.part_plating3 .image:after,
-#reactor .tile.part_plating3:after {
-	background-position: -64px -416px;
+#parts .part.part_reactor_plating3 .image:after,
+#reactor .tile.part_reactor_plating3:after {
+	background-position: -64px -448px;
 }
 
-#parts .part.part_plating4 .image:after,
-#reactor .tile.part_plating4:after {
-	background-position: -96px -416px;
+#parts .part.part_reactor_plating4 .image:after,
+#reactor .tile.part_reactor_plating4:after {
+	background-position: -96px -448px;
 }
 
-#parts .part.part_plating5 .image:after,
-#reactor .tile.part_plating5:after {
-	background-position: -128px -416px;
+#parts .part.part_reactor_plating5 .image:after,
+#reactor .tile.part_reactor_plating5:after {
+	background-position: -128px -448px;
 }
 
 
