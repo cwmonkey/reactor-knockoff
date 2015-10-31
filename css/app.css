@@ -115,6 +115,7 @@ button {
 	z-index: 2;
 }
 
+#reactor .category_coolant_cell .percent_wrapper,
 #reactor .category_reflector .percent_wrapper,
 #reactor .category_vent .percent_wrapper,
 #reactor .category_cell .percent_wrapper {
@@ -126,6 +127,7 @@ button {
 	right: 1px;
 }
 
+#reactor .category_coolant_cell .percent,
 #reactor .category_reflector .percent,
 #reactor .category_vent .percent,
 #reactor .category_cell .percent {
@@ -140,6 +142,7 @@ button {
 	width: 100%;
 }
 
+#reactor .category_coolant_cell .percent,
 #reactor .category_vent .percent {
 	background: #f00;
 	width: 0;

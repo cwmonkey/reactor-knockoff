@@ -113,7 +113,7 @@ var Tile = function(row, col) {
 	this.heat_contained = 0;
 	this.power = 0;
 	this.ticks = 0;
-	this.vents = [];
+	this.containments = [];
 	this.cells = [];
 	this.activated = false;
 	this.row = row;
@@ -143,7 +143,7 @@ var tiler;
 var tileu;
 var tilel;
 var tiled;
-var tile_vent;
+var tile_containment;
 var tile_cell;
 var heat_remove;
 var update_tiles = function() {
@@ -167,14 +167,14 @@ var update_tiles = function() {
 
 		for ( ci = 0; ci < cols; ci++ ) {
 			tile = row[ci];
-			tile.vents.length = 0;
+			tile.containments.length = 0;
 			tile.cells.length = 0;
 
 			if ( tile.part && tile.activated && (tile.part.category !== 'cell' || tile.ticks) ) {
 				if ( ci < cols - 1 ) {
 					tiler = row[ci + 1];
-					if ( tiler.part && tiler.part.category === 'vent' ) {
-						tile.vents.push(tiler);
+					if ( tiler.part && tiler.part.containment ) {
+						tile.containments.push(tiler);
 					} else if ( tiler.part && tiler.part.category === 'cell' ) {
 						tile.cells.push(tiler);
 					}
@@ -183,8 +183,8 @@ var update_tiles = function() {
 				// left
 				if ( ci > 0 ) {
 					tilel = row[ci - 1];
-					if ( tilel.part && tilel.part.category === 'vent' ) {
-						tile.vents.push(tilel);
+					if ( tilel.part && tilel.part.containment ) {
+						tile.containments.push(tilel);
 					} else if ( tilel.part && tilel.part.category === 'cell' ) {
 						tile.cells.push(tilel);
 					}
@@ -193,8 +193,8 @@ var update_tiles = function() {
 				// down
 				if ( ri < rows - 1 ) {
 					tiled = tiles[ri + 1][ci];
-					if ( tiled.part && tiled.part.category === 'vent' ) {
-						tile.vents.push(tiled);
+					if ( tiled.part && tiled.part.containment ) {
+						tile.containments.push(tiled);
 					} else if ( tiled.part && tiled.part.category === 'cell' ) {
 						tile.cells.push(tiled);
 					}
@@ -203,8 +203,8 @@ var update_tiles = function() {
 				// up
 				if ( ri > 0 ) {
 					tileu = tiles[ri - 1][ci];
-					if ( tileu.part && tileu.part.category === 'vent' ) {
-						tile.vents.push(tileu);
+					if ( tileu.part && tileu.part.containment ) {
+						tile.containments.push(tileu);
 					} else if ( tileu.part && tileu.part.category === 'cell' ) {
 						tile.cells.push(tileu);
 					}
@@ -291,15 +291,15 @@ var update_tiles = function() {
 
 			if ( tile.part && tile.activated ) {
 				if ( tile.part.category === 'cell' ) {
-					l = tile.vents.length;
+					l = tile.containments.length;
 
 					if ( l ) {
 						heat_remove = Math.ceil(tile.heat / l);
 
 						for ( i = 0; i < l; i++ ) {
-							tile_vent = tile.vents[i];
+							tile_containment = tile.containments[i];
 							tile.heat -= heat_remove;
-							tile_vent.heat += heat_remove - tile_vent.part.vent;
+							tile_containment.heat += heat_remove;
 						}
 					}
 				}
@@ -1277,8 +1277,8 @@ $parts.delegate('part', 'click', function() {
 });
 
 // Add part to tile
-var part_replace = /[\b\s]part_[a-z0-9]+\b/;
-var category_replace = /[\b\s]category_[a-z]+\b/;
+var part_replace = /[\b\s]part_[a-z0-9_]+\b/;
+var category_replace = /[\b\s]category_[a-z_]+\b/;
 var spent_replace = /[\b\s]spent\b/;
 var disabled_replace = /[\b\s]disabled\b/;
 var exploding_replace = /[\b\s]exploding\b/;
@@ -1531,7 +1531,7 @@ var game_loop = function() {
 					} else {
 						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
 					}
-				} else if ( tile.part.category === 'vent' ) {
+				} else if ( tile.part.containment ) {
 					tile.heat_contained += tile.heat;
 				} else if ( tile.part.category === 'reflector' ) {
 					current_power += tile.power;
@@ -1558,6 +1558,7 @@ var game_loop = function() {
 		}
 	}
 
+	// Try to place parts in the queue
 	if ( tile_queue.length ) {
 		tile = tile_queue[0];
 
@@ -1597,22 +1598,24 @@ var game_loop = function() {
 		current_heat -= reduce_heat;
 	}
 
-	// Vents Cooling
+	// Apply heat to containment parts
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
 
 		for ( ci = 0; ci < cols; ci++ ) {
 			tile = row[ci];
-			if ( tile.activated && tile.part && tile.part.category === 'vent' && tile.heat_contained > 0 ) {
-				tile.heat_contained -= tile.part.vent;
+			if ( tile.activated && tile.part && tile.part.containment ) {
+				if ( tile.part.category === 'vent' ) {
+					tile.heat_contained -= tile.part.vent;
+					if ( tile.heat_contained < 0 ) {
+						tile.heat_contained = 0;
+					}
+				}
+
 				if ( tile.heat_contained > tile.part.containment ) {
 					tile.$el.className += ' exploding';
 					remove_part(tile);
 				} else {
-					if ( tile.heat_contained < 0 ) {
-						tile.heat_contained = 0;
-					}
-
 					tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
 				}
 			}
