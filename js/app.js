@@ -79,6 +79,7 @@ var current_power = 0;
 var current_money = 0;
 var max_heat = 1000;
 var base_max_power = 100;
+var auto_sell_multiplier = 0;
 var max_power = base_max_power;
 var loop_wait = base_loop_wait;
 var power_multiplier = base_power_multiplier;
@@ -898,7 +899,7 @@ var upgrades = [
 		cost: 100,
 		multiplier: 10,
 		onclick: function(upgrade) {
-			
+			auto_sell_multiplier = .01 * upgrade.level;
 		}
 	},
 	{
@@ -976,11 +977,25 @@ var upgrades = [
 		id: 'improved_heat_exchangers',
 		type: 'exchangers',
 		title: 'Improved Heat Exchangers',
-		description: 'Heat Exchangers hold and exchange 100% more heat per level of upgrade',
+		description: 'Heat Exchangers, Inlets and Outlets hold and exchange 100% more heat per level of upgrade',
 		cost: 600,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 5; i++ ) {
+				part = part_objects['heat_inlet' + i];
+				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
+				part.updateHtml();
+
+				part = part_objects['heat_outlet' + i];
+				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
+				part.updateHtml();
+
+				part = part_objects['heat_exchanger' + i];
+				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
+				part.containment = part.part.base_containment * ( upgrade.level + 1 );
+				part.updateHtml();
+			}
 		}
 	},
 	{
@@ -1357,6 +1372,8 @@ var apply_to_tile = function(tile, part) {
 	}
 };
 
+var rpl;
+var rpqi;
 var remove_part = function(tile, skip_update) {
 	skip_update = skip_update || false;
 	tile.part = null;
@@ -1374,14 +1391,14 @@ var remove_part = function(tile, skip_update) {
 		update_tiles();
 	}
 
-	l = tile_queue.length;
-	if ( l ) { 
-		for ( qi = 0; qi < l; qi++ ) {
-			tile2 = tile_queue[qi];
+	rpl = tile_queue.length;
+	if ( rpl ) { 
+		for ( rpqi = 0; rpqi < rpl; rpqi++ ) {
+			tile2 = tile_queue[rpqi];
 			if ( !tile2.part ) {
-				tile_queue.splice(qi, 1);
-				qi--;
-				l--;
+				tile_queue.splice(rpqi, 1);
+				rpqi--;
+				rpl--;
 			}
 		}
 	}
@@ -1552,7 +1569,12 @@ var loop_timeout;
 var do_update;
 var reduce_heat;
 var shared_heat;
+var max_shared_heat;
+var sell_amount;
+var heat_outlet_countainments_count;
 var game_loop = function() {
+	heat_outlet_countainments_count = 0;
+
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
 
@@ -1579,8 +1601,6 @@ var game_loop = function() {
 					} else {
 						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
 					}
-				} else if ( tile.part.containment ) {
-					tile.heat_contained += tile.heat;
 				} else if ( tile.part.category === 'reflector' ) {
 					current_power += tile.power;
 					tile.ticks -= tile.cells.length;
@@ -1600,6 +1620,12 @@ var game_loop = function() {
 					} else {
 						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
 					}
+				} else if ( tile.part.category === 'heat_outlet' ) {
+					heat_outlet_countainments_count += tile.containments.length;
+				}
+
+				if ( tile.part.containment ) {
+					tile.heat_contained += tile.heat;
 				}
 
 			}
@@ -1607,17 +1633,24 @@ var game_loop = function() {
 	}
 
 	// Reduce reactor heat parts
+	max_shared_heat = current_heat / heat_outlet_countainments_count;
+
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
 
 		for ( ci = 0; ci < cols; ci++ ) {
 			tile = row[ci];
+
 			if ( tile.activated && tile.part && tile.part.transfer && tile.containments ) {
 				l = tile.containments.length;
 				shared_heat = tile.part.transfer;
 
 				if ( current_heat < shared_heat * l ) {
 					shared_heat = current_heat / l;
+				}
+
+				if ( shared_heat > max_shared_heat ) {
+					shared_heat = max_shared_heat;
 				}
 
 				for ( pi = 0; pi < l; pi++ ) {
@@ -1670,6 +1703,7 @@ var game_loop = function() {
 	}
 
 	// Apply heat to containment parts
+	do_update = false;
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
 
@@ -1685,7 +1719,8 @@ var game_loop = function() {
 
 				if ( tile.heat_contained > tile.part.containment ) {
 					tile.$el.className += ' exploding';
-					remove_part(tile);
+					do_update = true;
+					remove_part(tile, true);
 				} else {
 					tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
 				}
@@ -1693,8 +1728,28 @@ var game_loop = function() {
 		}
 	}
 
+	if ( do_update ) {
+		update_tiles();
+	}
+
+	// Auto Sell
+	sell_amount = Math.ceil(max_power * auto_sell_multiplier);
+	if ( sell_amount ) {
+		if ( sell_amount > current_power ) {
+			sell_amount = current_power;
+		}
+
+		current_power -= sell_amount;
+		current_money += sell_amount;
+		$money.innerHTML = fmt(current_money);
+	}
+
 	if ( current_power > max_power ) {
 		current_power = max_power;
+	}
+
+	if ( current_heat < 0 ) {
+		current_heat = 0;
 	}
 
 	$current_heat.innerHTML = fmt(current_heat);
