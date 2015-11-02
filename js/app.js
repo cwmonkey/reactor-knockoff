@@ -85,6 +85,10 @@ var loop_wait = base_loop_wait;
 var power_multiplier = base_power_multiplier;
 var heat_multiplier = base_heat_multiplier;
 var manual_heat_reduce = base_manual_heat_reduce;
+var vent_capacitor_multiplier = 0;
+var vent_plating_multiplier = 0;
+var transfer_capacitor_multiplier = 0;
+var transfer_plating_multiplier = 0;
 
 // For iteration
 var i;
@@ -148,7 +152,14 @@ var tiled;
 var tile_containment;
 var tile_cell;
 var heat_remove;
+var heat_outlet_countainments_count;
+var transfer_multiplier;
+var vent_multiplier;
+
 var update_tiles = function() {
+	heat_outlet_countainments_count = 0;
+	transfer_multiplier = 0;
+	vent_multiplier = 0;
 	max_power = base_max_power;
 
 	for ( ri = 0; ri < rows; ri++ ) {
@@ -214,6 +225,19 @@ var update_tiles = function() {
 					}
 				}
 			}
+
+			if ( tile.part && tile.activated ) {
+				if ( tile.part.category === 'heat_outlet' ) {
+					heat_outlet_countainments_count += tile.containments.length;
+				} else if ( tile.part.category === 'capacitor' ) {
+					transfer_multiplier += tile.part.part.level * transfer_capacitor_multiplier;
+					vent_multiplier += tile.part.part.level * vent_capacitor_multiplier;
+				} else if ( tile.part.category === 'reactor_plating' ) {
+					transfer_multiplier += tile.part.part.level * transfer_plating_multiplier;
+					vent_multiplier += tile.part.part.level * vent_plating_multiplier;
+				}
+			}
+
 		}
 	}
 
@@ -1006,7 +1030,7 @@ var upgrades = [
 		cost: 1000,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+			transfer_plating_multiplier = upgrade.level;
 		}
 	},
 	{
@@ -1017,7 +1041,7 @@ var upgrades = [
 		cost: 1000,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+			transfer_capacitor_multiplier = upgrade.level;
 		}
 	},
 
@@ -1046,7 +1070,7 @@ var upgrades = [
 		cost: 1000,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+			vent_plating_multiplier = upgrade.level;
 		}
 	},
 	{
@@ -1057,7 +1081,7 @@ var upgrades = [
 		cost: 1000,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+			vent_capacitor_multiplier = upgrade.level;
 		}
 	}
 ];
@@ -1228,6 +1252,7 @@ $upgrades.delegate('upgrade', 'click', function(event) {
 		upgrade.setLevel(upgrade.level + 1);
 	}
 
+	update_tiles();
 	check_upgrades_affordability();
 });
 
@@ -1571,9 +1596,8 @@ var reduce_heat;
 var shared_heat;
 var max_shared_heat;
 var sell_amount;
-var heat_outlet_countainments_count;
+
 var game_loop = function() {
-	heat_outlet_countainments_count = 0;
 
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
@@ -1581,25 +1605,27 @@ var game_loop = function() {
 		for ( ci = 0; ci < cols; ci++ ) {
 			tile = row[ci];
 			if ( tile.activated && tile.part ) {
-				if ( tile.part.category === 'cell' && tile.ticks !== 0 ) {
-					current_power += tile.power;
-					current_heat += tile.heat;
-					tile.ticks--;
+				if ( tile.part.category === 'cell' ) {
+					if ( tile.ticks !== 0 ) {
+						current_power += tile.power;
+						current_heat += tile.heat;
+						tile.ticks--;
 
-					if ( tile.ticks === 0 ) {
-						if ( tile.part.perpetual && current_money >= tile.part.cost ) {
-							// auto replenish cell
-							current_money -= tile.part.cost;
-							$money.innerHTML = fmt(current_money);
-							tile.ticks = tile.part.ticks;
-							tile.$percent.style.width = '100%';
+						if ( tile.ticks === 0 ) {
+							if ( tile.part.perpetual && current_money >= tile.part.cost ) {
+								// auto replenish cell
+								current_money -= tile.part.cost;
+								$money.innerHTML = fmt(current_money);
+								tile.ticks = tile.part.ticks;
+								tile.$percent.style.width = '100%';
+							} else {
+								tile.$percent.style.width = '0';
+								tile.$el.className += ' spent';
+								update_tiles();
+							}
 						} else {
-							tile.$percent.style.width = '0';
-							tile.$el.className += ' spent';
-							update_tiles();
+							tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
 						}
-					} else {
-						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
 					}
 				} else if ( tile.part.category === 'reflector' ) {
 					current_power += tile.power;
@@ -1620,8 +1646,6 @@ var game_loop = function() {
 					} else {
 						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
 					}
-				} else if ( tile.part.category === 'heat_outlet' ) {
-					heat_outlet_countainments_count += tile.containments.length;
 				}
 
 				if ( tile.part.containment ) {
@@ -1643,7 +1667,11 @@ var game_loop = function() {
 
 			if ( tile.activated && tile.part && tile.part.transfer && tile.containments ) {
 				l = tile.containments.length;
-				shared_heat = tile.part.transfer;
+				if ( transfer_multiplier ) {
+					shared_heat = tile.part.transfer * (1 + transfer_multiplier / 100);
+				} else {
+					shared_heat = tile.part.transfer;
+				}
 
 				if ( current_heat < shared_heat * l ) {
 					shared_heat = current_heat / l;
@@ -1711,7 +1739,12 @@ var game_loop = function() {
 			tile = row[ci];
 			if ( tile.activated && tile.part && tile.part.containment ) {
 				if ( tile.part.vent ) {
-					tile.heat_contained -= tile.part.vent;
+					if ( vent_multiplier ) {
+						tile.heat_contained -= tile.part.vent * (1 + vent_multiplier / 100);
+					} else {
+						tile.heat_contained -= tile.part.vent;
+					}
+
 					if ( tile.heat_contained < 0 ) {
 						tile.heat_contained = 0;
 					}
