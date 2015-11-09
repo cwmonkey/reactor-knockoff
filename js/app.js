@@ -903,7 +903,6 @@ var upgrades = [
 		multiplier: 20,
 		onclick: function(upgrade) {
 			manual_heat_reduce = base_manual_heat_reduce * Math.pow(10, upgrade.level);
-			$manual_heat_reduce.innerHTML = '-' + manual_heat_reduce;
 			set_manual_heat_reduce();
 		}
 	},
@@ -915,7 +914,12 @@ var upgrades = [
 		cost: 5000,
 		multiplier: 5,
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 5; i++ ) {
+				part = part_objects['reactor_plating' + i];
+				part.reactor_heat = part.part.base_reactor_heat * ( upgrade.level + 1 );
+				part.updateHtml();
+			}
 		}
 	},
 
@@ -939,7 +943,13 @@ var upgrades = [
 		cost: 5000,
 		multiplier: 5,
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 5; i++ ) {
+				part = part_objects['capacitor' + i];
+				part.reactor_power = part.part.base_reactor_power * ( upgrade.level + 1 );
+				part.containment = part.part.base_containment * ( upgrade.level + 1 );
+				part.updateHtml();
+			}
 		}
 	},
 	{
@@ -950,7 +960,12 @@ var upgrades = [
 		cost: 5000,
 		multiplier: 5,
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 5; i++ ) {
+				part = part_objects['capacitor' + i];
+				part.perpetual = upgrade.level ? true : false;
+				part.updateHtml();
+			}
 		}
 	},
 
@@ -991,7 +1006,12 @@ var upgrades = [
 		cost: 5000,
 		multiplier: 100,
 		onclick: function(upgrade) {
-
+			var part;
+			for ( var i = 1; i <= 5; i++ ) {
+				part = part_objects['reflector' + i];
+				part.power_increase = part.part.base_power_increase * ( upgrade.level + 1 );
+				part.updateHtml();
+			}
 		}
 	},
 	{
@@ -1002,7 +1022,12 @@ var upgrades = [
 		cost: 10000000000000000000,
 		max_level: 1,
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 5; i++ ) {
+				part = part_objects['reflector' + i];
+				part.perpetual = upgrade.level ? true : false;
+				part.updateHtml();
+			}
 		}
 	},
 
@@ -1658,7 +1683,9 @@ var game_loop = function() {
 					}
 				}
 
-				if ( tile.part.containment ) {
+				// TODO: Find a better place/logic for this?
+				// Add heat to containment part
+				if ( tile.activated && tile.part && tile.part.containment ) {
 					tile.heat_contained += tile.heat;
 				}
 
