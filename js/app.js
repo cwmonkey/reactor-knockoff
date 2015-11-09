@@ -436,6 +436,7 @@ for ( ri = 0; ri < rows; ri++ ) {
 /////////////////////////////
 
 var parts = [
+	// Cells
 	{
 		id: 'uranium1',
 		type: 'uranium',
@@ -562,6 +563,8 @@ var parts = [
 		cell_power_upgrade_multiplier: 10,
 		cell_perpetual_upgrade_cost: 3586000000000000000
 	},
+
+	// Energy
 	{
 		id: 'reflector',
 		type: 'reflector',
@@ -592,6 +595,8 @@ var parts = [
 		base_containment: 10,
 		containment_multiplier: 100
 	},
+
+	// Heat
 	{
 		id: 'vent',
 		type: 'vent',
@@ -606,7 +611,7 @@ var parts = [
 		base_vent: 8,
 		location: 'cooling'
 	},
-	{
+	/* {
 		id: 'heat_exchanger',
 		type: 'heat_exchanger',
 		title: 'Heat Exchanger',
@@ -635,7 +640,7 @@ var parts = [
 		base_transfer: 16,
 		transfer_multiplier: 75,
 		location: 'cooling'
-	},
+	},*/
 	{
 		id: 'heat_outlet',
 		type: 'heat_outlet',
@@ -650,7 +655,7 @@ var parts = [
 		transfer_multiplier: 75,
 		location: 'cooling'
 	},
-	{
+	/*{
 		id: 'coolant_cell',
 		type: 'coolant_cell',
 		title: 'Coolant Cell',
@@ -663,7 +668,7 @@ var parts = [
 		base_containment: 2000,
 		containment_multiplier: 180,
 		location: 'cooling'
-	},
+	},*/
 	{
 		id: 'reactor_plating',
 		type: 'reactor_plating',
@@ -949,7 +954,7 @@ var upgrades = [
 		}
 	},
 
-	{
+	/*{
 		id: 'improved_coolant_cells',
 		type: 'other',
 		title: 'Improved Coolant Cells',
@@ -959,7 +964,7 @@ var upgrades = [
 		onclick: function(upgrade) {
 			
 		}
-	},
+	},*/
 
 	// Reflectors
 	{
@@ -970,7 +975,12 @@ var upgrades = [
 		cost: 5000,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+			var part;
+			for ( var i = 1; i <= 5; i++ ) {
+				part = part_objects['reflector' + i];
+				part.ticks = part.part.base_ticks * ( upgrade.level + 1 );
+				part.updateHtml();
+			}
 		}
 	},
 	{
@@ -981,7 +991,7 @@ var upgrades = [
 		cost: 5000,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+
 		}
 	},
 	{
@@ -1007,18 +1017,18 @@ var upgrades = [
 		onclick: function(upgrade) {
 			var part;
 			for ( var i = 1; i <= 5; i++ ) {
-				part = part_objects['heat_inlet' + i];
+				/*part = part_objects['heat_inlet' + i];
 				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateHtml();*/
 
 				part = part_objects['heat_outlet' + i];
 				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
 				part.updateHtml();
 
-				part = part_objects['heat_exchanger' + i];
+				/*part = part_objects['heat_exchanger' + i];
 				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
 				part.containment = part.part.base_containment * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateHtml();*/
 			}
 		}
 	},
@@ -1508,8 +1518,6 @@ if ( rks ) {
 		tile_queue.push(tiles[stile.row][stile.col]);
 	}
 
-	update_tiles();
-
 	// Upgrades
 	for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
 		supgrade = rks.upgrades[i];
@@ -1519,6 +1527,8 @@ if ( rks ) {
 			upgrade_objects[supgrade.id].setLevel(supgrade.level);
 		}
 	}
+
+	update_tiles();
 }
 
   /////////////////////////////
