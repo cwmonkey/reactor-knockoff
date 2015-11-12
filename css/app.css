@@ -679,6 +679,10 @@ button {
 	background-position: 0 -480px;
 }
 
+#heat_control_operator.upgrade .image:after {
+	background-position: -32px -480px;
+}
+
 #upgrades .unaffordable .image {
 	opacity: .5;
 }
