@@ -211,6 +211,15 @@ button {
 	margin-right: .25em;
 }
 
+#main.paused #pause,
+#unpause {
+	display: none;
+}
+
+#main.paused #unpause {
+	display: inline-block;
+}
+
   /* //////////////////////////
  // Cells
 ////////////////////////// */

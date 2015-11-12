@@ -1492,7 +1492,7 @@ var mouse_apply_to_tile = function(e) {
 		&& (
 			!tile.part
 			|| (tile.part === clicked_part && tile.ticks === 0)
-			|| (tile.part && tile.part.type === clicked_part.type && tile.part.part.level < clicked_part.part.level && current_money >= clicked_part.cost )
+			|| (tile.part && tile.part.part.type === clicked_part.part.type && tile.part.part.level < clicked_part.part.level && current_money >= clicked_part.cost )
 		)
 	) {
 		if ( current_money < clicked_part.cost ) {
@@ -1589,13 +1589,43 @@ document.oncontextmenu = function(e) {
 	}
 };
 
-$reactor.delegate('tile', 'click', mouse_apply_to_tile);
+$reactor.delegate('tile', 'click', function(e) {
+	if ( !tile_mousedown ) {
+		mouse_apply_to_tile.call(this, e);
+	}
+});
 
 $reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown = true;
 	tile_mousedown_right = e.which === 3;
 	e.preventDefault();
-	mouse_apply_to_tile.call(this, e);
+
+	if ( e.shiftKey ) {
+		if ( this.tile.part ) {
+			var ri, ci, row, tile;
+			var level = this.tile.part.part.level;
+			var type = this.tile.part.part.type;
+			var active = this.tile.part.active;
+			// All matching tiles
+			for ( ri = 0; ri < rows; ri++ ) {
+				row = tiles[ri];
+
+				for ( ci = 0; ci < cols; ci++ ) {
+					tile = row[ci];
+
+					if ( !tile_mousedown_right && tile.part && type === tile.part.part.type ) {
+						mouse_apply_to_tile.call(tile.$el, e);
+					} else if ( tile_mousedown_right && tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
+						mouse_apply_to_tile.call(tile.$el, e);
+					}
+				}
+			}
+		} else {
+			mouse_apply_to_tile.call(this, e);
+		}
+	} else {
+		mouse_apply_to_tile.call(this, e);
+	}
 });
 
 $reactor.onmouseup = tile_mouseup_fn;
@@ -1906,6 +1936,27 @@ var game_loop = function() {
 
 	loop_timeout = setTimeout(game_loop, loop_wait);
 };
+
+// Pause
+var pause_replace = /[\b\s]paused\b/;
+var $pause = $('#pause');
+
+var pause = function() {
+	clearTimeout(loop_timeout);
+	$main.className += ' paused';
+};
+
+$pause.onclick = pause;
+
+// Unpause
+var $unpause = $('#unpause');
+
+var unpause = function() {
+	loop_timeout = setTimeout(game_loop, loop_wait);
+	$main.className = $main.className.replace(pause_replace, '');
+};
+
+$unpause.onclick = unpause;
 
 // affordability loop
 var check_affordability = function() {
