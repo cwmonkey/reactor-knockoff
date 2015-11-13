@@ -47,16 +47,34 @@ var cm_names = ("K M B T Qa Qi Sx Sp Oc No Dc").split(" ");
 
 var pow;
 var fnum;
-// http://userscripts-mirror.org/scripts/review/293573
-var fmt = function(num) {
-  /*var len = Math.floor(num).toString().length - 1;
-  var pow = Math.floor(len/3) * 3;
-  var manlen = 2 - len % 3;
-  return (Math.floor(num / Math.pow(10, pow - manlen)) / Math.pow(10, manlen)) + (pow == 0 ? "" : cm_names[(pow / 3) - 1]);*/
-  pow = Math.floor((Math.floor(num).toString().length - 1)/3) * 3;
-  fnum = (Math.floor(num / Math.pow(10, pow - 3)) / Math.pow(10, 3)) + (pow == 0 ? "" : cm_names[(pow / 3) - 1]);
+var find_exponent = /(([1-9])(\.([0-9]+))?)e\+([0-9]+)/;
+var fmt_parts;
+var floor_num;
 
-  return fnum;
+var fmt = function(num) {
+	// Math.floor returns exponents quicker for some reason
+	floor_num = Math.floor(num).toString();
+
+	// in case of exponents
+	if ( (fmt_parts = floor_num.match(find_exponent)) ) {
+		// Out of range of the friendly numbers
+		if ( fmt_parts[5] > 35 ) {
+			fnum = parseFloat(fmt_parts[1]) + 'e' + fmt_parts[5];
+		// has a decimal
+		} else if ( fmt_parts[3] ) {
+			num = fmt_parts[2] + fmt_parts[4] + '00';
+			fnum = parseFloat(num.substring(0, fmt_parts[5] % 3 + 1) + '.' + num.substring(fmt_parts[5] % 3 + 1, fmt_parts[5] % 3 + 4)) + cm_names[Math.floor(fmt_parts[5]/3) - 1];
+		} else {
+			num = fmt_parts[2] + '00';
+			fnum = num.substring(0, fmt_parts[5] % 3 + 1) + cm_names[Math.floor(fmt_parts[5]/3) - 1];
+		}
+	} else {
+		// http://userscripts-mirror.org/scripts/review/293573
+		pow = Math.floor((floor_num.length - 1)/3) * 3;
+		fnum = (Math.floor(num / Math.pow(10, pow - 3)) / Math.pow(10, 3)) + (pow == 0 ? "" : cm_names[(pow / 3) - 1]);
+	}
+
+	return fnum;
 };
 
   /////////////////////////////
