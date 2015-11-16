@@ -3,6 +3,7 @@
 <head>
 	<title>Reactor Knockoff</title>
 
+	<link href='https://fonts.googleapis.com/css?family=Jura:400,600|Orbitron:900' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="css/reset.css"/>
 	<link rel="stylesheet" href="css/app.css"/>
 </head>
@@ -27,16 +28,18 @@
 						(<span id="auto_heat_reduce"></span> per tick)
 					</button>
 				</section>
-				<section id="power">
-					<h3 class="heading">Power</h3>
-					<div id="power_indicator">
-						<span id="power_text"><span id="current_power">0</span>/<span id="max_power">0</span></span>
-						<span id="power_percentage"></span>
-					</div>
-				</section>
-				<button id="sell">Sell</button>
+				<div id="power_section">
+					<section id="power">
+						<h3 class="heading">Power</h3>
+						<div id="power_indicator">
+							<span id="power_text"><span id="current_power">0</span>/<span id="max_power">0</span></span>
+							<span id="power_percentage"></span>
+						</div>
+					</section>
+					<button id="sell">Sell</button>
+				</div>
 				<p id="money_wrapper">$<span id="money">0</span></p>
-				<button id="scrounge">Scrounge for Cash</button>
+				<!-- button id="scrounge">Scrounge for Cash</button -->
 			</section>
 
 			<section id="parts_section">
@@ -54,44 +57,67 @@
 		</div>
 
 		<div id="primary">
-			<menu id="nav">
-				<button id="save">Save</button>
-				<button id="show_upgrades">Upgrades</button>
-				<button id="pause">Pause</button>
-				<button id="unpause">Unpause</button>
-			</menu>
+			<div id="tooltip_nav">
+				<section id="tooltip">
+					<h2 class="headline" id="tooltip_name" title="Name"></h2>
+					<p id="tooltip_description" title="Description"></p>
+					<p id="tooltip_cost" title="Cost"></p>
+					<p id="tooltip_sells" title="Sells for"></p>
+					<p id="tooltip_heat_per" title="Heat per tick"></p>
+					<p id="tooltip_power_per" title="Power per tick"></p>
+					<p id="tooltip_heat_wrapper" title="Heat per tick">
+						<span id="tooltip_heat"></span>/<span id="tooltip_max_heat"></span>
+					</p>
+				</section>
 
-			<section id="reactor_section">
-				<h2 class="heading">Reactor</h2>
-				<div id="reactor">
-				</div>
-			</section>
+				<menu id="nav">
+					<button id="save">Save</button>
+					<button id="show_upgrades">Upgrades</button>
+					<button id="pause">Pause</button>
+					<button id="unpause">Unpause</button>
+				</menu>
+			</div>
 
-			<section id="upgrades_section">
-				<h2 class="heading">Upgrades</h2>
-				<div id="upgrades">
-					<div id="cell_upgrades">
-						<div id="cell_tick_upgrades">
+			<div id="reactor_upgrades">
+				<section id="reactor_section">
+					<h2 class="heading">Reactor</h2>
+					<div id="reactor">
+					</div>
+				</section>
+
+				<section id="upgrades_section">
+					<h2 class="heading">Upgrades</h2>
+					<div id="upgrades">
+						<div id="cell_upgrades">
+							<div id="cell_tick_upgrades">
+
+							</div>
+							<div id="cell_power_upgrades">
+
+							</div>
+							<div id="cell_perpetual_upgrades">
+
+							</div>
+						</div>
+						<div id="other_upgrades">
 
 						</div>
-						<div id="cell_power_upgrades">
+						<div id="vent_upgrades">
 
 						</div>
-						<div id="cell_perpetual_upgrades">
+						<div id="exchanger_upgrades">
 
 						</div>
 					</div>
-					<div id="other_upgrades">
+				</section>
 
+				<section id="experimental_upgrades_section">
+					<h2 class="heading">Experimental Upgrades</h2>
+					<div id="experimental_upgrades">
+						
 					</div>
-					<div id="vent_upgrades">
-
-					</div>
-					<div id="exchanger_upgrades">
-
-					</div>
-				</div>
-			</section>
+				</section>
+			</div>
 		</div>
 	</main>
 

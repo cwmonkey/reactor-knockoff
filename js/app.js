@@ -96,7 +96,7 @@ var base_max_power = 100;
 // Current
 var current_heat = 0;
 var current_power = 0;
-var current_money = 0;
+var current_money = 10;
 var max_heat = base_max_heat;
 var auto_sell_multiplier = 0;
 var max_power = base_max_power;
@@ -433,6 +433,18 @@ var $max_power = $('#max_power');
 var $main = $('#main');
 var $upgrades = $('#upgrades');
 
+// Tooltip
+var $tooltip = $('#tooltip');
+var $tooltip_name = $('#tooltip_name');
+var $tooltip_description = $('#tooltip_description');
+var $tooltip_cost = $('#tooltip_cost');
+var $tooltip_sells = $('#tooltip_sells');
+var $tooltip_heat_per = $('#tooltip_heat_per');
+var $tooltip_power_per = $('#tooltip_power_per');
+var $tooltip_heat_wrapper = $('#tooltip_heat_wrapper');
+var $tooltip_heat = $('#tooltip_heat');
+var $tooltip_max_heat = $('#tooltip_max_heat');
+
 if ( debug ) {
 	$main.className += ' debug';
 }
@@ -733,11 +745,13 @@ var Part = function(part) {
 	this.cost = part.base_cost;
 	this.affordable = true;
 	this.perpetual = false;
+	this.description = '';
+	this.sells = 0;
 
 	var $image = $('<div class="image">');
 	$image.innerHTML = 'Click to Select';
 
-	var $description = $('<div class="description info">');
+	/*var $description = $('<div class="description info">');
 
 	var $headline = $('<div class="headline">');
 	$headline.innerHTML = part.title;
@@ -753,13 +767,13 @@ var Part = function(part) {
 
 	$description.appendChild($headline);
 	$description.appendChild(this.$text);
-	$description.appendChild($cost_wrapper);
+	$description.appendChild($cost_wrapper);*/
 
 	this.$el.appendChild($image);
-	this.$el.appendChild($description);
+	// this.$el.appendChild($description);
 };
 
-Part.prototype.updateHtml = function() {
+Part.prototype.updateDescription = function() {
 	var description = this.part.base_description
 		.replace(/%power_increase/, fmt(this.power_increase))
 		.replace(/%reactor_power/, fmt(this.reactor_power))
@@ -777,9 +791,27 @@ Part.prototype.updateHtml = function() {
 		description = description.replace(/%type/, part_objects[this.part.type + 1].part.title);
 	}
 
-	this.$text.innerHTML = description;
+	this.description = description;
+};
 
-	this.$cost.innerHTML = fmt(this.cost);
+Part.prototype.showTooltip = function() {
+	$tooltip_name.innerHTML = this.part.title;
+
+	$tooltip_sells.style.display = 'none';
+	$tooltip_heat_per.style.display = 'none';
+	$tooltip_power_per.style.display = 'none';
+	$tooltip_heat_wrapper.style.display = 'none';
+	$tooltip_heat.style.display = 'none';
+	$tooltip_max_heat.style.display = 'none';
+
+	this.updateTooltip();
+};
+
+Part.prototype.updateTooltip = function() {
+	$tooltip_description.innerHTML = this.description;
+
+	$tooltip_cost.style.display = null;
+	$tooltip_cost.innerHTML = fmt(this.cost);
 };
 
 var part_obj;
@@ -839,7 +871,7 @@ var create_part = function(part, level) {
 	part_objects[part.id] = part_obj;
 	part_objects_array.push(part_obj);
 
-	part_obj.updateHtml();
+	part_obj.updateDescription();
 
 	if ( part.category === 'cell' ) {
 		$cells.appendChild(part_obj.$el);
@@ -865,6 +897,32 @@ for ( pi = 0, pl = parts.length; pi < pl; pi++ ) {
 	}
 }
 
+// Part tooltips
+var tooltip_showing_replace = /[\s\b]tooltip_showing\b/;
+var tooltip_showing = false;
+var tooltip_update = null;
+var part_tooltip_show = function(e) {
+	var part = this.part;
+
+	part.showTooltip();
+	tooltip_showing = true;
+	tooltip_update = part.updateTooltip;
+	$main.className += ' tooltip_showing';
+};
+
+var part_tooltip_hide = function(e) {
+	$tooltip.style.display = null;
+	var part = this.part;
+
+	tooltip_showing = false;
+	tooltip_update = null;
+	$main.className = $main.className.replace(tooltip_showing_replace, '');
+};
+
+$parts.delegate('part', 'mouseover', part_tooltip_show);
+$parts.delegate('part', 'focus', part_tooltip_show);
+$parts.delegate('part', 'mouseout', part_tooltip_hide);
+$parts.delegate('part', 'mouseup', part_tooltip_hide);
 
   /////////////////////////////
  // Reduce Heat Manually
@@ -954,7 +1012,7 @@ var upgrades = [
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['reactor_plating' + i];
 				part.reactor_heat = part.part.base_reactor_heat * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -984,7 +1042,7 @@ var upgrades = [
 				part = part_objects['capacitor' + i];
 				part.reactor_power = part.part.base_reactor_power * ( upgrade.level + 1 );
 				part.containment = part.part.base_containment * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -1000,7 +1058,7 @@ var upgrades = [
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['capacitor' + i];
 				part.perpetual = upgrade.level ? true : false;
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -1030,7 +1088,7 @@ var upgrades = [
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['reflector' + i];
 				part.ticks = part.part.base_ticks * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -1046,7 +1104,7 @@ var upgrades = [
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['reflector' + i];
 				part.power_increase = part.part.base_power_increase * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -1062,7 +1120,7 @@ var upgrades = [
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['reflector' + i];
 				part.perpetual = upgrade.level ? true : false;
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -1080,16 +1138,16 @@ var upgrades = [
 			for ( var i = 1; i <= 5; i++ ) {
 				/*part = part_objects['heat_inlet' + i];
 				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
-				part.updateHtml();*/
+				part.updateDescription();*/
 
 				part = part_objects['heat_outlet' + i];
 				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateDescription();
 
 				/*part = part_objects['heat_exchanger' + i];
 				part.transfer = part.part.base_transfer * ( upgrade.level + 1 );
 				part.containment = part.part.base_containment * ( upgrade.level + 1 );
-				part.updateHtml();*/
+				part.updateDescription();*/
 			}
 		}
 	},
@@ -1129,7 +1187,7 @@ var upgrades = [
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['vent' + i];
 				part.vent = part.part.base_vent * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -1245,7 +1303,7 @@ var types = [
 			for ( var i = 1; i <= 3; i++ ) {
 				part = part_objects[upgrade.part.type + i];
 				part.power = part.part.base_power * ( upgrade.level + 1 );
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -1258,7 +1316,7 @@ var types = [
 			for ( var i = 1; i <= 3; i++ ) {
 				part = part_objects[upgrade.part.type + i];
 				part.ticks = part.part.base_ticks * Math.pow(2, upgrade.level);
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	},
@@ -1276,7 +1334,7 @@ var types = [
 				} else {
 					part.perpetual = false;
 				}
-				part.updateHtml();
+				part.updateDescription();
 			}
 		}
 	}
@@ -1675,7 +1733,7 @@ $sell.onclick = function() {
  // Scrounge
 /////////////////////////////
 
-var $scrounge = $('#scrounge');
+/* var $scrounge = $('#scrounge');
 
 $scrounge.onclick = function() {
 	if ( current_money < 10 && current_power === 0 ) {
@@ -1683,7 +1741,7 @@ $scrounge.onclick = function() {
 
 		$money.innerHTML = fmt(current_money);
 	}
-};
+}; */
 
   /////////////////////////////
  // Game Loop

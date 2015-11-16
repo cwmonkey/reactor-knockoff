@@ -11,7 +11,9 @@ html {
 }
 
 body {
-	font-family: sans-serif, Arial;
+	font-family: sans-serif;
+	font-family: 'Jura';
+	font-weight: 600;
 	font-size: 16px;
 }
 
@@ -20,6 +22,18 @@ button {
 	border: none;
 	box-shadow: none;
 	-webkit-appearance: none;
+	font-family: 'Jura';
+	font-weight: 600;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: Orbitron;
+	font-weight: 900;
 }
 
 #main {
@@ -28,11 +42,19 @@ button {
 }
 
 #secondary {
-	width: 160px;
+	width: 200px;
 }
 
 #primary {
-	width: 608px;
+	width: 632px;
+}
+
+#main_header,
+#reactor_section .heading,
+#parts_section .heading,
+#stats_section .heading {
+	position: absolute;
+	clip: rect(1px, 1px, 1px, 1px);
 }
 
 #power_indicator,
@@ -42,8 +64,10 @@ button {
 	font-size: .8em;
 	text-align: center;
 	padding: .75em 1em;
+	margin-bottom: 2px;
 }
 
+#money_wrapper,
 #power_text,
 #heat_text {
 	position: relative;
@@ -59,6 +83,7 @@ button {
 		1px -1px 0 rgba(0, 0, 0, 1),
 		-1px 1px 0 rgba(0, 0, 0, 1)
 		;
+	font-family: monospace;
 }
 
 #power_percentage,
@@ -70,12 +95,21 @@ button {
 	z-index: 1;
 }
 
+#money_wrapper {
+	background: #59c435;
+	color: #fff;
+	font-size: .8em;
+	text-align: center;
+	padding: .75em 1em;
+	border: 2px solid #198405;
+}
+
 #heat_percentage {
-	background-color: red;
+	background-color: #f00;
 }
 
 #power_percentage {
-	background-color: #0F0;
+	background-color: #33a5c6;
 }
 
 #parts,
@@ -83,6 +117,33 @@ button {
 #parts > menu > menu,
 #reactor {
 	display: table;
+}
+
+#parts_section,
+#stats_section,
+#tooltip_nav,
+#reactor_upgrades {
+	border: 10px solid #eee;
+	border-image: url("../img/border_bg.png") 10 10 stretch;
+	margin: 2px 0 0 2px;
+	background: #b2b2b2;
+	background-clip: padding-box;
+}
+
+#power_section,
+#heat {
+	margin-bottom: 4px;
+}
+
+#reduce_heat,
+#sell {
+	display: block;
+	width: 100%;
+}
+
+#tooltip_nav {
+	padding: 4px;
+	height: 108px;
 }
 
 #parts .part .image,
@@ -106,9 +167,13 @@ button {
 	width: 100%;
 }
 
-
 #parts .part {
 	background: transparent;
+	margin-right: 4px;
+}
+
+#parts .part:nth-child(5n) {
+	margin-right: 0;
 }
 
 #parts .part.unaffordable .image {
@@ -205,10 +270,23 @@ button {
  // Navs
 ////////////////////////// */
 
+#stats_section button,
 #nav button {
-	border: 2px solid #999;
+	border: 2px solid #888;
 	padding: .25em 1em;
+	cursor: pointer;
+	margin: 0;
+}
+
+#nav button {
 	margin-right: .25em;
+}
+
+#stats_section button:hover,
+#stats_section button:focus,
+#nav button:hover,
+#nav button:focus {
+	background: #fff;
 }
 
 #main.paused #pause,
@@ -225,20 +303,21 @@ button {
 ////////////////////////// */
 
 #cells {
-	max-width: 10em;
+	max-width: 11em;
 }
 
-#cells .part {
-	margin-right: 32px;
+#cells .part,
+#cells .part:nth-child(5n) {
+	margin-right: 40px;
+}
+
+#cells .part:nth-child(3n) {
+	margin-right: 0;
 }
 
 .part .description {
 	position: absolute;
 	clip: rect(1px 1px 1px 1px);
-}
-
-#cells .part:nth-child(3n) {
-	margin-right: 0;
 }
 
 /* uranium */
@@ -697,18 +776,41 @@ button {
 }
 
   /* //////////////////////////
- // States
+ // Tooltips
 ////////////////////////// */
 
-#main :hover > .info {
-	width: 608px;
-	clip: auto;
-	position: fixed;
-	right: 0;
-	top: 0;
-	z-index: 10;
-	background: #fff;
-	font-size: 16px;
+#tooltip {
+	display: none;
+	text-align: center;
+	position: relative;
+	height: 100%;
+	padding: 0 4em;
+}
+
+#tooltip_name {
+	margin-bottom: .5em;
+}
+
+#tooltip_description {
+	margin-bottom: .5em;
+}
+
+#tooltip_cost:before {
+	content: "Cost: ";
+}
+
+#main.tooltip_showing #tooltip {
+	display: block;
+}
+
+#main.tooltip_showing #nav {
+	display: none;
+}
+
+#tooltip_cost {
+	position: absolute;
+	left: 0;
+	bottom: 0;
 }
 
   /* //////////////////////////
