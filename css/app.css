@@ -270,6 +270,11 @@ h6 {
  // Navs
 ////////////////////////// */
 
+#nav {
+	position: relative;
+	height: 100%;
+}
+
 #stats_section button,
 #nav button {
 	border: 2px solid #888;
@@ -289,13 +294,64 @@ h6 {
 	background: #fff;
 }
 
+#main.paused #unpause {
+	display: inline-block;
+}
+
+#controls_nav {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+#pages_nav {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+}
+
+#controls_nav button {
+	margin-bottom: 4px;
+	clear: both;
+	float: right;
+}
+
 #main.paused #pause,
-#unpause {
+#unpause,
+#main.auto_disabled #disabled_auto,
+#enable_auto {
+	display: none !important;
+}
+
+  /* //////////////////////////
+ // Pages
+////////////////////////// */
+
+#reactor_section,
+#upgrades_section,
+#experimental_upgrades_section {
 	display: none;
 }
 
-#main.paused #unpause {
-	display: inline-block;
+#main.reactor_showing #reactor_section,
+#main.upgrades_showing #upgrades_section,
+#main.experiments_showing #experimental_upgrades_section {
+	display: block
+}
+
+#experimental_upgrades_section,
+#upgrades_section {
+	padding: 10px;
+}
+
+#experimental_upgrades_section .heading,
+#upgrades_section .heading {
+	margin-bottom: 1em;
+}
+
+#experimental_upgrades_section > div,
+#upgrades > div {
+	margin-bottom: 1em;
 }
 
   /* //////////////////////////

@@ -1386,10 +1386,19 @@ $upgrades.delegate('upgrade', 'click', function(event) {
 });
 
   /////////////////////////////
- // Show Upgrades
+ // Show Pages
 /////////////////////////////
 
-var $show_upgrades = $('#show_upgrades');
+var $pages_nav = $('#pages_nav');
+var page_find = /\b[a-z]+_showing[\b\s]/;
+$pages_nav.delegate('nav', 'click', function(event) {
+	var page = this.getAttribute('data-page');
+console.log(page);
+	$main.className = $main.className.replace(page_find, page + ' ');
+});
+
+
+
 
 var check_upgrades_affordability = function(event) {
 	for ( var i = 0, l = upgrade_objects_array.length, upgrade; i < l; i++ ) {
@@ -1402,6 +1411,7 @@ var check_upgrades_affordability = function(event) {
 	}
 };
 
+var $show_upgrades = $('#show_upgrades');
 $show_upgrades.onclick = check_upgrades_affordability;
 
   /////////////////////////////

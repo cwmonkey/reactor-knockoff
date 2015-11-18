@@ -11,7 +11,7 @@
 	<header id="main_header">
 		<h1 class="heading">Reactor Knockoff</h1>
 	</header>
-	<main id="main">
+	<main id="main" class="reactor_showing">
 		<div id="secondary">
 			<section id="stats_section">
 				<h2 class="heading">Stats</h2>
@@ -71,10 +71,23 @@
 				</section>
 
 				<menu id="nav">
-					<button id="save">Save</button>
-					<button id="show_upgrades">Upgrades</button>
-					<button id="pause">Pause</button>
-					<button id="unpause">Unpause</button>
+					<menu id="game_nav">
+						<button id="save">Save</button>
+						<button id="options">Options</button>
+					</menu>
+
+					<menu id="pages_nav">
+						<button id="show_reactor" class="nav" data-page="reactor_showing">Reactor</button>
+						<button id="show_upgrades" class="nav" data-page="upgrades_showing">Upgrades</button>
+						<button id="show_experiments" class="nav" data-page="experiments_showing">Experiments</button>
+					</menu>
+
+					<menu id="controls_nav">
+						<button id="disable_auto">Disable Auto Sell</button>
+						<button id="enable_auto">Enable Auto Sell</button>
+						<button id="pause">Pause</button>
+						<button id="unpause">Unpause</button>
+					</menu>
 				</menu>
 			</div>
 
