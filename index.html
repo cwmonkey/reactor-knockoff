@@ -12,8 +12,8 @@
 		<h1 class="heading">Reactor Knockoff</h1>
 	</header>
 	<main id="main" class="reactor_showing">
-		<div id="secondary">
-			<section id="stats_section">
+		<div id="secondary" class="panel_holder">
+			<section id="stats_section" class="panel">
 				<h2 class="heading">Stats</h2>
 				<section id="heat">
 					<h3 class="heading">Heat</h3>
@@ -25,7 +25,7 @@
 					</div>
 					<button id="reduce_heat">
 						<span id="manual_heat_reduce"></span> Heat
-						(<span id="auto_heat_reduce"></span> per tick)
+						(<span id="auto_heat_reduce"></span>/tick)
 					</button>
 				</section>
 				<div id="power_section">
@@ -42,22 +42,32 @@
 				<!-- button id="scrounge">Scrounge for Cash</button -->
 			</section>
 
-			<section id="parts_section">
+			<section id="parts_section" class="panel">
 				<h2 class="heading">Parts</h2>
-				<menu id="parts">
+
+				<menu id="parts_nav" class="subpanel_alt">
+					<button id="show_normal" class="nav" data-section="parts_section" data-page="parts">Normal</button>
+					<button id="show_experimental" class="nav" data-section="parts_section" data-page="experimental_parts">Experimental</button>
+				</menu>
+
+				<menu id="parts" class="page subpanel showing">
 					<menu id="power">
-						<menu id="cells"></menu>
+						<menu id="cells" class="cells"></menu>
 						<menu id="reflectors"></menu>
 						<menu id="capacitors"></menu>
 					</menu>
 					<menu id="cooling">
 					</menu>
 				</menu>
+
+				<menu id="experimental_parts" class="page subpanel">
+					<menu id="xcells" class="cells"></menu>
+				</menu>
 			</section>
 		</div>
 
-		<div id="primary">
-			<div id="tooltip_nav">
+		<div id="primary" class="panel_holder">
+			<div id="tooltip_nav" class="panel">
 				<section id="tooltip">
 					<h2 class="headline" id="tooltip_name" title="Name"></h2>
 					<p id="tooltip_description" title="Description"></p>
@@ -77,9 +87,9 @@
 					</menu>
 
 					<menu id="pages_nav">
-						<button id="show_reactor" class="nav" data-page="reactor_showing">Reactor</button>
-						<button id="show_upgrades" class="nav" data-page="upgrades_showing">Upgrades</button>
-						<button id="show_experiments" class="nav" data-page="experiments_showing">Experiments</button>
+						<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">Reactor</button>
+						<button id="show_upgrades" class="nav" data-section="reactor_upgrades" data-page="upgrades_section">Upgrades</button>
+						<button id="show_experiments" class="nav" data-section="reactor_upgrades" data-page="experimental_upgrades_section">Experiments</button>
 					</menu>
 
 					<menu id="controls_nav">
@@ -91,14 +101,14 @@
 				</menu>
 			</div>
 
-			<div id="reactor_upgrades">
-				<section id="reactor_section">
+			<div id="reactor_upgrades" class="panel">
+				<section id="reactor_section" class="page showing">
 					<h2 class="heading">Reactor</h2>
-					<div id="reactor">
+					<div id="reactor" class="subpanel">
 					</div>
 				</section>
 
-				<section id="upgrades_section">
+				<section id="upgrades_section" class="page">
 					<h2 class="heading">Upgrades</h2>
 					<div id="upgrades">
 						<div id="cell_upgrades">
@@ -124,10 +134,18 @@
 					</div>
 				</section>
 
-				<section id="experimental_upgrades_section">
+				<section id="experimental_upgrades_section" class="page">
 					<h2 class="heading">Experimental Upgrades</h2>
 					<div id="experimental_upgrades">
-						
+						<div id="xlaboratory"></div>
+
+						<div id="xboost"></div>
+
+						<div id="xcells"></div>
+
+						<div id="xcell_boost"></div>
+
+						<div id="xother"></div>
 					</div>
 				</section>
 			</div>

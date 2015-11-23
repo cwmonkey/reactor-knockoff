@@ -422,6 +422,7 @@ var update_tiles = function() {
 var $reactor = $('#reactor');
 var $parts = $('#parts');
 var $cells = $('#cells');
+var $xcells = $('#xcells');
 var $reflectors = $('#reflectors');
 var $capacitors = $('#capacitors');
 var $money = $('#money');
@@ -467,6 +468,26 @@ for ( ri = 0; ri < rows; ri++ ) {
 
 	tiles.push(row);
 }
+
+  /////////////////////////////
+ // Show Pages
+/////////////////////////////
+
+var showing_find = /[\b\s]showing\b/;
+$main.delegate('nav', 'click', function(event) {
+	var id = this.getAttribute('data-page');
+	var section = this.getAttribute('data-section');
+	var $page = $('#' + id);
+	var $section = $('#' + section);
+	var pages = $section.getElementsByClassName('page');
+
+	for ( var i = 0, length = pages.length, $p; i < length; i++ ) {
+		$p = pages[i];
+		$p.className = $p.className.replace(showing_find, '');
+	}
+
+	$page.className += ' showing';
+});
 
   /////////////////////////////
  // Parts
@@ -599,6 +620,19 @@ var parts = [
 		cell_power_upgrade_cost: 17500000000000000,
 		cell_power_upgrade_multiplier: 10,
 		cell_perpetual_upgrade_cost: 3586000000000000000
+	},
+	{
+		id: 'protium',
+		type: 'protium',
+		levels: 3,
+		title: 'Protium Cell',
+		base_description: single_cell_description + ' After being fully depleted, protium cells permanently generate 10% more power per depleted cell.',
+		category: 'cell',
+		experimental: true,
+		base_cost: 3000000000000000,
+		base_ticks: 3600,
+		base_power: 1250000000000,
+		base_heat: 1250000000000
 	},
 
 	// Energy
@@ -874,7 +908,11 @@ var create_part = function(part, level) {
 	part_obj.updateDescription();
 
 	if ( part.category === 'cell' ) {
-		$cells.appendChild(part_obj.$el);
+		if ( part.experimental ) {
+			$xcells.appendChild(part_obj.$el);
+		} else {
+			$cells.appendChild(part_obj.$el);
+		}
 	} else if ( part.category === 'reflector' ) {
 		$reflectors.appendChild(part_obj.$el);
 	} else if ( part.category === 'capacitor' ) {
@@ -1215,6 +1253,153 @@ var upgrades = [
 	}
 ];
 
+// Experimental Upgrades
+var experiments = [
+	{
+		id: 'laboratory',
+		type: 'laboratory',
+		title: 'Laboratory',
+		description: 'Enables experimental upgrades.',
+		ecost: 1,
+		levels: 1,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'infused_cells',
+		type: 'boost',
+		title: 'Infused Cells',
+		description: 'Each fuel cell produces an additional 100% base power per level of upgrade.',
+		erequires: 'laboratory',
+		ecost: 50,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'unleashed_cells',
+		type: 'boost',
+		title: 'Unleashed Cells',
+		description: 'Each fuel cell produces two times their base heat and power per level of upgrade.',
+		erequires: 'laboratory',
+		ecost: 100,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'quantum_buffering',
+		type: 'boost',
+		title: 'Quantum Buffering',
+		description: 'Capacitors and platings are two times as effective per level of upgrade.',
+		erequires: 'laboratory',
+		ecost: 50,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'full_spectrum_reflectors',
+		type: 'boost',
+		title: 'Full Spectrum Reflectors',
+		description: 'Reflectors increase the power output of adjacent cells by an additional 5% per level of upgrade.',
+		erequires: 'laboratory',
+		ecost: 50,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'fluid_hyperdynamics',
+		type: 'boost',
+		title: 'Fluid Hyperdynamics',
+		description: 'Heat vents, exchangers, inlets and outlets are two times as effective per level of upgrade.',
+		erequires: 'laboratory',
+		ecost: 50,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'fractal_piping',
+		type: 'boost',
+		title: 'Fractal Piping',
+		description: 'Heat vents and exchangers hold two times their base heat per level of upgrade.',
+		erequires: 'laboratory',
+		ecost: 50,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'ultracryonics',
+		type: 'boost',
+		title: 'Ultracryonics',
+		description: 'Coolant cells hold two times their base heat per level of upgrade.',
+		erequires: 'laboratory',
+		ecost: 50,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'phlembotinum_core',
+		type: 'boost',
+		title: 'Phlembotinum Core',
+		description: 'Increase the base heat and power storage of the reactor by four times per level of upgrade.',
+		erequires: 'laboratory',
+		ecost: 50,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'protium_cells',
+		type: 'cells',
+		title: 'Protium Cells',
+		description: 'Allows you to use protium cells.',
+		erequires: 'laboratory',
+		ecost: 50,
+		levels: 1,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'unstable_protium',
+		type: 'cells_boost',
+		title: 'Unstable Protium',
+		description: 'Protium cells last half as long and product twice as much power and heat per level.',
+		erequires: 'laboratory',
+		ecost: 500,
+		multiplier: 2,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'vortex_cooling',
+		type: 'other',
+		title: 'Vortex Cooling',
+		description: 'Allows you to use extreme coolant cells.',
+		erequires: 'laboratory',
+		ecost: 10000,
+		levels: 1,
+		onclick: function(upgrade) {
+		}
+	},
+	{
+		id: 'experimental_capacitance',
+		type: 'other',
+		title: 'Experimental Capacitance',
+		description: 'Allows you to use extreme capacitors.',
+		erequires: 'laboratory',
+		ecost: 10000,
+		levels: 1,
+		onclick: function(upgrade) {
+		}
+	},
+
+];
+
 var Upgrade = function(upgrade) {
 	var me = this;
 	this.upgrade = upgrade;
@@ -1384,21 +1569,6 @@ $upgrades.delegate('upgrade', 'click', function(event) {
 	update_tiles();
 	check_upgrades_affordability();
 });
-
-  /////////////////////////////
- // Show Pages
-/////////////////////////////
-
-var $pages_nav = $('#pages_nav');
-var page_find = /\b[a-z]+_showing[\b\s]/;
-$pages_nav.delegate('nav', 'click', function(event) {
-	var page = this.getAttribute('data-page');
-console.log(page);
-	$main.className = $main.className.replace(page_find, page + ' ');
-});
-
-
-
 
 var check_upgrades_affordability = function(event) {
 	for ( var i = 0, l = upgrade_objects_array.length, upgrade; i < l; i++ ) {
@@ -1994,7 +2164,7 @@ var game_loop = function() {
 	$power_percentage.style.width = current_power / max_power * 100 + '%';
 
 	if ( current_heat <= max_heat ) {
-		$reactor.style.backgroundColor = 'rgb(255, 255, 255)';
+		$reactor.style.backgroundColor = 'transparent';
 	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
 		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
 	} else {

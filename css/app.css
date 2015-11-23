@@ -11,10 +11,11 @@ html {
 }
 
 body {
-	font-family: sans-serif;
-	font-family: 'Jura';
+	font-family: 'Jura', sans-serif;
 	font-weight: 600;
 	font-size: 16px;
+	background: #000204;
+	color: #fff;
 }
 
 button {
@@ -39,18 +40,24 @@ h6 {
 #main {
 	display: flex;
 	position: relative;
+	margin: 4px;
+	float: left;
 }
 
 #secondary {
-	width: 200px;
+	width: 221px;
 }
 
 #primary {
-	width: 632px;
+	width: 652px;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: auto;
 }
 
 #main_header,
-#reactor_section .heading,
 #parts_section .heading,
 #stats_section .heading {
 	position: absolute;
@@ -146,7 +153,7 @@ h6 {
 	height: 108px;
 }
 
-#parts .part .image,
+#parts_section .part .image,
 #upgrades .image,
 #reactor .tile {
 	position: relative;
@@ -156,7 +163,7 @@ h6 {
 	vertical-align: top;
 }
 
-#parts .part .image,
+#parts_section .part .image,
 #reactor .tile {
 	height: 32px;
 	width: 32px;
@@ -167,25 +174,25 @@ h6 {
 	width: 100%;
 }
 
-#parts .part {
+#parts_section .part {
 	background: transparent;
 	margin-right: 4px;
 }
 
-#parts .part:nth-child(5n) {
+#parts_section .part:nth-child(5n) {
 	margin-right: 0;
 }
 
-#parts .part.unaffordable .image {
+#parts_section .part.unaffordable .image {
 	opacity: .5;
 }
 
-#parts .part.active {
+#parts_section .part.active {
 	outline: 2em dashed blue;
 	outline-offset: -2em;
 }
 
-#parts .part .image:after,
+#parts_section .part .image:after,
 #upgrades .image:before,
 #upgrades .image:after,
 #reactor .tile:after {
@@ -196,10 +203,12 @@ h6 {
 	top: 0;
 	left: 0;
 	display: block;
-	background: url("../img/sprites.png") left top no-repeat;
+	/*background: url("../img/sprites.png") left top no-repeat;*/
+	background-position: left top;
+	background-repeat: no-repeat;
 }
 
-#parts .part:after {
+#parts_section .part:after {
 	top: 0;
 	left: 0;
 }
@@ -208,8 +217,12 @@ h6 {
  // Reactor
 ////////////////////////// */
 
+#reactor_section .heading {
+	margin-bottom: 14px;
+}
+
 #reactor .tile {
-	background: url("../img/sprites.png") -160px top no-repeat;
+	background-image: url("../img/tile.png");
 }
 
 #reactor .tile.disabled:after {
@@ -257,13 +270,13 @@ h6 {
 }
 
 @keyframes explosion {
-  0%   { background: url('../img/sprites.png') 0 -512px no-repeat; } 
-  100% { background: url('../img/sprites.png') -192px -512px no-repeat; }
+  0%   { background: url('../img/explosion_map.gif') 32px 0 no-repeat; } 
+  100% { background: url('../img/explosion_map.gif') -192px 0 no-repeat; }
 }
 
 #reactor .tile.exploding:after {
-  background: url('../img/sprites.png') -192px -512px no-repeat;
-  animation: explosion .6s steps(6);
+  background: url('../img/sprites.png') -192px 0 no-repeat;
+  animation: explosion .6s steps(7);
 }
 
   /* //////////////////////////
@@ -279,8 +292,15 @@ h6 {
 #nav button {
 	border: 2px solid #888;
 	padding: .25em 1em;
-	cursor: pointer;
 	margin: 0;
+
+	border: 8px solid #eee;
+	border-image: url("../img/button_border.png") 8 8 stretch;
+	background-color: #7181a8;
+	background-clip: padding-box;
+	color: #fff;
+	cursor: pointer;
+	outline: none;
 }
 
 #nav button {
@@ -291,7 +311,10 @@ h6 {
 #stats_section button:focus,
 #nav button:hover,
 #nav button:focus {
-	background: #fff;
+	box-shadow:
+		inset 0px 0px 8px 3px #7181a8;
+	background-color: #fff;
+	color: #000;
 }
 
 #main.paused #unpause {
@@ -323,25 +346,57 @@ h6 {
 	display: none !important;
 }
 
+#parts_nav .nav {
+	overflow: hidden;
+	white-space: nowrap;
+	text-indent: 52px;
+	width: 26px;
+	height: 26px;
+	position: relative;
+}
+
+#parts_nav .nav:after {
+	content: " ";
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+}
+
+#show_normal {
+	background: #9999ff url(../img/nav.png);
+}
+
+#show_normal:after {
+	background: url(../img/nav_normal.gif);
+}
+
+#show_experimental {
+	background: #ff0000 url(../img/nav.png);
+}
+
+#show_experimental:after {
+	background: url(../img/nav_experimental.gif);
+}
+
   /* //////////////////////////
  // Pages
 ////////////////////////// */
 
-#reactor_section,
-#upgrades_section,
-#experimental_upgrades_section {
-	display: none;
+#main .page {
+	position: absolute;
+	clip: rect(1px, 1px, 1px, 1px);
+	left: 0;
+	top: 0;
 }
 
-#main.reactor_showing #reactor_section,
-#main.upgrades_showing #upgrades_section,
-#main.experiments_showing #experimental_upgrades_section {
-	display: block
+#main .showing {
+	position: static;
 }
 
 #experimental_upgrades_section,
 #upgrades_section {
-	padding: 10px;
 }
 
 #experimental_upgrades_section .heading,
@@ -358,16 +413,16 @@ h6 {
  // Cells
 ////////////////////////// */
 
-#cells {
+#parts_section .cells {
 	max-width: 11em;
 }
 
-#cells .part,
-#cells .part:nth-child(5n) {
+#parts_section .cells .part,
+#parts_section .cells .part:nth-child(5n) {
 	margin-right: 40px;
 }
 
-#cells .part:nth-child(3n) {
+#parts_section .cells .part:nth-child(3n) {
 	margin-right: 0;
 }
 
@@ -376,119 +431,129 @@ h6 {
 	clip: rect(1px 1px 1px 1px);
 }
 
+#reactor .tile.spent:after {
+	-webkit-filter: grayscale(100%);
+	filter: grayscale(100%);
+}
+
 /* uranium */
 #parts .part.part_uranium1 .image:after,
 #reactor .tile.part_uranium1:after,
 #upgrades .uranium .image:after,
 #forceful_fusion .image:after {
-	background-position: 0 -32px;
-}
-
-#reactor .tile.spent.part_uranium1:after {
-	background-position: -96px -32px;
+	background-image: url("../img/cell_1_1.gif");
 }
 
 #parts .part.part_uranium2 .image:after,
 #reactor .tile.part_uranium2:after {
-	background-position: -32px -32px;
-}
-
-#reactor .tile.part_uranium2.spent:after {
-	background-position: -128px -32px;
+	background-image: url("../img/cell_1_2.gif");
 }
 
 #parts .part.part_uranium3 .image:after,
 #reactor .tile.part_uranium3:after {
-	background-position: -64px -32px;
-}
-
-#reactor .tile.part_uranium3.spent:after {
-	background-position: -160px -32px;
+	background-image: url("../img/cell_1_4.gif");
 }
 
 /* plutonium */
 #parts .part.part_plutonium1 .image:after,
 #reactor .tile.part_plutonium1:after,
 #upgrades .plutonium .image:after {
-	background-position: 0 -64px;
+	background-image: url("../img/cell_2_1.gif");
 }
 
 #parts .part.part_plutonium2 .image:after,
 #reactor .tile.part_plutonium2:after {
-	background-position: -32px -64px;
+	background-image: url("../img/cell_2_2.gif");
 }
 
 #parts .part.part_plutonium3 .image:after,
 #reactor .tile.part_plutonium3:after {
-	background-position: -64px -64px;
+	background-image: url("../img/cell_2_4.gif");
 }
 
 /* thorium */
 #parts .part.part_thorium1 .image:after,
 #reactor .tile.part_thorium1:after,
 #upgrades .thorium .image:after {
-	background-position: 0 -96px;
+	background-image: url("../img/cell_3_1.gif");
 }
 
 #parts .part.part_thorium2 .image:after,
 #reactor .tile.part_thorium2:after {
-	background-position: -32px -96px;
+	background-image: url("../img/cell_3_2.gif");
 }
 
 #parts .part.part_thorium3 .image:after,
 #reactor .tile.part_thorium3:after {
-	background-position: -64px -96px;
+	background-image: url("../img/cell_3_4.gif");
 }
 
 /* seaborgium */
 #parts .part.part_seaborgium1 .image:after,
 #reactor .tile.part_seaborgium1:after,
 #upgrades .seaborgium .image:after {
-	background-position: 0 -128px;
+	background-image: url("../img/cell_4_1.gif");
 }
 
 #parts .part.part_seaborgium2 .image:after,
 #reactor .tile.part_seaborgium2:after {
-	background-position: -32px -128px;
+	background-image: url("../img/cell_4_2.gif");
 }
 
 #parts .part.part_seaborgium3 .image:after,
 #reactor .tile.part_seaborgium3:after {
-	background-position: -64px -128px;
+	background-image: url("../img/cell_4_4.gif");
 }
 
 /* dolorium */
 #parts .part.part_dolorium1 .image:after,
 #reactor .tile.part_dolorium1:after,
 #upgrades .dolorium .image:after {
-	background-position: 0 -160px;
+	background-image: url("../img/cell_5_1.gif");
 }
 
 #parts .part.part_dolorium2 .image:after,
 #reactor .tile.part_dolorium2:after {
-	background-position: -32px -160px;
+	background-image: url("../img/cell_5_2.gif");
 }
 
 #parts .part.part_dolorium3 .image:after,
 #reactor .tile.part_dolorium3:after {
-	background-position: -64px -160px;
+	background-image: url("../img/cell_5_4.gif");
 }
 
 /* nefastium */
 #parts .part.part_nefastium1 .image:after,
 #reactor .tile.part_nefastium1:after,
 #upgrades .nefastium .image:after {
-	background-position: 0 -192px;
+	background-image: url("../img/cell_6_1.gif");
 }
 
 #parts .part.part_nefastium2 .image:after,
 #reactor .tile.part_nefastium2:after {
-	background-position: -32px -192px;
+	background-image: url("../img/cell_6_2.gif");
 }
 
 #parts .part.part_nefastium3 .image:after,
 #reactor .tile.part_nefastium3:after {
-	background-position: -64px -192px;
+	background-image: url("../img/cell_6_4.gif");
+}
+
+/* protium */
+#parts_section .part.part_protium1 .image:after,
+#reactor .tile.part_protium1:after,
+#upgrades .protium .image:after {
+	background-image: url("../img/xcell_1_1.gif");
+}
+
+#parts_section .part.part_protium2 .image:after,
+#reactor .tile.part_protium2:after {
+	background-image: url("../img/xcell_1_2.gif");
+}
+
+#parts_section .part.part_protium3 .image:after,
+#reactor .tile.part_protium3:after {
+	background-image: url("../img/xcell_1_4.gif");
 }
 
   /* //////////////////////////
@@ -500,27 +565,27 @@ h6 {
 #perpetual_reflectors .image:after,
 #parts .part.part_reflector1 .image:after,
 #reactor .tile.part_reflector1:after {
-	background-position: 0 -224px;
+	background-image: url("../img/reflector_1.gif");
 }
 
 #parts .part.part_reflector2 .image:after,
 #reactor .tile.part_reflector2:after {
-	background-position: -32px -224px;
+	background-image: url("../img/reflector_2.gif");
 }
 
 #parts .part.part_reflector3 .image:after,
 #reactor .tile.part_reflector3:after {
-	background-position: -64px -224px;
+	background-image: url("../img/reflector_3.gif");
 }
 
 #parts .part.part_reflector4 .image:after,
 #reactor .tile.part_reflector4:after {
-	background-position: -96px -224px;
+	background-image: url("../img/reflector_4.gif");
 }
 
 #parts .part.part_reflector5 .image:after,
 #reactor .tile.part_reflector5:after {
-	background-position: -128px -224px;
+	background-image: url("../img/reflector_5.gif");
 }
 
   /* //////////////////////////
@@ -534,27 +599,27 @@ h6 {
 #active_exchangers .image:after,
 #improved_power_lines .image:after,
 #improved_wiring .image:after {
-	background-position: 0 -256px;
+	background-image: url("../img/capacitor_1.gif");
 }
 
 #parts .part.part_capacitor2 .image:after,
 #reactor .tile.part_capacitor2:after{
-	background-position: -32px -256px;
+	background-image: url("../img/capacitor_2.gif");
 }
 
 #parts .part.part_capacitor3 .image:after,
 #reactor .tile.part_capacitor3:after{
-	background-position: -64px -256px;
+	background-image: url("../img/capacitor_3.gif");
 }
 
 #parts .part.part_capacitor4 .image:after,
 #reactor .tile.part_capacitor4:after{
-	background-position: -96px -256px;
+	background-image: url("../img/capacitor_4.gif");
 }
 
 #parts .part.part_capacitor5 .image:after,
 #reactor .tile.part_capacitor5:after{
-	background-position: -128px -256px;
+	background-image: url("../img/capacitor_5.gif");
 }
 
   /* //////////////////////////
@@ -565,133 +630,133 @@ h6 {
 #parts .part.part_vent1 .image:after,
 #reactor .tile.part_vent1:after,
 #improved_heat_vents .image:after {
-	background-position: 0 -288px;
+	background-image: url("../img/vent_1.gif");
 }
 
 #parts .part.part_vent2 .image:after,
 #reactor .tile.part_vent2:after {
-	background-position: -32px -288px;
+	background-image: url("../img/vent_2.gif");
 }
 
 #parts .part.part_vent3 .image:after,
 #reactor .tile.part_vent3:after {
-	background-position: -64px -288px;
+	background-image: url("../img/vent_3.gif");
 }
 
 #parts .part.part_vent4 .image:after,
 #reactor .tile.part_vent4:after {
-	background-position: -96px -288px;
+	background-image: url("../img/vent_4.gif");
 }
 
 #parts .part.part_vent5 .image:after,
 #reactor .tile.part_vent5:after {
-	background-position: -128px -288px;
+	background-image: url("../img/vent_5.gif");
 }
 
 /* Heat Exchangers */
 #parts .part.part_heat_exchanger1 .image:after,
 #reactor .tile.part_heat_exchanger1:after,
 #improved_heat_exchangers .image:after {
-	background-position: 0 -320px;
+	background-image: url("../img/exchanger_1.gif");
 }
 
 #parts .part.part_heat_exchanger2 .image:after,
 #reactor .tile.part_heat_exchanger2:after {
-	background-position: -32px -320px;
+	background-image: url("../img/exchanger_2.gif");
 }
 
 #parts .part.part_heat_exchanger3 .image:after,
 #reactor .tile.part_heat_exchanger3:after {
-	background-position: -64px -320px;
+	background-image: url("../img/exchanger_3.gif");
 }
 
 #parts .part.part_heat_exchanger4 .image:after,
 #reactor .tile.part_heat_exchanger4:after {
-	background-position: -96px -320px;
+	background-image: url("../img/exchanger_4.gif");
 }
 
 #parts .part.part_heat_exchanger5 .image:after,
 #reactor .tile.part_heat_exchanger5:after {
-	background-position: -128px -320px;
+	background-image: url("../img/exchanger_5.gif");
 }
 
 /* Heat Inlets */
 #parts .part.part_heat_inlet1 .image:after,
 #reactor .tile.part_heat_inlet1:after {
-	background-position: 0 -352px;
+	background-image: url("../img/inlet_1.gif");
 }
 
 #parts .part.part_heat_inlet2 .image:after,
 #reactor .tile.part_heat_inlet2:after {
-	background-position: -32px -352px;
+	background-image: url("../img/inlet_2.gif");
 }
 
 #parts .part.part_heat_inlet3 .image:after,
 #reactor .tile.part_heat_inlet3:after {
-	background-position: -64px -352px;
+	background-image: url("../img/inlet_3.gif");
 }
 
 #parts .part.part_heat_inlet4 .image:after,
 #reactor .tile.part_heat_inlet4:after {
-	background-position: -96px -352px;
+	background-image: url("../img/inlet_4.gif");
 }
 
 #parts .part.part_heat_inlet5 .image:after,
 #reactor .tile.part_heat_inlet5:after {
-	background-position: -128px -352px;
+	background-image: url("../img/inlet_5.gif");
 }
 
 /* Heat Outlets */
 #parts .part.part_heat_outlet1 .image:after,
 #reactor .tile.part_heat_outlet1:after {
-	background-position: 0 -384px;
+	background-image: url("../img/outlet_1.gif");
 }
 
 #parts .part.part_heat_outlet2 .image:after,
 #reactor .tile.part_heat_outlet2:after {
-	background-position: -32px -384px;
+	background-image: url("../img/outlet_2.gif");
 }
 
 #parts .part.part_heat_outlet3 .image:after,
 #reactor .tile.part_heat_outlet3:after {
-	background-position: -64px -384px;
+	background-image: url("../img/outlet_3.gif");
 }
 
 #parts .part.part_heat_outlet4 .image:after,
 #reactor .tile.part_heat_outlet4:after {
-	background-position: -96px -384px;
+	background-image: url("../img/outlet_4.gif");
 }
 
 #parts .part.part_heat_outlet5 .image:after,
 #reactor .tile.part_heat_outlet5:after {
-	background-position: -128px -384px;
+	background-image: url("../img/outlet_5.gif");
 }
 
 /* Coolant Cells */
 #improved_coolant_cells .image:after,
 #parts .part.part_coolant_cell1 .image:after,
 #reactor .tile.part_coolant_cell1:after {
-	background-position: 0 -416px;
+	background-image: url("../img/coolant_1.gif");
 }
 
 #parts .part.part_coolant_cell2 .image:after,
 #reactor .tile.part_coolant_cell2:after {
-	background-position: -32px -416px;
+	background-image: url("../img/coolant_2.gif");
 }
 
 #parts .part.part_coolant_cell3 .image:after,
 #reactor .tile.part_coolant_cell3:after {
-	background-position: -64px -416px;
+	background-image: url("../img/coolant_3.gif");
 }
 
 #parts .part.part_coolant_cell4 .image:after,
 #reactor .tile.part_coolant_cell4:after {
-	background-position: -96px -416px;
+	background-image: url("../img/coolant_4.gif");
 }
 
 #parts .part.part_coolant_cell5 .image:after,
 #reactor .tile.part_coolant_cell5:after {
-	background-position: -128px -416px;
+	background-image: url("../img/coolant_5.gif");
 }
 
 /* Platings */
@@ -701,27 +766,27 @@ h6 {
 #reinforced_heat_exchangers .image:after,
 #upgrades #improved_piping .image:after,
 #upgrades #improved_alloys .image:after {
-	background-position: 0 -448px;
+	background-image: url("../img/plating_1.gif");
 }
 
 #parts .part.part_reactor_plating2 .image:after,
 #reactor .tile.part_reactor_plating2:after {
-	background-position: -32px -448px;
+	background-image: url("../img/plating_2.gif");
 }
 
 #parts .part.part_reactor_plating3 .image:after,
 #reactor .tile.part_reactor_plating3:after {
-	background-position: -64px -448px;
+	background-image: url("../img/plating_3.gif");
 }
 
 #parts .part.part_reactor_plating4 .image:after,
 #reactor .tile.part_reactor_plating4:after {
-	background-position: -96px -448px;
+	background-image: url("../img/plating_4.gif");
 }
 
 #parts .part.part_reactor_plating5 .image:after,
 #reactor .tile.part_reactor_plating5:after {
-	background-position: -128px -448px;
+	background-image: url("../img/plating_5.gif");
 }
 
 
@@ -757,7 +822,7 @@ h6 {
 /* Time */
 #improved_reflector_density .image:before,
 #upgrades .cell_tick .image:before {
-	background-position: -32px 0;
+	background-image: url("../img/status_time.gif");
 	z-index: 2;
 }
 
@@ -768,7 +833,7 @@ h6 {
 #forceful_fusion .image:before,
 #improved_wiring .image:before,
 #improved_alloys .image:before {
-	background-position: -128px 0;
+	background-image: url("../img/status_plus.gif");
 	z-index: 2;
 }
 
@@ -777,7 +842,7 @@ h6 {
 #improved_power_lines .image:before,
 #improved_piping .image:before,
 #upgrades .cell_power .image:before {
-	background-position: -64px 0;
+	background-image: url("../img/status_bolt.gif");
 	z-index: 2;
 }
 
@@ -785,7 +850,7 @@ h6 {
 #perpetual_capacitors .image:before,
 #perpetual_reflectors .image:before,
 #upgrades .cell_perpetual .image:before {
-	background-position: -96px 0;
+	background-image: url("../img/status_infinity.gif");
 	z-index: 2;
 }
 
@@ -820,11 +885,11 @@ h6 {
 }*/
 
 #chronometer.upgrade .image:after {
-	background-position: 0 -480px;
+	background-image: url("../img/upgrade_flux.gif");
 }
 
 #heat_control_operator.upgrade .image:after {
-	background-position: -32px -480px;
+	background-image: url("../img/upgrade_computer.gif");
 }
 
 #upgrades .unaffordable .image {
@@ -896,4 +961,70 @@ h6 {
 
 .debug #reactor .tile {
 	font-size: 1px;
+}
+
+  /* //////////////////////////
+ // UI
+////////////////////////// */
+#main:before {
+	content: " ";
+	border: 10px solid #eee;
+	border-image: url("../img/connector_border.png") 10 10 stretch;
+	background-color: #30424b;
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background-clip: padding-box;
+	z-index: -1;
+}
+
+#main .panel_holder:first-child .panel:first-child {
+	border: 12px solid #eee;
+	border-image: url("../img/panel_border_first_first.png") 12 12 stretch;
+	background-color: #43576d;
+	margin: 0 3px 0 0;
+	padding: 6px 0 2px 6px;
+	flex: 1;
+}
+
+#main .panel_holder:first-child .panel:last-child {
+	border: 12px solid #eee;
+	border-image: url("../img/panel_border_first_last.png") 12 12 stretch;
+	background-color: #43576d;
+	margin: 4px 3px 0 0;
+	padding: 2px 0 6px 6px;
+	flex: 1;
+}
+
+#main .panel_holder:last-child .panel:first-child {
+	border: 12px solid #eee;
+	border-image: url("../img/panel_border_last_first.png") 12 12 stretch;
+	background-color: #43576d;
+	margin: 0 0 4px 0;
+	padding: 6px 4px 2px 2px;
+}
+
+#main .panel_holder:last-child .panel:last-child {
+	border: 12px solid #eee;
+	border-image: url("../img/panel_border_last_last.png") 12 12 stretch;
+	background-color: #43576d;
+	padding: 0 6px 6px 2px;
+	margin: 0;
+	flex: 1;
+}
+
+#main .subpanel {
+	border: 6px solid #eee;
+	border-image: url("../img/inner_border.png") 6 6 stretch;
+	background-clip: padding-box;
+}
+
+#parts_nav {
+	border: 8px solid #eee;
+	border-image: url("../img/inner_border_alt.png") 8 8 stretch;
+	background-color: #7181a8;
+	background-clip: padding-box;
+	margin-bottom: 4px;
 }
