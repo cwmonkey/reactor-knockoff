@@ -1,3 +1,14 @@
+/*
+
+TODO:
+
+tooltips for upgrades
+shift + right click on spent cells also gets rid of unspent cells
+document part/upgrade keys
+
+*/
+
+
 ;(function() {
 'use strict';
 
@@ -51,7 +62,9 @@ var find_exponent = /(([1-9])(\.([0-9]+))?)e\+([0-9]+)/;
 var fmt_parts;
 var floor_num;
 
-var fmt = function(num) {
+var fmt = function(num, places) {
+	places = places || 3;
+
 	// Math.floor returns exponents quicker for some reason
 	floor_num = Math.floor(num).toString();
 
@@ -84,7 +97,7 @@ var fmt = function(num) {
 // settings
 var cols = 19;
 var rows = 16;
-var debug = true;
+var debug = false;
 var base_loop_wait = 1000;
 var base_power_multiplier = 1;
 var base_heat_multiplier = 4;
@@ -177,8 +190,8 @@ var tile_containment;
 var tile_cell;
 var heat_remove;
 var heat_outlet_countainments_count;
-var transfer_multiplier;
-var vent_multiplier;
+var transfer_multiplier = 0;
+var vent_multiplier = 0;
 
 var update_tiles = function() {
 	heat_outlet_countainments_count = 0;
@@ -469,6 +482,44 @@ for ( ri = 0; ri < rows; ri++ ) {
 	tiles.push(row);
 }
 
+// Tile tooltips
+
+// TODO: DRY this
+$reactor.delegate('tile', 'mouseover', function(e) {
+});
+
+var tile_tooltip_show = function(e) {
+	var tile = this.tile;
+	var part = tile.part;
+
+	if ( !part ) return;
+
+	part.showTooltip(tile);
+	tooltip_showing = true;
+	tooltip_update = (function(tile) {
+		return function() {
+			part.updateTooltip(tile);
+		};
+	})(tile);
+	$main.className += ' tooltip_showing';
+};
+
+var tile_tooltip_hide = function(e) {
+	// $tooltip.style.display = null;
+	var part = this.part;
+
+	tooltip_showing = false;
+	tooltip_update = null;
+	$main.className = $main.className.replace(tooltip_showing_replace, '');
+};
+
+$reactor.delegate('tile', 'mouseover', tile_tooltip_show);
+$reactor.delegate('tile', 'focus', tile_tooltip_show);
+$reactor.delegate('tile', 'blur', tile_tooltip_hide);
+$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
+$reactor.delegate('tile', 'mouseup', tile_tooltip_hide);
+
+
   /////////////////////////////
  // Show Pages
 /////////////////////////////
@@ -679,7 +730,9 @@ var parts = [
 		base_cost: 50,
 		cost_multiplier: 250,
 		base_containment: 80,
+		containment_multiplier: 75,
 		base_vent: 8,
+		vent_multiplier: 75,
 		location: 'cooling'
 	},
 	/* {
@@ -753,6 +806,20 @@ var parts = [
 		base_reactor_heat: 100,
 		reactor_heat_multiplier: 140,
 		location: 'cooling'
+	},
+	{
+		id: 'particle_accelerator',
+		type: 'particle_accelerator',
+		title: 'Particle Accelerator',
+		base_description: 'Generates Exotic Particles based on the heat contained. If this part explodes it causes instant reactor meltdown. Holds a maximum of %containment heat.',
+		levels: 5,
+		category: 'particle_accelerator',
+		level: 1,
+		base_cost: 1000000000000,
+		cost_multiplier: 1000000,
+		base_containment: 1000000,
+		containment_multiplier: 1000000,
+		location: 'cooling'
 	}
 ];
 
@@ -807,19 +874,31 @@ var Part = function(part) {
 	// this.$el.appendChild($description);
 };
 
-Part.prototype.updateDescription = function() {
+Part.prototype.updateDescription = function(tile) {
 	var description = this.part.base_description
 		.replace(/%power_increase/, fmt(this.power_increase))
 		.replace(/%reactor_power/, fmt(this.reactor_power))
 		.replace(/%reactor_heat/, fmt(this.reactor_heat))
-		.replace(/%transfer/, fmt(this.transfer))
-		.replace(/%power/, fmt(this.power))
-		.replace(/%heat/, fmt(this.heat))
 		.replace(/%ticks/, fmt(this.ticks))
-		.replace(/%vent/, fmt(this.vent))
 		.replace(/%containment/, fmt(this.containment))
 		.replace(/%count/, [1, 2, 4][this.part.level - 1])
 		;
+
+	if ( tile ) {
+		description = description
+			.replace(/%transfer/, fmt(this.transfer * (1 + transfer_multiplier / 100)))
+			.replace(/%vent/, fmt(this.vent * (1 + vent_multiplier / 100) ))
+			.replace(/%power/, fmt(tile.power))
+			.replace(/%heat/, fmt(tile.heat))
+			;
+	} else {
+		description = description
+			.replace(/%transfer/, fmt(this.transfer))
+			.replace(/%vent/, fmt(this.vent))
+			.replace(/%power/, fmt(this.power))
+			.replace(/%heat/, fmt(this.heat))
+			;
+	}
 
 	if ( this.part.level > 1 ) {
 		description = description.replace(/%type/, part_objects[this.part.type + 1].part.title);
@@ -828,24 +907,34 @@ Part.prototype.updateDescription = function() {
 	this.description = description;
 };
 
-Part.prototype.showTooltip = function() {
+Part.prototype.showTooltip = function(tile) {
 	$tooltip_name.innerHTML = this.part.title;
 
-	$tooltip_sells.style.display = 'none';
+	if ( tile ) {
+		this.updateDescription(tile);
+		$tooltip_cost.style.display = 'none';
+		$tooltip_sells.style.display = null;
+	} else {
+		this.updateDescription();
+		$tooltip_cost.style.display = null;
+		$tooltip_sells.style.display = 'none';
+	}
+
 	$tooltip_heat_per.style.display = 'none';
 	$tooltip_power_per.style.display = 'none';
 	$tooltip_heat_wrapper.style.display = 'none';
 	$tooltip_heat.style.display = 'none';
 	$tooltip_max_heat.style.display = 'none';
 
-	this.updateTooltip();
+	this.updateTooltip(tile);
 };
 
-Part.prototype.updateTooltip = function() {
+Part.prototype.updateTooltip = function(tile) {
 	$tooltip_description.innerHTML = this.description;
 
-	$tooltip_cost.style.display = null;
-	$tooltip_cost.innerHTML = fmt(this.cost);
+	if ( !tile ) {
+		$tooltip_cost.innerHTML = fmt(this.cost);
+	}
 };
 
 var part_obj;
@@ -896,6 +985,10 @@ var create_part = function(part, level) {
 
 			if ( part.base_transfer && part.transfer_multiplier ) {
 				part.base_transfer = part.base_transfer * Math.pow(part.transfer_multiplier, level - 1);
+			}
+
+			if ( part.base_vent && part.vent_multiplier ) {
+				part.base_vent = part.base_vent * Math.pow(part.vent_multiplier, level - 1);
 			}
 		}
 	}
@@ -949,7 +1042,6 @@ var part_tooltip_show = function(e) {
 };
 
 var part_tooltip_hide = function(e) {
-	$tooltip.style.display = null;
 	var part = this.part;
 
 	tooltip_showing = false;
@@ -959,6 +1051,7 @@ var part_tooltip_hide = function(e) {
 
 $parts.delegate('part', 'mouseover', part_tooltip_show);
 $parts.delegate('part', 'focus', part_tooltip_show);
+$parts.delegate('part', 'blur', part_tooltip_hide);
 $parts.delegate('part', 'mouseout', part_tooltip_hide);
 $parts.delegate('part', 'mouseup', part_tooltip_hide);
 
@@ -1461,7 +1554,12 @@ var upgrade_locations = {
 	cell_perpetual_upgrades: $('#cell_perpetual_upgrades'),
 	other: $('#other_upgrades'),
 	vents: $('#vent_upgrades'),
-	exchangers: $('#exchanger_upgrades')
+	exchangers: $('#exchanger_upgrades'),
+	experimental_laboratory: $('xlaboratory'),
+	experimental_boost: $('xboost'),
+	experimental_cells: $('xcells'),
+	experimental_cell_boost: $('xcell_boost'),
+	experimental_other: $('xother')
 };
 
 var upgrade_objects = {};
@@ -1473,6 +1571,7 @@ var create_upgrade = function(u) {
 	if ( u.className ) {
 		upgrade.$el.className += ' ' + u.className;
 	}
+
 	upgrade_locations[u.type].appendChild(upgrade.$el);
 	upgrade_objects_array.push(upgrade);
 	upgrade_objects[upgrade.upgrade.id] = upgrade;
@@ -1939,11 +2038,13 @@ var sell_amount;
 var power_add;
 var heat_add;
 var heat_remove;
+var meltdown;
 
 var game_loop = function() {
 	power_add = 0;
 	heat_add = 0;
 	heat_remove = 0;
+	meltdown = false;
 
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
@@ -2120,6 +2221,10 @@ var game_loop = function() {
 
 				if ( tile.heat_contained > tile.part.containment ) {
 					tile.$el.className += ' exploding';
+					if ( tile.part.category === 'particle_accelerator' ) {
+						meltdown = true;
+					}
+
 					do_update = true;
 					remove_part(tile, true);
 				} else {
@@ -2153,6 +2258,10 @@ var game_loop = function() {
 		current_heat = 0;
 	}
 
+	if ( meltdown ) {
+		current_heat = max_heat * 2;
+	}
+
 	$current_heat.innerHTML = fmt(current_heat);
 	if ( current_heat < max_heat ) {
 		$heat_percentage.style.width = current_heat / max_heat * 100 + '%';
@@ -2163,9 +2272,9 @@ var game_loop = function() {
 	$current_power.innerHTML = fmt(current_power);
 	$power_percentage.style.width = current_power / max_power * 100 + '%';
 
-	if ( current_heat <= max_heat ) {
+	if ( !meltdown && current_heat <= max_heat ) {
 		$reactor.style.backgroundColor = 'transparent';
-	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
+	} else if ( !meltdown && current_heat > max_heat && current_heat <= max_heat * 2 ) {
 		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
 	} else {
 		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';

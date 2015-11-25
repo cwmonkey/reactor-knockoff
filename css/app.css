@@ -239,6 +239,7 @@ h6 {
 #reactor .category_coolant_cell .percent_wrapper,
 #reactor .category_reflector .percent_wrapper,
 #reactor .category_vent .percent_wrapper,
+#reactor .category_particle_accelerator .percent_wrapper,
 #reactor .category_cell .percent_wrapper {
 	border: 1px solid black;
 	background: black;
@@ -251,10 +252,15 @@ h6 {
 #reactor .category_coolant_cell .percent,
 #reactor .category_reflector .percent,
 #reactor .category_vent .percent,
+#reactor .category_particle_accelerator .percent,
 #reactor .category_cell .percent {
 	text-indent: 64px;
 	white-space: nowrap;
 	height: 2px;
+}
+
+#reactor .disabled .percent_wrapper {
+	display: none;
 }
 
 #reactor .category_reflector .percent,
@@ -264,6 +270,7 @@ h6 {
 }
 
 #reactor .category_coolant_cell .percent,
+#reactor .category_particle_accelerator .percent,
 #reactor .category_vent .percent {
 	background: #f00;
 	width: 0;
@@ -275,7 +282,7 @@ h6 {
 }
 
 #reactor .tile.exploding:after {
-  background: url('../img/sprites.png') -192px 0 no-repeat;
+  background: url('../img/explosion_map.gif') -192px 0 no-repeat;
   animation: explosion .6s steps(7);
 }
 
@@ -787,6 +794,32 @@ h6 {
 #parts .part.part_reactor_plating5 .image:after,
 #reactor .tile.part_reactor_plating5:after {
 	background-image: url("../img/plating_5.gif");
+}
+
+/* Particle Accelerators */
+#parts .part.part_particle_accelerator1 .image:after,
+#reactor .tile.part_particle_accelerator1:after {
+	background-image: url("../img/accelerator_1.gif");
+}
+
+#parts .part.part_particle_accelerator2 .image:after,
+#reactor .tile.part_particle_accelerator2:after {
+	background-image: url("../img/accelerator_2.gif");
+}
+
+#parts .part.part_particle_accelerator3 .image:after,
+#reactor .tile.part_particle_accelerator3:after {
+	background-image: url("../img/accelerator_3.gif");
+}
+
+#parts .part.part_particle_accelerator4 .image:after,
+#reactor .tile.part_particle_accelerator4:after {
+	background-image: url("../img/accelerator_4.gif");
+}
+
+#parts .part.part_particle_accelerator5 .image:after,
+#reactor .tile.part_particle_accelerator5:after {
+	background-image: url("../img/accelerator_5.gif");
 }
 
 
