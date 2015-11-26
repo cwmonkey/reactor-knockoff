@@ -2,7 +2,6 @@
 
 TODO:
 
-tooltips for upgrades
 shift + right click on spent cells also gets rid of unspent cells
 document part/upgrade keys
 # of ticks total on cells on tooltip
@@ -522,13 +521,13 @@ $reactor.delegate('tile', 'mouseover', tile_tooltip_show);
 $reactor.delegate('tile', 'focus', tile_tooltip_show);
 $reactor.delegate('tile', 'blur', tile_tooltip_hide);
 $reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
-$reactor.delegate('tile', 'mouseup', tile_tooltip_hide);
 
   /////////////////////////////
  // Show Pages
 /////////////////////////////
 
 var showing_find = /[\b\s]showing\b/;
+
 $main.delegate('nav', 'click', function(event) {
 	var id = this.getAttribute('data-page');
 	var section = this.getAttribute('data-section');
@@ -542,6 +541,13 @@ $main.delegate('nav', 'click', function(event) {
 	}
 
 	$page.className += ' showing';
+
+	// Page specific stuff
+	if ( id == 'upgrades_section' ) {
+		check_upgrades_affordability(true);
+	} else {
+		clearTimeout(check_upgrades_affordability_timeout);
+	}
 });
 
   /////////////////////////////
@@ -1602,7 +1608,6 @@ $upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
 $upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
 $upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
 $upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
-$upgrades.delegate('upgrade', 'mouseup', upgrade_tooltip_hide);
 
 // More stuff I guess
 
@@ -1729,7 +1734,8 @@ $upgrades.delegate('upgrade', 'click', function(event) {
 	check_upgrades_affordability();
 });
 
-var check_upgrades_affordability = function(event) {
+var check_upgrades_affordability_timeout;
+var check_upgrades_affordability = function(do_timeout) {
 	for ( var i = 0, l = upgrade_objects_array.length, upgrade; i < l; i++ ) {
 		upgrade = upgrade_objects_array[i];
 		if ( current_money < upgrade.cost ) {
@@ -1738,10 +1744,11 @@ var check_upgrades_affordability = function(event) {
 			upgrade.$el.className = upgrade.$el.className.replace(unaffordable_replace, '');
 		}
 	}
-};
 
-var $show_upgrades = $('#show_upgrades');
-$show_upgrades.onclick = check_upgrades_affordability;
+	if ( do_timeout === true ) {
+		check_upgrades_affordability_timeout = setTimeout(check_upgrades_affordability, 200);
+	}
+};
 
   /////////////////////////////
  // Save game
