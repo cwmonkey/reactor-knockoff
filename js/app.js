@@ -5,6 +5,14 @@ TODO:
 tooltips for upgrades
 shift + right click on spent cells also gets rid of unspent cells
 document part/upgrade keys
+# of ticks total on cells on tooltip
+ticks left on reactor part tooltip
+selling
+current reactor heat/power generation
+right click to sell upgrades
+Increase reactor size via upgrades
+update upgrades section
+
 
 */
 
@@ -485,9 +493,6 @@ for ( ri = 0; ri < rows; ri++ ) {
 // Tile tooltips
 
 // TODO: DRY this
-$reactor.delegate('tile', 'mouseover', function(e) {
-});
-
 var tile_tooltip_show = function(e) {
 	var tile = this.tile;
 	var part = tile.part;
@@ -518,7 +523,6 @@ $reactor.delegate('tile', 'focus', tile_tooltip_show);
 $reactor.delegate('tile', 'blur', tile_tooltip_hide);
 $reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
 $reactor.delegate('tile', 'mouseup', tile_tooltip_hide);
-
 
   /////////////////////////////
  // Show Pages
@@ -1184,6 +1188,7 @@ var upgrades = [
 		description: 'Capacitors are automatically replaced when they are destroyed if they are on a cool surface. The replacement part will cost 1.5 times the normal cost.',
 		cost: 5000,
 		multiplier: 5,
+		levels: 1,
 		onclick: function(upgrade) {
 			var part;
 			for ( var i = 1; i <= 5; i++ ) {
@@ -1245,7 +1250,7 @@ var upgrades = [
 		title: 'Perpetual Reflectors',
 		description: 'Reflectors are automtically replaced after being destroyed if they are on a cool surface. The replacement part will cost 1.5 times the normal cost.',
 		cost: 10000000000000000000,
-		max_level: 1,
+		levels: 1,
 		onclick: function(upgrade) {
 			var part;
 			for ( var i = 1; i <= 5; i++ ) {
@@ -1495,6 +1500,7 @@ var experiments = [
 
 var Upgrade = function(upgrade) {
 	var me = this;
+	this.max_level = upgrade.levels || upgrade_max_level;
 	this.upgrade = upgrade;
 	this.level = null;
 	this.cost = null;
@@ -1503,12 +1509,14 @@ var Upgrade = function(upgrade) {
 	this.$el.id = upgrade.id;
 	this.$el.upgrade = upgrade;
 
+	this.display_cost = '';
+
 	var $image = $('<div class="image">');
 	$image.innerHTML = 'Click to Upgrade';
 
 	this.$levels = $('<span class="levels">');
 
-	var $description = $('<div class="description info">');
+	/*var $description = $('<div class="description info">');
 
 	var $headline = $('<div class="headline">');
 	$headline.id = upgrade.id + 'headline';
@@ -1524,14 +1532,16 @@ var Upgrade = function(upgrade) {
 
 	$cost_wrapper.appendChild(this.$cost);
 
-	$image.appendChild(this.$levels);
-
 	$description.appendChild($headline);
 	$description.appendChild($text);
 	$description.appendChild($cost_wrapper);
 
-	this.$el.appendChild($image);
 	this.$el.appendChild($description);
+	*/
+
+	$image.appendChild(this.$levels);
+
+	this.$el.appendChild($image);
 
 	this.setLevel(0);
 };
@@ -1540,13 +1550,61 @@ Upgrade.prototype.setLevel = function(level) {
 	this.level = level;
 	this.$levels.innerHTML = level;
 	this.cost = this.upgrade.cost * Math.pow(this.upgrade.multiplier, this.level);
-	if ( this.upgrade.level >= this.upgrade.max_level ) {
-		this.$cost.innerHTML = '--';
+
+	if ( this.level >= this.max_level ) {
+		this.display_cost = '--';
 	} else {
-		this.$cost.innerHTML = fmt(this.cost);
+		this.display_cost = fmt(this.cost);
 	}
+
 	this.upgrade.onclick(this);
 }
+
+Upgrade.prototype.showTooltip = function() {
+	$tooltip_name.innerHTML = this.upgrade.title;
+
+	$tooltip_cost.style.display = null;
+	$tooltip_sells.style.display = 'none';
+	$tooltip_heat_per.style.display = 'none';
+	$tooltip_power_per.style.display = 'none';
+	$tooltip_heat_wrapper.style.display = 'none';
+	$tooltip_heat.style.display = 'none';
+	$tooltip_max_heat.style.display = 'none';
+
+	this.updateTooltip();
+};
+
+Upgrade.prototype.updateTooltip = function(tile) {
+	$tooltip_description.innerHTML = this.upgrade.description;
+
+	$tooltip_cost.innerHTML = this.display_cost;
+};
+
+// Upgrade tooltips
+var upgrade_tooltip_show = function(e) {
+	var upgrade = this.upgrade;
+
+	upgrade.showTooltip();
+	tooltip_showing = true;
+	tooltip_update = upgrade.updateTooltip;
+	$main.className += ' tooltip_showing';
+};
+
+var upgrade_tooltip_hide = function(e) {
+	var upgrade = this.upgrade;
+
+	tooltip_showing = false;
+	tooltip_update = null;
+	$main.className = $main.className.replace(tooltip_showing_replace, '');
+};
+
+$upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
+$upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
+$upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
+$upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
+$upgrades.delegate('upgrade', 'mouseup', upgrade_tooltip_hide);
+
+// More stuff I guess
 
 var upgrade_locations = {
 	cell_tick_upgrades: $('#cell_tick_upgrades'),
@@ -1565,9 +1623,10 @@ var upgrade_locations = {
 var upgrade_objects = {};
 var upgrade_objects_array = [];
 var create_upgrade = function(u) {
-	u.max_level = u.max_level || upgrade_max_level;
+	u.levels = u.levels || upgrade_max_level;
 	var upgrade = new Upgrade(u);
 	upgrade.$el.upgrade = upgrade;
+
 	if ( u.className ) {
 		upgrade.$el.className += ' ' + u.className;
 	}
@@ -1608,7 +1667,7 @@ var types = [
 		type: 'cell_perpetual',
 		title: 'Perpetual ',
 		description: ' cells are automatically replaced when they become depleted. The replacement cell will cost 1.5 times the normal cost.',
-		max_level: 1,
+		levels: 1,
 		onclick: function(upgrade) {
 			var part;
 			for ( var i = 1; i <= 3; i++ ) {
@@ -1639,6 +1698,7 @@ for ( var i = 0, l = types.length; i < l; i++ ) {
 				type: type.type + '_upgrades',
 				title: type.title + ' ' + part.title,
 				description: part.title + ' ' + type.description,
+				levels: type.levels,
 				cost: part[type.type + '_upgrade_cost'],
 				multiplier: part[type.type + '_upgrade_multiplier'],
 				onclick: type.onclick,
