@@ -11,8 +11,6 @@ html {
 }
 
 body {
-	font-family: 'Jura', sans-serif;
-	font-weight: 600;
 	font-size: 16px;
 	background: #000204;
 	color: #fff;
@@ -23,8 +21,18 @@ button {
 	border: none;
 	box-shadow: none;
 	-webkit-appearance: none;
-	font-family: 'Jura';
-	font-weight: 600;
+	font-family: 'Play';
+	font-weight: 400;
+	font-size: 13.5px;
+	text-shadow: 1px 1px 0 rgba(0, 0, 0, 1);
+	cursor: pointer;
+}
+
+p {
+	font-family: sans-serif;
+	font-size: .875em;
+	line-height: 1.4;
+	font-weight: normal;
 }
 
 h1,
@@ -33,8 +41,10 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: Orbitron;
-	font-weight: 900;
+	font-family: 'Quantico';
+	font-weight: 400;
+	text-shadow: 1px 1px 3px rgba(0, 0, 0, 1);
+	font-size: 18px;
 }
 
 #main {
@@ -46,6 +56,9 @@ h6 {
 
 #secondary {
 	width: 221px;
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;;
 }
 
 #primary {
@@ -64,6 +77,10 @@ h6 {
 	clip: rect(1px, 1px, 1px, 1px);
 }
 
+#stats_section {
+	height: 247px;
+}
+
 #power_indicator,
 #heat_indicator {
 	border: 2px solid #000;
@@ -74,7 +91,7 @@ h6 {
 	margin-bottom: 2px;
 }
 
-#money_wrapper,
+#currency,
 #power_text,
 #heat_text {
 	position: relative;
@@ -91,6 +108,7 @@ h6 {
 		-1px 1px 0 rgba(0, 0, 0, 1)
 		;
 	font-family: monospace;
+	font-weight: bold;
 }
 
 #power_percentage,
@@ -102,13 +120,20 @@ h6 {
 	z-index: 1;
 }
 
-#money_wrapper {
+#currency {
 	background: #59c435;
 	color: #fff;
 	font-size: .8em;
 	text-align: center;
-	padding: .75em 1em;
 	border: 2px solid #198405;
+	display: table;
+	width: 100%;
+}
+
+#exotic_particles_wrapper,
+#money_wrapper {
+	display: block;
+	margin: .25em 0;
 }
 
 #heat_percentage {
@@ -150,11 +175,11 @@ h6 {
 
 #tooltip_nav {
 	padding: 4px;
-	height: 108px;
+	height: 148px;
 }
 
 #parts_section .part .image,
-#upgrades .image,
+#all_upgrades .image,
 #reactor .tile {
 	position: relative;
 	overflow: hidden;
@@ -169,7 +194,7 @@ h6 {
 	width: 32px;
 }
 
-#upgrades .image {
+#all_upgrades .image {
 	height: 100%;
 	width: 100%;
 }
@@ -193,8 +218,8 @@ h6 {
 }
 
 #parts_section .part .image:after,
-#upgrades .image:before,
-#upgrades .image:after,
+#all_upgrades .image:before,
+#all_upgrades .image:after,
 #reactor .tile:after {
 	height: 32px;
 	width: 32px;
@@ -239,6 +264,7 @@ h6 {
 #reactor .category_coolant_cell .percent_wrapper,
 #reactor .category_reflector .percent_wrapper,
 #reactor .category_vent .percent_wrapper,
+#reactor .category_heat_exchanger .percent_wrapper,
 #reactor .category_particle_accelerator .percent_wrapper,
 #reactor .category_cell .percent_wrapper {
 	border: 1px solid black;
@@ -252,6 +278,7 @@ h6 {
 #reactor .category_coolant_cell .percent,
 #reactor .category_reflector .percent,
 #reactor .category_vent .percent,
+#reactor .category_heat_exchanger .percent,
 #reactor .category_particle_accelerator .percent,
 #reactor .category_cell .percent {
 	text-indent: 64px;
@@ -270,6 +297,7 @@ h6 {
 }
 
 #reactor .category_coolant_cell .percent,
+#reactor .category_heat_exchanger .percent,
 #reactor .category_particle_accelerator .percent,
 #reactor .category_vent .percent {
 	background: #f00;
@@ -295,6 +323,8 @@ h6 {
 	height: 100%;
 }
 
+#reboot,
+#refund,
 #stats_section button,
 #nav button {
 	border: 2px solid #888;
@@ -306,7 +336,6 @@ h6 {
 	background-color: #7181a8;
 	background-clip: padding-box;
 	color: #fff;
-	cursor: pointer;
 	outline: none;
 }
 
@@ -314,6 +343,10 @@ h6 {
 	margin-right: .25em;
 }
 
+#refund:hover,
+#refund:focus,
+#reboot:hover,
+#reboot:focus,
 #stats_section button:hover,
 #stats_section button:focus,
 #nav button:hover,
@@ -322,10 +355,7 @@ h6 {
 		inset 0px 0px 8px 3px #7181a8;
 	background-color: #fff;
 	color: #000;
-}
-
-#main.paused #unpause {
-	display: inline-block;
+	text-shadow: none;
 }
 
 #controls_nav {
@@ -351,6 +381,10 @@ h6 {
 #main.auto_disabled #disabled_auto,
 #enable_auto {
 	display: none !important;
+}
+
+#main.paused #unpause {
+	display: inline-block !important;
 }
 
 #parts_nav .nav {
@@ -412,7 +446,20 @@ h6 {
 }
 
 #experimental_upgrades_section > div,
+#experimental_upgrades > div,
 #upgrades > div {
+	margin-bottom: 1em;
+}
+
+#reboot_section,
+#refund_section {
+	width: 80%;
+	margin: 2em auto 0;
+	text-align: center;
+}
+
+#reboot,
+#refund {
 	margin-bottom: 1em;
 }
 
@@ -520,6 +567,7 @@ h6 {
 }
 
 #parts .part.part_dolorium2 .image:after,
+#experimental_upgrades #infused_cells .image:after,
 #reactor .tile.part_dolorium2:after {
 	background-image: url("../img/cell_5_2.gif");
 }
@@ -542,6 +590,7 @@ h6 {
 }
 
 #parts .part.part_nefastium3 .image:after,
+#experimental_upgrades #unleashed_cells .image:after,
 #reactor .tile.part_nefastium3:after {
 	background-image: url("../img/cell_6_4.gif");
 }
@@ -549,11 +598,13 @@ h6 {
 /* protium */
 #parts_section .part.part_protium1 .image:after,
 #reactor .tile.part_protium1:after,
+#experimental_upgrades #protium_cells .image:after,
 #upgrades .protium .image:after {
 	background-image: url("../img/xcell_1_1.gif");
 }
 
 #parts_section .part.part_protium2 .image:after,
+#experimental_upgrades #unstable_protium .image:after,
 #reactor .tile.part_protium2:after {
 	background-image: url("../img/xcell_1_2.gif");
 }
@@ -591,6 +642,7 @@ h6 {
 }
 
 #parts .part.part_reflector5 .image:after,
+#experimental_upgrades #full_spectrum_reflectors .image:after,
 #reactor .tile.part_reflector5:after {
 	background-image: url("../img/reflector_5.gif");
 }
@@ -625,8 +677,15 @@ h6 {
 }
 
 #parts .part.part_capacitor5 .image:after,
-#reactor .tile.part_capacitor5:after{
+#experimental_upgrades #quantum_buffering .image:after,
+#reactor .tile.part_capacitor5:after {
 	background-image: url("../img/capacitor_5.gif");
+}
+
+#xparts .part.part_capacitor6 .image:after,
+#experimental_upgrades #experimental_capacitance .image:after,
+#reactor .tile.part_capacitor6:after{
+	background-image: url("../img/capacitor_6.gif");
 }
 
   /* //////////////////////////
@@ -656,8 +715,15 @@ h6 {
 }
 
 #parts .part.part_vent5 .image:after,
+#experimental_upgrades #fluid_hyperdynamics .image:after,
 #reactor .tile.part_vent5:after {
 	background-image: url("../img/vent_5.gif");
+}
+
+#xparts .part.part_vent6 .image:after,
+#experimental_upgrades #vortex_cooling .image:after,
+#reactor .tile.part_vent6:after {
+	background-image: url("../img/vent_6.gif");
 }
 
 /* Heat Exchangers */
@@ -683,6 +749,7 @@ h6 {
 }
 
 #parts .part.part_heat_exchanger5 .image:after,
+#experimental_upgrades #fractal_piping .image:after,
 #reactor .tile.part_heat_exchanger5:after {
 	background-image: url("../img/exchanger_5.gif");
 }
@@ -762,6 +829,7 @@ h6 {
 }
 
 #parts .part.part_coolant_cell5 .image:after,
+#experimental_upgrades #ultracryonics .image:after,
 #reactor .tile.part_coolant_cell5:after {
 	background-image: url("../img/coolant_5.gif");
 }
@@ -792,12 +860,14 @@ h6 {
 }
 
 #parts .part.part_reactor_plating5 .image:after,
+#experimental_upgrades #phlembotinum_core .image:after,
 #reactor .tile.part_reactor_plating5:after {
 	background-image: url("../img/plating_5.gif");
 }
 
 /* Particle Accelerators */
 #parts .part.part_particle_accelerator1 .image:after,
+#upgrades #improved_particle_accelerators .image:after,
 #reactor .tile.part_particle_accelerator1:after {
 	background-image: url("../img/accelerator_1.gif");
 }
@@ -818,16 +888,22 @@ h6 {
 }
 
 #parts .part.part_particle_accelerator5 .image:after,
+#experimental_upgrades #force_particle_research .image:after,
 #reactor .tile.part_particle_accelerator5:after {
 	background-image: url("../img/accelerator_5.gif");
 }
 
+/* Other */
+
+#experimental_upgrades #laboratory .image:after {
+	background-image: url("../img/lab.gif");
+}
 
   /* //////////////////////////
  // Upgrades
 ////////////////////////// */
 
-#upgrades .upgrade {
+#all_upgrades .upgrade {
 	width: 2.5em;
 	height: 2.5em;
 	display: inline-block;
@@ -835,17 +911,17 @@ h6 {
 	vertical-align: top;
 }
 
-#upgrades .upgrade .description {
+#all_upgrades .upgrade .description {
 	position: absolute;
 	clip: rect(1px 1px 1px 1px);
 }
 
-#upgrades .image:before {
+#all_upgrades .image:before {
 	top: auto;
 	bottom: 0;
 }
 
-#upgrades .image:after {
+#all_upgrades .image:after {
 	left: 50%;
 	margin-left: -16px;
 	top: 50%;
@@ -854,7 +930,7 @@ h6 {
 
 /* Time */
 #improved_reflector_density .image:before,
-#upgrades .cell_tick .image:before {
+#all_upgrades .cell_tick .image:before {
 	background-image: url("../img/status_time.gif");
 	z-index: 2;
 }
@@ -874,7 +950,7 @@ h6 {
 #improved_neutron_reflection .image:before,
 #improved_power_lines .image:before,
 #improved_piping .image:before,
-#upgrades .cell_power .image:before {
+#all_upgrades .cell_power .image:before {
 	background-image: url("../img/status_bolt.gif");
 	z-index: 2;
 }
@@ -882,12 +958,12 @@ h6 {
 /* Infinity */
 #perpetual_capacitors .image:before,
 #perpetual_reflectors .image:before,
-#upgrades .cell_perpetual .image:before {
+#all_upgrades .cell_perpetual .image:before {
 	background-image: url("../img/status_infinity.gif");
 	z-index: 2;
 }
 
-#upgrades .upgrade .levels {
+#all_upgrades .upgrade .levels {
 	position: absolute;
 	z-index: 3;
 	text-indent: 0;
@@ -907,7 +983,7 @@ h6 {
 		;
 }
 
-/*#upgrades .upgrade .image:before {
+/*#all_upgrades .upgrade .image:before {
 	position: absolute;
 	top: 4px;
 	left: 4px;
@@ -925,7 +1001,7 @@ h6 {
 	background-image: url("../img/upgrade_computer.gif");
 }
 
-#upgrades .unaffordable .image {
+#all_upgrades .unaffordable .image {
 	opacity: .5;
 }
 
@@ -1005,10 +1081,10 @@ h6 {
 	border-image: url("../img/connector_border.png") 10 10 stretch;
 	background-color: #30424b;
 	position: absolute;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
+	left: 4px;
+	top: 4px;
+	right: 4px;
+	bottom: 4px;
 	background-clip: padding-box;
 	z-index: -1;
 }
@@ -1016,16 +1092,15 @@ h6 {
 #main .panel_holder:first-child .panel:first-child {
 	border: 12px solid #eee;
 	border-image: url("../img/panel_border_first_first.png") 12 12 stretch;
-	background-color: #43576d;
+	background-color: #485667;
 	margin: 0 3px 0 0;
 	padding: 6px 0 2px 6px;
-	flex: 1;
 }
 
 #main .panel_holder:first-child .panel:last-child {
 	border: 12px solid #eee;
 	border-image: url("../img/panel_border_first_last.png") 12 12 stretch;
-	background-color: #43576d;
+	background-color: #485667;
 	margin: 4px 3px 0 0;
 	padding: 2px 0 6px 6px;
 	flex: 1;
@@ -1034,7 +1109,7 @@ h6 {
 #main .panel_holder:last-child .panel:first-child {
 	border: 12px solid #eee;
 	border-image: url("../img/panel_border_last_first.png") 12 12 stretch;
-	background-color: #43576d;
+	background-color: #485667;
 	margin: 0 0 4px 0;
 	padding: 6px 4px 2px 2px;
 }
@@ -1042,7 +1117,7 @@ h6 {
 #main .panel_holder:last-child .panel:last-child {
 	border: 12px solid #eee;
 	border-image: url("../img/panel_border_last_last.png") 12 12 stretch;
-	background-color: #43576d;
+	background-color: #485667;
 	padding: 0 6px 6px 2px;
 	margin: 0;
 	flex: 1;
