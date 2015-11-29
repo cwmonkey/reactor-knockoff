@@ -228,7 +228,6 @@ h6 {
 	top: 0;
 	left: 0;
 	display: block;
-	/*background: url("../img/sprites.png") left top no-repeat;*/
 	background-position: left top;
 	background-repeat: no-repeat;
 }
@@ -247,7 +246,7 @@ h6 {
 }
 
 #reactor .tile {
-	background-image: url("../img/tile.png");
+  background: transparent url("../img/tile.png") left top no-repeat;
 }
 
 #reactor .tile.disabled:after {
@@ -264,6 +263,7 @@ h6 {
 #reactor .category_coolant_cell .percent_wrapper,
 #reactor .category_reflector .percent_wrapper,
 #reactor .category_vent .percent_wrapper,
+#reactor .category_capacitor .percent_wrapper,
 #reactor .category_heat_exchanger .percent_wrapper,
 #reactor .category_particle_accelerator .percent_wrapper,
 #reactor .category_cell .percent_wrapper {
@@ -278,6 +278,7 @@ h6 {
 #reactor .category_coolant_cell .percent,
 #reactor .category_reflector .percent,
 #reactor .category_vent .percent,
+#reactor .category_capacitor .percent,
 #reactor .category_heat_exchanger .percent,
 #reactor .category_particle_accelerator .percent,
 #reactor .category_cell .percent {
@@ -299,6 +300,7 @@ h6 {
 #reactor .category_coolant_cell .percent,
 #reactor .category_heat_exchanger .percent,
 #reactor .category_particle_accelerator .percent,
+#reactor .category_capacitor .percent,
 #reactor .category_vent .percent {
 	background: #f00;
 	width: 0;
@@ -754,6 +756,12 @@ h6 {
 	background-image: url("../img/exchanger_5.gif");
 }
 
+#xparts .part.part_heat_exchanger6 .image:after,
+#experimental_upgrades #underground_heat_extraction .image:after,
+#reactor .tile.part_heat_exchanger6:after {
+	background-image: url("../img/exchanger_6.gif");
+}
+
 /* Heat Inlets */
 #parts .part.part_heat_inlet1 .image:after,
 #reactor .tile.part_heat_inlet1:after {
@@ -780,6 +788,12 @@ h6 {
 	background-image: url("../img/inlet_5.gif");
 }
 
+#xparts .part.part_heat_inlet6 .image:after,
+#experimental_upgrades #vortex_extraction .image:after,
+#reactor .tile.part_heat_inlet6:after {
+	background-image: url("../img/inlet_6.gif");
+}
+
 /* Heat Outlets */
 #parts .part.part_heat_outlet1 .image:after,
 #reactor .tile.part_heat_outlet1:after {
@@ -804,6 +818,12 @@ h6 {
 #parts .part.part_heat_outlet5 .image:after,
 #reactor .tile.part_heat_outlet5:after {
 	background-image: url("../img/outlet_5.gif");
+}
+
+#xparts .part.part_heat_outlet6 .image:after,
+#experimental_upgrades #explosive_ejection .image:after,
+#reactor .tile.part_heat_outlet6:after {
+	background-image: url("../img/outlet_6.gif");
 }
 
 /* Coolant Cells */
@@ -863,6 +883,12 @@ h6 {
 #experimental_upgrades #phlembotinum_core .image:after,
 #reactor .tile.part_reactor_plating5:after {
 	background-image: url("../img/plating_5.gif");
+}
+
+#xparts .part.part_reactor_plating6 .image:after,
+#experimental_upgrades #micro_capacitance .image:after,
+#reactor .tile.part_reactor_plating6:after {
+	background-image: url("../img/plating_6.gif");
 }
 
 /* Particle Accelerators */
@@ -1132,7 +1158,7 @@ h6 {
 #parts_nav {
 	border: 8px solid #eee;
 	border-image: url("../img/inner_border_alt.png") 8 8 stretch;
-	background-color: #7181a8;
+	background-color: #76809b;
 	background-clip: padding-box;
 	margin-bottom: 4px;
 }
