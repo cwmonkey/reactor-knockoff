@@ -4,13 +4,11 @@ TODO:
 
 shift + right click on spent cells also gets rid of unspent cells
 document part/upgrade keys
-# of ticks total on cells on tooltip
-ticks left on reactor part tooltip
 selling
-current reactor heat/power generation
-right click to sell upgrades
+right click to sell upgrades?
 Increase reactor size via upgrades
-update upgrades section
+"story" objectives
+Auto save
 
 console.log
 */
@@ -70,20 +68,27 @@ var fmt_parts;
 var floor_num;
 
 var fmt = function(num, places) {
-	places = places || 3;
+	places = places || null;
 
 	// Math.floor returns exponents quicker for some reason
 	floor_num = Math.floor(num).toString();
 
+	if ( places !== null ) {
+		pow = floor_num.length - places;
+		num = Math.round(num / Math.pow(10, pow)) * Math.pow(10, pow);
+	}
+
 	// in case of exponents
 	if ( (fmt_parts = floor_num.match(find_exponent)) ) {
+		places = places || 3;
+
 		// Out of range of the friendly numbers
 		if ( fmt_parts[5] > 35 ) {
-			fnum = parseFloat(fmt_parts[1]) + 'e' + fmt_parts[5];
+			fnum = fmt_parts[2] + (fmt_parts[3]?fmt_parts[3].substring(0, places + 1):'') + 'e' + fmt_parts[5];
 		// has a decimal
 		} else if ( fmt_parts[3] ) {
 			num = fmt_parts[2] + fmt_parts[4] + '00';
-			fnum = parseFloat(num.substring(0, fmt_parts[5] % 3 + 1) + '.' + num.substring(fmt_parts[5] % 3 + 1, fmt_parts[5] % 3 + 4)) + cm_names[Math.floor(fmt_parts[5]/3) - 1];
+			fnum = parseFloat(num.substring(0, fmt_parts[5] % 3 + 1) + '.' + num.substring(fmt_parts[5] % 3 + 1, fmt_parts[5] % 3 + places + 1)) + cm_names[Math.floor(fmt_parts[5]/3) - 1];
 		} else {
 			num = fmt_parts[2] + '00';
 			fnum = num.substring(0, fmt_parts[5] % 3 + 1) + cm_names[Math.floor(fmt_parts[5]/3) - 1];
@@ -91,7 +96,7 @@ var fmt = function(num, places) {
 	} else {
 		// http://userscripts-mirror.org/scripts/review/293573
 		pow = Math.floor((floor_num.length - 1)/3) * 3;
-		fnum = (Math.floor(num / Math.pow(10, pow - 3)) / Math.pow(10, 3)) + (pow == 0 ? "" : cm_names[(pow / 3) - 1]);
+		fnum = (Math.floor(num / Math.pow(10, pow - 3)) / Math.pow(10, 3)) + (pow === 0 ? "" : cm_names[(pow / 3) - 1]);
 	}
 
 	return fnum;
@@ -134,6 +139,8 @@ var altered_max_heat;
 var altered_max_power;
 
 var paused = false;
+var auto_sell_disabled = false;
+var auto_buy_disabled = false;
 var exotic_particles = 0;
 var current_exotic_particles = 0;
 var total_exotic_particles = 0;
@@ -201,6 +208,8 @@ var reboot = function(refund) {
 
 			if ( !upgrade.ecost ) {
 				upgrade.setLevel(0);
+			} else {
+				upgrade.setLevel(upgrade.level);
 			}
 		}
 
@@ -493,17 +502,16 @@ var update_tiles = function() {
 // get dom nodes cached
 var $reactor = $('#reactor');
 var $all_parts = $('#all_parts');
-var $cells = $('#cells');
-var $xcells = $('#xcells');
-var $xparts = $('#xparts');
-var $reflectors = $('#reflectors');
-var $capacitors = $('#capacitors');
+
 var $money = $('#money');
 var $cooling = $('#cooling');
 var $current_heat = $('#current_heat');
 var $current_power = $('#current_power');
 var $max_heat = $('#max_heat');
 var $max_power = $('#max_power');
+var $power_per_tick = $('#power_per_tick');
+var $heat_per_tick = $('#heat_per_tick');
+var $money_per_tick = $('#money_per_tick');
 var $main = $('#main');
 var $upgrades = $('#upgrades');
 var $all_upgrades = $('#all_upgrades');
@@ -523,6 +531,9 @@ var $tooltip_power_per = $('#tooltip_power_per');
 var $tooltip_heat_wrapper = $('#tooltip_heat_wrapper');
 var $tooltip_heat = $('#tooltip_heat');
 var $tooltip_max_heat = $('#tooltip_max_heat');
+var $tooltip_ticks_wrapper = $('#tooltip_ticks_wrapper');
+var $tooltip_ticks = $('#tooltip_ticks');
+var $tooltip_max_ticks = $('#tooltip_max_ticks');
 
 if ( debug ) {
 	$main.className += ' debug';
@@ -567,9 +578,6 @@ var tile_tooltip_show = function(e) {
 };
 
 var tile_tooltip_hide = function(e) {
-	// $tooltip.style.display = null;
-	var part = this.part;
-
 	tooltip_showing = false;
 	tooltip_update = null;
 	$main.className = $main.className.replace(tooltip_showing_replace, '');
@@ -611,6 +619,17 @@ $main.delegate('nav', 'click', function(event) {
   /////////////////////////////
  // Parts
 /////////////////////////////
+
+var $cells = $('#cells');
+var $reflectors = $('#reflectors');
+var $capacitors = $('#capacitors');
+var $vents = $('#vents');
+var $heat_exchangers = $('#heat_exchangers');
+var $heat_inlets = $('#heat_inlets');
+var $heat_outlets = $('#heat_outlets');
+var $coolant_cells = $('#coolant_cells');
+var $reactor_platings = $('#reactor_platings');
+var $particle_accelerators = $('#particle_accelerators');
 
 var parts = [
 	// Cells
@@ -766,7 +785,7 @@ var parts = [
 		level: 1,
 		base_cost: 500,
 		cost_multiplier: 10,
-		base_power_increase: 10,
+		base_power_increase: 5,
 		power_increase_multiplier: 1,
 		base_ticks: 100,
 		ticks_multiplier: 12.5
@@ -913,7 +932,7 @@ var parts = [
 		base_cost: 50000000000000,
 		base_transfer: 20000000000
 	},
-	/*{
+	{
 		id: 'coolant_cell',
 		type: 'coolant_cell',
 		title: 'Coolant Cell',
@@ -926,7 +945,19 @@ var parts = [
 		base_containment: 2000,
 		containment_multiplier: 180,
 		location: 'cooling'
-	},*/
+	},
+	{
+		id: 'coolant_cell6',
+		type: 'coolant_cell',
+		title: 'Thermionic Coolant Cell',
+		base_description: 'Holds %containment heat before being destroyed. 50% of the heat added to this part is instantly converted to power and added to the generator.',
+		category: 'coolant_cell',
+		experimental: true,
+		erequires: 'thermionic_conversion',
+		level: 6,
+		base_cost: 160000000000000,
+		base_containment: 377820000000000
+	},
 	{
 		id: 'reactor_plating',
 		type: 'reactor_plating',
@@ -971,10 +1002,11 @@ var parts = [
 	}
 ];
 
+var locked_find = /[\b\s]locked\b/;
 var Part = function(part) {
 	this.className = 'part_' + part.id;
 	this.$el = document.createElement('BUTTON');
-	this.$el.className = 'part ' + this.className;
+	this.$el.className = 'part locked ' + this.className;
 	this.$el.part = this;
 
 	this.part = part;
@@ -1049,25 +1081,51 @@ Part.prototype.showTooltip = function(tile) {
 		this.updateDescription(tile);
 		$tooltip_cost.style.display = 'none';
 		$tooltip_sells.style.display = null;
+
+		if ( tile.activated && tile.part.containment ) {
+			$tooltip_heat_wrapper.style.display = null;
+		} else {
+			$tooltip_heat_wrapper.style.display = 'none';
+		}
+
+		if ( tile.activated && tile.part.ticks ) {
+			$tooltip_ticks_wrapper.style.display = null;
+		} else {
+			$tooltip_ticks_wrapper.style.display = 'none';
+		}
 	} else {
 		this.updateDescription();
 		$tooltip_cost.style.display = null;
 		$tooltip_sells.style.display = 'none';
+
+		$tooltip_heat_wrapper.style.display = 'none';
+		$tooltip_ticks_wrapper.style.display = 'none';
 	}
 
 	$tooltip_heat_per.style.display = 'none';
 	$tooltip_power_per.style.display = 'none';
-	$tooltip_heat_wrapper.style.display = 'none';
-	$tooltip_heat.style.display = 'none';
-	$tooltip_max_heat.style.display = 'none';
 
 	this.updateTooltip(tile);
 };
 
 Part.prototype.updateTooltip = function(tile) {
-	$tooltip_description.innerHTML = this.description;
+	if ( tile ) {
+		if ( $tooltip_description.innerHTML !== tile.part.description ) {
+			$tooltip_description.innerHTML = tile.part.description;
+		}
 
-	if ( !tile ) {
+		if ( tile.activated && tile.part.containment ) {
+			$tooltip_heat.innerHTML = fmt(tile.heat_contained);
+			$tooltip_max_heat.innerHTML = fmt(tile.part.containment);
+		}
+
+		if ( tile.activated && tile.part.ticks ) {
+			$tooltip_ticks.innerHTML = fmt(tile.ticks);
+			$tooltip_max_ticks.innerHTML = fmt(tile.part.ticks);
+		}
+	} else {
+		$tooltip_description.innerHTML = this.description;
+
 		if ( this.erequires && !upgrade_objects[this.erequires].level ) {
 			$tooltip_cost.innerHTML = 'LOCKED';
 		} else {
@@ -1144,19 +1202,25 @@ var create_part = function(part, level) {
 	part_obj.updateDescription();
 
 	if ( part.category === 'cell' ) {
-		if ( part.experimental ) {
-			$xcells.appendChild(part_obj.$el);
-		} else {
-			$cells.appendChild(part_obj.$el);
-		}
-	} else if ( part.experimental ) {
-		$xparts.appendChild(part_obj.$el);
+		$cells.appendChild(part_obj.$el);
 	} else if ( part.category === 'reflector' ) {
 		$reflectors.appendChild(part_obj.$el);
 	} else if ( part.category === 'capacitor' ) {
 		$capacitors.appendChild(part_obj.$el);
-	} else if ( part.location === 'cooling' ) {
-		$cooling.appendChild(part_obj.$el);
+	} else if ( part.category === 'vent' ) {
+		$vents.appendChild(part_obj.$el);
+	} else if ( part.category === 'heat_exchanger' ) {
+		$heat_exchangers.appendChild(part_obj.$el);
+	} else if ( part.category === 'heat_inlet' ) {
+		$heat_inlets.appendChild(part_obj.$el);
+	} else if ( part.category === 'heat_outlet' ) {
+		$heat_outlets.appendChild(part_obj.$el);
+	} else if ( part.category === 'coolant_cell' ) {
+		$coolant_cells.appendChild(part_obj.$el);
+	} else if ( part.category === 'reactor_plating' ) {
+		$reactor_platings.appendChild(part_obj.$el);
+	} else if ( part.category === 'particle_accelerator' ) {
+		$particle_accelerators.appendChild(part_obj.$el);
 	}
 
 	return part_obj;
@@ -1177,12 +1241,19 @@ for ( pi = 0, pl = parts.length; pi < pl; pi++ ) {
 var tooltip_showing_replace = /[\s\b]tooltip_showing\b/;
 var tooltip_showing = false;
 var tooltip_update = null;
+var tooltip_part;
+
+var part_tooltip_update = function() {
+	tooltip_part.updateTooltip();
+}
+
 var part_tooltip_show = function(e) {
 	var part = this.part;
 
 	part.showTooltip();
 	tooltip_showing = true;
-	tooltip_update = part.updateTooltip;
+	tooltip_part = part;
+	tooltip_update = part_tooltip_update;
 	$main.className += ' tooltip_showing';
 };
 
@@ -1191,6 +1262,7 @@ var part_tooltip_hide = function(e) {
 
 	tooltip_showing = false;
 	tooltip_update = null;
+	tooltip_part = null;
 	$main.className = $main.className.replace(tooltip_showing_replace, '');
 };
 
@@ -1340,8 +1412,6 @@ var upgrades = [
 			}*/
 		}
 	},
-
-	/* TODO:
 	{
 		id: 'improved_coolant_cells',
 		type: 'other',
@@ -1350,9 +1420,13 @@ var upgrades = [
 		cost: 5000,
 		multiplier: 100,
 		onclick: function(upgrade) {
-			
+			for ( var i = 1; i <= 6; i++ ) {
+				part = part_objects['coolant_cell' + i];
+				part.containment = part.part.base_containment * ( upgrade.level + 1 ) * Math.pow(2, upgrade_objects['ultracryonics'].level);
+				part.updateDescription();
+			}
 		}
-	},*/
+	},
 
 	// Reflectors
 	{
@@ -1376,7 +1450,7 @@ var upgrades = [
 		id: 'improved_neutron_reflection',
 		type: 'other',
 		title: 'Improved Neutron Reflection',
-		description: 'Reflectors generate an additional 5% power per level of upgrade.',
+		description: 'Reflectors generate an additional 1% power per level of upgrade.',
 		cost: 5000,
 		multiplier: 100,
 		onclick: function(upgrade) {
@@ -1384,7 +1458,7 @@ var upgrades = [
 			// TODO: 6
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (upgrade.level + 1) * Math.pow(2, upgrade_objects['full_spectrum_reflectors'].level);
+				part.power_increase = part.part.base_power_increase * .1 * (upgrade.level + 1) * Math.pow(2, upgrade_objects['full_spectrum_reflectors'].level);
 				part.updateDescription();
 			}
 		}
@@ -1612,7 +1686,7 @@ var upgrades = [
 			// TODO: 6
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (upgrade_objects['improved_neutron_reflection'].level + 1) * Math.pow(2, upgrade.level);
+				part.power_increase = part.part.base_power_increase * .1 * (upgrade_objects['improved_neutron_reflection'].level + 1) * Math.pow(2, upgrade.level);
 				part.updateDescription();
 			}
 		}
@@ -1678,13 +1752,11 @@ var upgrades = [
 		ecost: 50,
 		multiplier: 2,
 		onclick: function(upgrade) {
-			/* TODO:
 			for ( var i = 1; i <= 6; i++ ) {
 				part = part_objects['coolant_cell' + i];
-				part.base_heat = part.part.base_heat * Math.pow(2, upgrade.level) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
+				part.containment = part.part.base_containment * ( upgrade_objects['improved_coolant_cells'].level + 1 ) * Math.pow(2, upgrade.level);
 				part.updateDescription();
 			}
-			*/
 		}
 	},
 	{
@@ -1749,10 +1821,10 @@ var upgrades = [
 		}
 	},
 	{
-		id: 'vortex_cooling',
+		id: 'experimental_capacitance',
 		type: 'experimental_other',
-		title: 'Vortex Cooling',
-		description: 'Allows you to use Extreme Coolant Cells.',
+		title: 'Experimental Capacitance',
+		description: 'Allows you to use Extreme Capacitors.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
@@ -1761,10 +1833,10 @@ var upgrades = [
 		}
 	},
 	{
-		id: 'vortex_extraction',
+		id: 'vortex_cooling',
 		type: 'experimental_other',
-		title: 'Vortex Extraction',
-		description: 'Allows you to use Extreme Heat Inlets.',
+		title: 'Vortex Cooling',
+		description: 'Allows you to use Extreme Vents.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
@@ -1785,10 +1857,10 @@ var upgrades = [
 		}
 	},
 	{
-		id: 'micro_capacitance',
+		id: 'vortex_extraction',
 		type: 'experimental_other',
-		title: 'Micro Capacitance',
-		description: 'Allows you to use Charged Reactor Plating.',
+		title: 'Vortex Extraction',
+		description: 'Allows you to use Extreme Heat Inlets.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
@@ -1809,10 +1881,22 @@ var upgrades = [
 		}
 	},
 	{
-		id: 'experimental_capacitance',
+		id: 'thermionic_conversion',
 		type: 'experimental_other',
-		title: 'Experimental Capacitance',
-		description: 'Allows you to use Extreme Capacitors.',
+		title: 'Thermionic Conversion',
+		description: 'Allows you to use Thermionic Coolant Cells.',
+		erequires: 'laboratory',
+		ecost: 10000,
+		levels: 1,
+		onclick: function(upgrade) {
+			// Nothing, just required for placing parts
+		}
+	},
+	{
+		id: 'micro_capacitance',
+		type: 'experimental_other',
+		title: 'Micro Capacitance',
+		description: 'Allows you to use Charged Reactor Plating.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
@@ -1912,7 +1996,7 @@ var upgrade_tooltip_show = function(e) {
 
 	upgrade.showTooltip();
 	tooltip_showing = true;
-	tooltip_update = upgrade.updateTooltip;
+	//tooltip_update = upgrade.updateTooltip;
 	$main.className += ' tooltip_showing';
 };
 
@@ -1920,7 +2004,7 @@ var upgrade_tooltip_hide = function(e) {
 	var upgrade = this.upgrade;
 
 	tooltip_showing = false;
-	tooltip_update = null;
+	//tooltip_update = null;
 	$main.className = $main.className.replace(tooltip_showing_replace, '');
 };
 
@@ -2179,7 +2263,9 @@ var save = function() {
 		exotic_particles: exotic_particles,
 		current_exotic_particles: current_exotic_particles,
 		total_exotic_particles: total_exotic_particles,
-		paused: paused
+		paused: paused,
+		auto_sell_disabled: auto_sell_disabled,
+		auto_buy_disabled: auto_buy_disabled
 	})));
 };
 
@@ -2269,6 +2355,8 @@ var remove_part = function(tile, skip_update) {
 			}
 		}
 	}
+
+	tile_tooltip_hide();
 };
 
 var mouse_apply_to_tile = function(e) {
@@ -2323,6 +2411,42 @@ var unpause = function() {
 
 $unpause.onclick = unpause;
 
+// Enable/Disable auto sell
+var $disable_auto_sell = $('#disable_auto_sell');
+var $enable_auto_sell = $('#enable_auto_sell');
+var auto_sell_disabled_find = /[\b\s]auto_sell_disabled\b/;
+
+var disable_auto_sell = function() {
+	$main.className += ' auto_sell_disabled';
+	auto_sell_disabled = true;
+};
+
+var enable_auto_sell = function() {
+	$main.className = $main.className.replace(auto_sell_disabled_find, '');
+	auto_sell_disabled = false;
+};
+
+$disable_auto_sell.onclick = disable_auto_sell;
+$enable_auto_sell.onclick = enable_auto_sell;
+
+// Enable/Disable auto buy
+var $disable_auto_buy = $('#disable_auto_buy');
+var $enable_auto_buy = $('#enable_auto_buy');
+var auto_buy_disabled_find = /[\b\s]auto_buy_disabled\b/;
+
+var disable_auto_buy = function() {
+	$main.className += ' auto_buy_disabled';
+	auto_buy_disabled = true;
+};
+
+var enable_auto_buy = function() {
+	$main.className = $main.className.replace(auto_buy_disabled_find, '');
+	auto_buy_disabled = false;
+};
+
+$disable_auto_buy.onclick = disable_auto_buy;
+$enable_auto_buy.onclick = enable_auto_buy;
+
   /////////////////////////////
  // Load
 /////////////////////////////
@@ -2355,9 +2479,19 @@ if ( rks ) {
 	max_heat = rks.max_heat || max_heat;
 	manual_heat_reduce = rks.manual_heat_reduce || manual_heat_reduce;
 	paused = rks.paused || paused;
+	auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
+	auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
 
 	if ( paused ) {
 		pause();
+	}
+
+	if ( auto_sell_disabled ) {
+		disable_auto_sell();
+	}
+
+	if ( auto_buy_disabled ) {
+		disable_auto_buy();
 	}
 
 	set_manual_heat_reduce();
@@ -2514,16 +2648,20 @@ var power_add;
 var heat_add;
 var heat_remove;
 var meltdown;
-var tile_containment_p;
-var tile_p;
 var transfer_heat;
 var ep_chance;
 var lower_heat;
 var power_sell_percent;
 var heat_add_next_loop = 0;
 var vent_reduce;
-var total_containment;
 var max_heat_transfer;
+
+var tile_percent;
+var tile_containment_percent;
+var total_containment;
+var tile_containment_containment;
+var total_containment_heat;
+var target_percent;
 
 var game_loop = function() {
 	power_add = 0;
@@ -2549,9 +2687,9 @@ var game_loop = function() {
 						tile.ticks--;
 
 						if ( tile.ticks === 0 ) {
-							if ( tile.part.perpetual && current_money >= tile.part.cost ) {
+							if ( auto_buy_disabled !== true && tile.part.perpetual && current_money >= tile.part.cost * 1.5 ) {
 								// auto replenish cell
-								current_money -= tile.part.cost;
+								current_money -= tile.part.cost * 1.5;
 								$money.innerHTML = fmt(current_money);
 								tile.ticks = tile.part.ticks;
 								tile.$percent.style.width = '100%';
@@ -2588,7 +2726,12 @@ var game_loop = function() {
 				// TODO: Find a better place/logic for this?
 				// Add heat to containment part
 				if ( tile.activated && tile.part && tile.part.containment ) {
-					tile.heat_contained += tile.heat;
+					if ( tile.part.id === 'coolant_cell6' ) {
+						tile.heat_contained += tile.heat / 2;
+						power_add += tile.heat / 2;
+					} else {
+						tile.heat_contained += tile.heat;
+					}
 				}
 
 				if ( tile.activated && tile.part && tile.part.category === 'particle_accelerator' ) {
@@ -2645,6 +2788,8 @@ var game_loop = function() {
 
 	current_heat += heat_add;
 
+	$heat_per_tick.innerHTML = fmt(heat_add);
+
 	// Reduce reactor heat parts
 	max_shared_heat = current_heat / heat_outlet_countainments_count;
 
@@ -2667,93 +2812,110 @@ var game_loop = function() {
 
 				// This algo seems pretty sketchy ;p
 				if ( tile_part.category === 'heat_exchanger' ) {
-					// Remove heat from Neighbor
+					total_containment = tile.part.containment;
+					total_containment_heat = tile.heat_contained;
+
+					// Figure out total heat and containment
 					for ( pi = 0; pi < l; pi++ ) {
 						tile_containment = tile.containments[pi];
-						if ( tile_containment.part.category === 'vent' ) {
-							total_containment = tile_containment.part.containment + tile_containment.part.vent;
+
+						// Lie about coolant_cell6's max containment since half will be converted to power
+						if ( tile_containment.part.id === 'coolant_cell6' ) {
+							total_containment += (tile_containment.part.containment - tile_containment.heat_contained) * 2;
+						// Lie about vent's max containment vented heat goes away
+						} else if ( tile_containment.part.part.category === 'vent' ) {
+							total_containment += tile_containment.part.containment + tile_containment.part.vent;
 						} else {
-							total_containment = tile_containment.part.containment;
+							total_containment += tile_containment.part.containment;
 						}
 
-						tile_containment_p = tile_containment.heat_contained / total_containment;
-						tile_p = tile.heat_contained / tile_part.containment;
+						total_containment_heat += tile_containment.heat_contained;
+					}
 
-						if ( tile_containment_p - tile_p > .1 ) {
-							transfer_heat = (tile_containment_p - tile_p) * tile_containment.heat_contained;
-							// If there is too much heat to be able to ballance, transfer all we can
+					target_percent = total_containment_heat / total_containment;
+
+					// First try to remove heat
+					for ( pi = 0; pi < l; pi++ ) {
+						tile_containment = tile.containments[pi];
+
+						// Lie about coolant_cell6's max containment since half will be converted to power
+						if ( tile_containment.part.id === 'coolant_cell6' ) {
+							tile_containment_containment = (tile_containment.part.containment - tile_containment.heat_contained) * 2;
+						// Lie about vent's max containment vented heat goes away
+						} else if ( tile_containment.part.part.category === 'vent' ) {
+							tile_containment_containment = tile_containment.part.containment + tile_containment.part.vent;
+						} else {
+							tile_containment_containment = tile_containment.part.containment;
+						}
+
+						tile_containment_percent = tile_containment.heat_contained / tile_containment_containment;
+
+						if ( tile_containment_percent > target_percent ) {
+							transfer_heat = (tile_containment_percent - target_percent) * total_containment_heat;
+
 							if ( transfer_heat > max_heat_transfer ) {
 								transfer_heat = max_heat_transfer;
 							}
 
-							// If the heat would destroy the exchanger, max out at 90%
-							if ( tile.heat_contained + transfer_heat >= tile_part.containment && tile_p < .99 ) {
-								transfer_heat = (90 - (tile_p * 100)) / 100 * tile_part.containment;
+							if ( transfer_heat >  tile_containment.heat_contained ) {
+								transfer_heat =  tile_containment.heat_contained;
 							}
 
-							if ( tile_containment.part.category === 'vent' ) {
-								if ( vent_multiplier ) {
-									vent_reduce = tile_containment.part.vent * (1 + vent_multiplier / 100);
-								} else {
-									vent_reduce = tile_containment.part.vent;
-								}
-							}
-
-							if ( tile_containment.part.category === 'vent' && vent_reduce > tile_containment.heat_contained + transfer_heat ) {
-								// Don't take any heat from vents that will vent
-							} else {
+							// TODO: skip if vents can handle the heat
+							if ( transfer_heat >= 1 ) {
 								tile_containment.heat_contained -= transfer_heat;
-								if ( tile_containment.heat_contained < 0 ) tile_containment.heat_contained = 0;
-
 								tile.heat_contained += transfer_heat;
 							}
 						}
 					}
 
-					// Add heat to neighbor
+					// Then try to add heat
 					for ( pi = 0; pi < l; pi++ ) {
+						tile_percent = tile.heat_contained / tile.part.containment;
+						transfer_heat = 0;
+
 						tile_containment = tile.containments[pi];
-						if ( tile_containment.part.category === 'vent' ) {
-							total_containment = tile_containment.part.containment + tile_containment.part.vent;
+
+						// Lie about coolant_cell6's max containment since half will be converted to power
+						if ( tile_containment.part.id === 'coolant_cell6' ) {
+							tile_containment_containment = (tile_containment.part.containment - tile_containment.heat_contained) * 2;
+						// Lie about vent's max containment vented heat goes away
+						} else if ( tile_containment.part.part.category === 'vent' ) {
+							tile_containment_containment = tile_containment.part.containment + tile_containment.part.vent;
 						} else {
-							total_containment = tile_containment.part.containment;
+							tile_containment_containment = tile_containment.part.containment;
 						}
 
-						tile_containment_p = tile_containment.heat_contained / total_containment;
-						tile_p = tile.heat_contained / tile_part.containment;
+						tile_containment_percent = tile_containment.heat_contained / tile_containment_containment;
 
-						if ( tile_p - tile_containment_p > .1  ) {
-							transfer_heat = (tile_p - tile_containment_p) * tile.heat_contained;
-							// If there is too much heat to be able to ballance, transfer all we can
-							if ( transfer_heat > max_heat_transfer ) {
-								transfer_heat = max_heat_transfer;
+						if ( tile_containment_percent < target_percent ) {
+							transfer_heat = (target_percent - tile_containment_percent) * tile_containment_containment;
+						} else if ( tile_containment_percent < tile_percent ) {
+							transfer_heat = (tile_percent - tile_containment_percent) * tile_containment_containment;
+						}
+
+						// Not sure if the lies above are useful with this
+						if ( tile_containment.part.part.category === 'vent' && transfer_heat < tile_containment.part.vent - tile_containment.heat_contained ) {
+							transfer_heat = tile_containment.part.vent - tile_containment.heat_contained;
+						}
+
+						if ( transfer_heat > max_heat_transfer ) {
+							transfer_heat = max_heat_transfer;
+						}
+
+						if ( transfer_heat > tile.heat_contained ) {
+							transfer_heat = tile.heat_contained;
+						}
+
+						if ( transfer_heat >= 1 ) {
+							if ( tile_containment.part.id === 'coolant_cell6' ) {
+								tile_containment.heat_contained += transfer_heat / 2;
+								power_add += transfer_heat / 2;
+							} else {
+								tile_containment.heat_contained += transfer_heat;
 							}
 
-							// If the heat would destroy the part, max out at 90%
-							if ( tile_containment.heat_contained + transfer_heat >= tile_containment.part.containment && tile_containment_p < .99 ) {
-								transfer_heat = (90 - (tile_containment_p * 100)) / 100 * tile_containment.part.containment;
-							}
-
-							// Give vents all the heat they can vent when possible
-							if ( tile_containment.part.category === 'vent' ) {
-								if ( vent_multiplier ) {
-									vent_reduce = tile_containment.part.vent * (1 + vent_multiplier / 100);
-								} else {
-									vent_reduce = tile_containment.part.vent;
-								}
-
-								if ( transfer_heat + tile_containment.heat_contained < vent_reduce ) {
-									transfer_heat = vent_reduce - tile_containment.heat_contained;
-								}
-							}
-
-							if ( transfer_heat > max_heat_transfer ) transfer_heat = max_heat_transfer;
-							if ( transfer_heat > tile.heat_contained ) transfer_heat = tile.heat_contained;
-
-							tile_containment.heat_contained += transfer_heat;
 							tile.heat_contained -= transfer_heat;
-
-							if ( tile.heat_contained < 0 ) tile.heat_contained = 0;
 						}
 					}
 				} else if ( tile_part.category === 'heat_outlet' ) {
@@ -2771,7 +2933,14 @@ var game_loop = function() {
 
 					for ( pi = 0; pi < l; pi++ ) {
 						tile_containment = tile.containments[pi];
-						tile_containment.heat_contained += shared_heat;
+
+						if ( tile_containment.part.id === 'coolant_cell6' ) {
+							tile_containment.heat_contained += shared_heat / 2;
+							power_add += shared_heat / 2;
+						} else {
+							tile_containment.heat_contained += shared_heat;
+						}
+
 						heat_remove += shared_heat;
 					}
 				}
@@ -2802,8 +2971,15 @@ var game_loop = function() {
 				row = tiles[ri];
 				for ( ci = 0; ci < cols; ci++ ) {
 					tile = row[ci];
+
 					if ( tile.activated && tile.part && tile.part.containment ) {
-						tile.heat_contained += reduce_heat / tiles.length;
+
+						if ( tile.part.id === 'coolant_cell6' ) {
+							tile.heat_contained += reduce_heat / tiles.length / 2;
+							power_add += reduce_heat / tiles.length / 2;
+						} else {
+							tile.heat_contained += reduce_heat / tiles.length;
+						}
 					}
 				}
 			}
@@ -2820,6 +2996,8 @@ var game_loop = function() {
 
 	// Add power
 	current_power += power_add;
+
+	$power_per_tick.innerHTML = fmt(power_add);
 
 	// Try to place parts in the queue
 	if ( tile_queue.length ) {
@@ -2873,7 +3051,7 @@ var game_loop = function() {
 				}
 
 				if ( tile.heat_contained > tile.part.containment ) {
-					if ( tile.heat <= 0 && tile.part.category === 'capacitor' && upgrade_objects['perpetual_capacitors'].level > 0 && current_money >= tile.part.cost * 10 ) {
+					if ( auto_buy_disabled !== true && tile.heat <= 0 && tile.part.category === 'capacitor' && upgrade_objects['perpetual_capacitors'].level > 0 && current_money >= tile.part.cost * 10 ) {
 						current_money -= tile.part.cost * 10;
 						heat_add_next_loop += tile.heat_contained;
 						tile.heat_contained = 0;
@@ -2900,32 +3078,34 @@ var game_loop = function() {
 	}
 
 	// Auto Sell
-	sell_amount = Math.ceil(max_power * auto_sell_multiplier);
-	if ( sell_amount ) {
-		if ( sell_amount > current_power ) {
-			power_sell_percent = current_power / sell_amount;
-			sell_amount = current_power;
-		} else {
-			power_sell_percent = 1;
-		}
+	if ( !auto_sell_disabled ) {
+		sell_amount = Math.ceil(max_power * auto_sell_multiplier);
+		if ( sell_amount ) {
+			if ( sell_amount > current_power ) {
+				power_sell_percent = current_power / sell_amount;
+				sell_amount = current_power;
+			} else {
+				power_sell_percent = 1;
+			}
 
-		current_power -= sell_amount;
-		current_money += sell_amount;
-		$money.innerHTML = fmt(current_money);
+			current_power -= sell_amount;
+			current_money += sell_amount;
+			$money_per_tick.innerHTML = fmt(sell_amount);
+			$money.innerHTML = fmt(current_money);
 
-		// Extreme capacitors frying themselves
-		for ( ri = 0; ri < rows; ri++ ) {
-			row = tiles[ri];
+			// Extreme capacitors frying themselves
+			for ( ri = 0; ri < rows; ri++ ) {
+				row = tiles[ri];
 
-			for ( ci = 0; ci < cols; ci++ ) {
-				tile = row[ci];
+				for ( ci = 0; ci < cols; ci++ ) {
+					tile = row[ci];
 
-				if ( tile.activated && tile.part && tile.part.id === 'capacitor6' ) {
-					tile.heat_contained += tile.part.reactor_power * auto_sell_multiplier * power_sell_percent * .5;
+					if ( tile.activated && tile.part && tile.part.id === 'capacitor6' ) {
+						tile.heat_contained += sell_amount * auto_sell_multiplier * power_sell_percent * .5;
+					}
 				}
 			}
 		}
-
 	}
 
 	if ( current_power > max_power ) {
@@ -2980,6 +3160,10 @@ var game_loop = function() {
 	if ( !paused ) {
 		loop_timeout = setTimeout(game_loop, loop_wait);
 	}
+
+	if ( tooltip_update !== null ) {
+		tooltip_update();
+	}
 };
 
 // affordability loop
@@ -3003,7 +3187,7 @@ var check_affordability = function() {
 			&& (!part.erequires || upgrade_objects[part.erequires].level)
 		) {
 			part.affordable = true;
-			part.$el.className = part.$el.className.replace(unaffordable_replace, '');
+			part.$el.className = part.$el.className.replace(unaffordable_replace, '').replace(locked_find, '');
 		}
 	}
 };

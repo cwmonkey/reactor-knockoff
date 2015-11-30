@@ -18,14 +18,31 @@ body {
 
 button {
 	padding: 0;
+	outline: 0;
 	border: none;
 	box-shadow: none;
 	-webkit-appearance: none;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+button,
+#parts_nav_top,
+#parts_nav_bottom {
 	font-family: 'Play';
 	font-weight: 400;
 	font-size: 13.5px;
-	text-shadow: 1px 1px 0 rgba(0, 0, 0, 1);
+	text-shadow: 1px 1px 0 #000;
 	cursor: pointer;
+	text-decoration: none;
+	text-align: center;
+}
+
+button::-moz-focus-inner {
+	padding: 0;
+	border: 0
 }
 
 p {
@@ -55,7 +72,7 @@ h6 {
 }
 
 #secondary {
-	width: 221px;
+	width: 260px;
 	flex-grow: 1;
 	display: flex;
 	flex-direction: column;;
@@ -78,21 +95,22 @@ h6 {
 }
 
 #stats_section {
-	height: 247px;
+  height: 239px;
 }
 
 #power_indicator,
-#heat_indicator {
-	border: 2px solid #000;
+#heat_indicator,
+#currency {
+	border: 2px solid #334147;
+	border-bottom-width: 0;
 	position: relative;
 	font-size: .8em;
 	text-align: center;
-	padding: .75em 1em;
-	margin-bottom: 2px;
+	padding: .4em 0;
 }
 
 #currency,
-#power_text,
+#power_indicator,
 #heat_text {
 	position: relative;
 	z-index: 2;
@@ -109,6 +127,7 @@ h6 {
 		;
 	font-family: monospace;
 	font-weight: bold;
+	line-height: 1.3
 }
 
 #power_percentage,
@@ -122,18 +141,19 @@ h6 {
 
 #currency {
 	background: #59c435;
-	color: #fff;
-	font-size: .8em;
-	text-align: center;
-	border: 2px solid #198405;
-	display: table;
-	width: 100%;
+	border-color: #198405;
+	border-bottom-width: 2px;
 }
 
+#heat_wrapper,
+#heat_per_tick_wrapper,
+#power_text,
+#power_per_tick_wrapper,
 #exotic_particles_wrapper,
 #money_wrapper {
 	display: block;
-	margin: .25em 0;
+	position: relative;
+	z-index: 2;
 }
 
 #heat_percentage {
@@ -158,7 +178,7 @@ h6 {
 	border: 10px solid #eee;
 	border-image: url("../img/border_bg.png") 10 10 stretch;
 	margin: 2px 0 0 2px;
-	background: #b2b2b2;
+	background: #76809b;
 	background-clip: padding-box;
 }
 
@@ -176,6 +196,21 @@ h6 {
 #tooltip_nav {
 	padding: 4px;
 	height: 148px;
+}
+
+#all_parts {
+	position: relative;
+}
+
+#parts {
+	max-height: 463px;
+	display: block;
+	overflow-y: hidden;
+}
+
+#top,
+#bottom {
+	height: 30px;
 }
 
 #parts_section .part .image,
@@ -204,7 +239,7 @@ h6 {
 	margin-right: 4px;
 }
 
-#parts_section .part:nth-child(5n) {
+#parts_section .part:nth-child(6n) {
 	margin-right: 0;
 }
 
@@ -327,22 +362,35 @@ h6 {
 
 #reboot,
 #refund,
-#stats_section button,
 #nav button {
 	border: 2px solid #888;
-	padding: .25em 1em;
+	padding: 0 1em .15em;
 	margin: 0;
-
 	border: 8px solid #eee;
-	border-image: url("../img/button_border.png") 8 8 stretch;
+	border-image: url("../img/button_border_alt.png") 8 8 stretch;
 	background-color: #7181a8;
-	background-clip: padding-box;
 	color: #fff;
 	outline: none;
+	transition: background-color .01s linear;
 }
 
 #nav button {
 	margin-right: .25em;
+}
+
+/* preload */
+body:before {
+	background:
+		url("../img/button_border_alt_active.png"),
+		url("../img/button_border_alt_down_active.png"),
+		url("../img/inner_border_alt_active.png"),
+		url("../img/inner_border_alt_down.png"),
+		url("../img/inner_border_alt_flip_active.png"),
+		url("../img/inner_border_alt_flip_down.png")
+	;
+	content: " ";
+	position: absolute;
+	visibility: hidden;
 }
 
 #refund:hover,
@@ -353,11 +401,16 @@ h6 {
 #stats_section button:focus,
 #nav button:hover,
 #nav button:focus {
-	box-shadow:
-		inset 0px 0px 8px 3px #7181a8;
-	background-color: #fff;
-	color: #000;
-	text-shadow: none;
+	border-image: url("../img/button_border_alt_active.png") 8 8 stretch;
+	background-color: #91a1c8;
+}
+
+#refund:active,
+#reboot:active,
+#stats_section button:active,
+#nav button:active {
+	border-image: url("../img/button_border_alt_down_active.png") 8 8 stretch;
+	background-color: #91a1c8;
 }
 
 #controls_nav {
@@ -380,47 +433,17 @@ h6 {
 
 #main.paused #pause,
 #unpause,
-#main.auto_disabled #disabled_auto,
-#enable_auto {
+#main.auto_sell_disabled #disable_auto_sell,
+#main.auto_buy_disabled #disable_auto_buy,
+#enable_auto_sell,
+#enable_auto_buy {
 	display: none !important;
 }
 
-#main.paused #unpause {
+#main.paused #unpause,
+#main.auto_sell_disabled #enable_auto_sell,
+#main.auto_buy_disabled #enable_auto_buy {
 	display: inline-block !important;
-}
-
-#parts_nav .nav {
-	overflow: hidden;
-	white-space: nowrap;
-	text-indent: 52px;
-	width: 26px;
-	height: 26px;
-	position: relative;
-}
-
-#parts_nav .nav:after {
-	content: " ";
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-}
-
-#show_normal {
-	background: #9999ff url(../img/nav.png);
-}
-
-#show_normal:after {
-	background: url(../img/nav_normal.gif);
-}
-
-#show_experimental {
-	background: #ff0000 url(../img/nav.png);
-}
-
-#show_experimental:after {
-	background: url(../img/nav_experimental.gif);
 }
 
   /* //////////////////////////
@@ -470,16 +493,20 @@ h6 {
 ////////////////////////// */
 
 #parts_section .cells {
-	max-width: 11em;
 }
 
 #parts_section .cells .part,
 #parts_section .cells .part:nth-child(5n) {
 	margin-right: 40px;
+	margin-left: 10px;
 }
 
 #parts_section .cells .part:nth-child(3n) {
 	margin-right: 0;
+}
+
+#parts_section .cells .part.unaffordable + .locked {
+	display: none;
 }
 
 .part .description {
@@ -684,7 +711,7 @@ h6 {
 	background-image: url("../img/capacitor_5.gif");
 }
 
-#xparts .part.part_capacitor6 .image:after,
+#parts .part.part_capacitor6 .image:after,
 #experimental_upgrades #experimental_capacitance .image:after,
 #reactor .tile.part_capacitor6:after{
 	background-image: url("../img/capacitor_6.gif");
@@ -722,7 +749,7 @@ h6 {
 	background-image: url("../img/vent_5.gif");
 }
 
-#xparts .part.part_vent6 .image:after,
+#parts .part.part_vent6 .image:after,
 #experimental_upgrades #vortex_cooling .image:after,
 #reactor .tile.part_vent6:after {
 	background-image: url("../img/vent_6.gif");
@@ -756,7 +783,7 @@ h6 {
 	background-image: url("../img/exchanger_5.gif");
 }
 
-#xparts .part.part_heat_exchanger6 .image:after,
+#parts .part.part_heat_exchanger6 .image:after,
 #experimental_upgrades #underground_heat_extraction .image:after,
 #reactor .tile.part_heat_exchanger6:after {
 	background-image: url("../img/exchanger_6.gif");
@@ -788,7 +815,7 @@ h6 {
 	background-image: url("../img/inlet_5.gif");
 }
 
-#xparts .part.part_heat_inlet6 .image:after,
+#parts .part.part_heat_inlet6 .image:after,
 #experimental_upgrades #vortex_extraction .image:after,
 #reactor .tile.part_heat_inlet6:after {
 	background-image: url("../img/inlet_6.gif");
@@ -820,7 +847,7 @@ h6 {
 	background-image: url("../img/outlet_5.gif");
 }
 
-#xparts .part.part_heat_outlet6 .image:after,
+#parts .part.part_heat_outlet6 .image:after,
 #experimental_upgrades #explosive_ejection .image:after,
 #reactor .tile.part_heat_outlet6:after {
 	background-image: url("../img/outlet_6.gif");
@@ -854,6 +881,12 @@ h6 {
 	background-image: url("../img/coolant_5.gif");
 }
 
+#parts .part.part_coolant_cell6 .image:after,
+#experimental_upgrades #thermionic_conversion .image:after,
+#reactor .tile.part_coolant_cell6:after {
+	background-image: url("../img/coolant_6.gif");
+}
+
 /* Platings */
 #parts .part.part_reactor_plating1 .image:after,
 #reactor .tile.part_reactor_plating1:after,
@@ -885,7 +918,7 @@ h6 {
 	background-image: url("../img/plating_5.gif");
 }
 
-#xparts .part.part_reactor_plating6 .image:after,
+#parts .part.part_reactor_plating6 .image:after,
 #experimental_upgrades #micro_capacitance .image:after,
 #reactor .tile.part_reactor_plating6:after {
 	background-image: url("../img/plating_6.gif");
@@ -1155,10 +1188,53 @@ h6 {
 	background-clip: padding-box;
 }
 
-#parts_nav {
+#parts_nav_top,
+#parts_nav_bottom {
+	position: absolute;
+	z-index: 1;
+	width: 100%;
+	left: 0;
+	color: #fff;
+}
+
+#parts_nav_top {
 	border: 8px solid #eee;
 	border-image: url("../img/inner_border_alt.png") 8 8 stretch;
 	background-color: #76809b;
-	background-clip: padding-box;
-	margin-bottom: 4px;
+	width: 100%;
+	top: 0;
+}
+
+#parts_nav_top:hover,
+#parts_nav_top:focus {
+	border-image: url("../img/inner_border_alt_active.png") 8 8 stretch;
+	background-color: #96a0bb;
+}
+
+#parts_nav_top:active {
+	border-image: url("../img/inner_border_alt_down.png") 8 8 stretch;
+	background-color: #96a0bb;
+}
+
+#stats_section button,
+#parts_nav_bottom {
+	border: 8px solid #eee;
+	border-image: url("../img/inner_border_alt_flip.png") 8 8 stretch;
+	background-color: #76809b;
+	bottom: 0;
+	color: #fff;
+}
+
+#stats_section button:hover,
+#stats_section button:focus,
+#parts_nav_bottom:hover,
+#parts_nav_bottom:focus {
+	border-image: url("../img/inner_border_alt_flip_active.png") 8 8 stretch;
+	background-color: #96a0bb;
+}
+
+#stats_section button:active,
+#parts_nav_bottom:active {
+	border-image: url("../img/inner_border_alt_flip_down.png") 8 8 stretch;
+	background-color: #96a0bb;
 }

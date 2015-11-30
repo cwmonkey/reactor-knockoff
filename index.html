@@ -21,14 +21,19 @@
 				<!-- Heat -->
 				<section id="heat">
 					<h3 class="heading">Heat</h3>
-					<div id="heat_indicator">
+					<p id="heat_indicator">
 						<span id="heat_text">
-							<span id="current_heat">0</span>/<span id="max_heat">0</span>
+							<span id="heat_wrapper">
+								<span id="current_heat">0</span>/<span id="max_heat">0</span>
+							</span>
+							<span id="heat_per_tick_wrapper">
+								(<span id="heat_per_tick"></span>/tick)
+							</span>
 						</span>
 						<span id="heat_percentage"></span>
-					</div>
+					</p>
 					<button id="reduce_heat">
-						<span id="manual_heat_reduce"></span> Heat
+						<span id="manual_heat_reduce"></span>
 						(<span id="auto_heat_reduce"></span>/tick)
 					</button>
 				</section>
@@ -37,10 +42,16 @@
 				<div id="power_section">
 					<section id="power">
 						<h3 class="heading">Power</h3>
-						<div id="power_indicator">
-							<span id="power_text"><span id="current_power">0</span>/<span id="max_power">0</span></span>
+						<p id="power_indicator">
+							<span id="power_text">
+								<span id="current_power">0</span>/<span id="max_power">0</span>
+							</span>
+							<span id="power_per_tick_wrapper">
+								(<span id="power_per_tick"></span>/tick)
+							</span>
+
 							<span id="power_percentage"></span>
-						</div>
+						</p>
 					</section>
 					<button id="sell">Sell</button>
 				</div>
@@ -48,7 +59,7 @@
 				<!-- Currency -->
 				<p id="currency">
 					<span id="money_wrapper">
-						$<span id="money">0</span>
+						$<span id="money">0</span> ($<span id="money_per_tick">0</span>/tick)
 					</span>
 					<span id="exotic_particles_wrapper">
 						(<span id="current_exotic_particles">0</span>/<span id="exotic_particles">0</span> EP)
@@ -61,28 +72,28 @@
 			<section id="parts_section" class="panel">
 				<h2 class="heading">Parts</h2>
 
-				<!-- Nav -->
-				<menu id="parts_nav" class="subpanel_alt">
-					<button id="show_normal" class="nav" data-section="parts_section" data-page="parts">Normal</button>
-					<button id="show_experimental" class="nav" data-section="parts_section" data-page="experimental_parts">Experimental</button>
-				</menu>
-
 				<div id="all_parts">
-					<!-- Parts -->
+					<nav id="parts_nav">
+						<a href="#top" id="parts_nav_top">&utrif;</a>
+						<a href="#bottom" id="parts_nav_bottom">&dtrif; </a>
+					</nav>
 					<menu id="parts" class="page subpanel showing">
+						<div id="top"></div>
 						<menu id="power">
 							<menu id="cells" class="cells"></menu>
 							<menu id="reflectors"></menu>
 							<menu id="capacitors"></menu>
 						</menu>
 						<menu id="cooling">
+							<menu id="vents"></menu>
+							<menu id="heat_exchangers"></menu>
+							<menu id="heat_inlets"></menu>
+							<menu id="heat_outlets"></menu>
+							<menu id="coolant_cells"></menu>
+							<menu id="reactor_platings"></menu>
+							<menu id="particle_accelerators"></menu>
 						</menu>
-					</menu>
-
-					<!-- Experiments -->
-					<menu id="experimental_parts" class="page subpanel">
-						<menu id="xcells" class="cells"></menu>
-						<menu id="xparts"></menu>
+						<div id="bottom"></div>
 					</menu>
 				</div>
 			</section>
@@ -100,8 +111,11 @@
 					<p id="tooltip_sells" title="Sells for"></p>
 					<p id="tooltip_heat_per" title="Heat per tick"></p>
 					<p id="tooltip_power_per" title="Power per tick"></p>
-					<p id="tooltip_heat_wrapper" title="Heat per tick">
-						<span id="tooltip_heat"></span>/<span id="tooltip_max_heat"></span>
+					<p id="tooltip_ticks_wrapper" title="Ticks remaining">
+						Ticks: <span id="tooltip_ticks"></span>/<span id="tooltip_max_ticks"></span>
+					</p>
+					<p id="tooltip_heat_wrapper" title="Heat contained">
+						Heat: <span id="tooltip_heat"></span>/<span id="tooltip_max_heat"></span>
 					</p>
 				</section>
 
@@ -120,8 +134,10 @@
 					</menu>
 
 					<menu id="controls_nav">
-						<button id="disable_auto">Disable Auto Sell</button>
-						<button id="enable_auto">Enable Auto Sell</button>
+						<button id="disable_auto_sell">Disable Auto Sell</button>
+						<button id="enable_auto_sell">Enable Auto Sell</button>
+						<button id="disable_auto_buy">Disable Auto Buy</button>
+						<button id="enable_auto_buy">Enable Auto Buy</button>
 						<button id="pause">Pause</button>
 						<button id="unpause">Unpause</button>
 					</menu>
