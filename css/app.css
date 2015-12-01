@@ -16,6 +16,14 @@ body {
 	color: #fff;
 }
 
+a {
+	color: #d3f5f6;
+}
+
+a:visited {
+	color: #c3a5f6;
+}
+
 button {
 	padding: 0;
 	outline: 0;
@@ -79,7 +87,7 @@ h6 {
 }
 
 #primary {
-	width: 652px;
+	width: 668px;
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
@@ -95,7 +103,7 @@ h6 {
 }
 
 #stats_section {
-  height: 239px;
+  height: 226px;
 }
 
 #power_indicator,
@@ -106,7 +114,12 @@ h6 {
 	position: relative;
 	font-size: .8em;
 	text-align: center;
-	padding: .4em 0;
+	padding: 5px 0;
+}
+
+#power_indicator,
+#heat_indicator {
+	padding: 8px 0;
 }
 
 #currency,
@@ -184,7 +197,7 @@ h6 {
 
 #power_section,
 #heat {
-	margin-bottom: 4px;
+	margin-bottom: 8px;
 }
 
 #reduce_heat,
@@ -276,8 +289,68 @@ h6 {
  // Reactor
 ////////////////////////// */
 
+#reactor_header {
+	display: table;
+	width: 100%;
+}
+
+#reactor_stats {
+	margin-bottom: .75em;
+	float: right;
+}
+
+#reactor_stats .stat {
+	font-family: monospace;
+	font-size: 13px;
+	display: inline-block;
+	width: 84px;
+	line-height: 16px;
+	text-align: right;
+	position: relative;
+	border: 2px solid #737D98;
+	border-top-color: #354249;
+	border-right-color: #354249;
+	border-radius: 6px;
+	margin-left: 18px;
+	padding-right: 2px;
+	background: #222C38;
+}
+
+#reactor_stats .stat:before {
+	width: 16px;
+	height: 16px;
+	content: " ";
+	position: absolute;
+	left: -20px;
+}
+
+#stats_vent:before {
+	background-image: url("../img/icon_vent.gif");
+}
+
+#stats_inlet:before {
+	background-image: url("../img/icon_inlet.gif");
+}
+
+#stats_outlet:before {
+	background-image: url("../img/icon_outlet.gif");
+}
+
+#stats_heat:before {
+	background-image: url("../img/icon_heat.gif");
+}
+
+#stats_power:before {
+	background-image: url("../img/icon_power.gif");
+}
+
+#stats_cash:before {
+	background-image: url("../img/icon_cash.gif");
+}
+
 #reactor_section .heading {
-	margin-bottom: 14px;
+	position: absolute;
+	clip: rect(1px, 1px, 1px, 1px);
 }
 
 #reactor .tile {
@@ -455,6 +528,14 @@ body:before {
 	clip: rect(1px, 1px, 1px, 1px);
 	left: 0;
 	top: 0;
+}
+
+#main .page .heading {
+	margin-bottom: .75em;
+}
+
+#main .page .subpanel {
+	padding: .5em;
 }
 
 #main .showing {

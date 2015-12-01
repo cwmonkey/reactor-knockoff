@@ -10,6 +10,7 @@ Increase reactor size via upgrades
 "story" objectives
 Auto save
 
+
 console.log
 */
 
@@ -74,8 +75,8 @@ var fmt = function(num, places) {
 	floor_num = Math.floor(num).toString();
 
 	if ( places !== null ) {
-		pow = floor_num.length - places;
-		num = Math.round(num / Math.pow(10, pow)) * Math.pow(10, pow);
+		pow = Math.floor((floor_num.length - 1)/3) * 3;
+		num = Math.round(num / Math.pow(10, pow - places)) * Math.pow(10, pow - places);
 	}
 
 	// in case of exponents
@@ -304,12 +305,20 @@ var tile2;
 var tile_part2;
 var range;
 
+var stat_vent;
+var stat_inlet;
+var stat_outlet;
+
 var update_tiles = function() {
 	heat_outlet_countainments_count = 0;
 	transfer_multiplier = 0;
 	vent_multiplier = 0;
 	max_power = altered_max_power;
 	max_heat = altered_max_heat;
+
+	stat_vent = 0;
+	stat_inlet = 0;
+	stat_outlet = 0;
 
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
@@ -321,6 +330,21 @@ var update_tiles = function() {
 			// Zero out heat and power
 			tile.heat = 0;
 			tile.power = 0;
+
+			// collect stats
+			if ( tile_part && tile.activated ) {
+				if ( tile_part.vent ) {
+					stat_vent += tile_part.vent;
+				}
+
+				if ( tile_part.category === 'heat_inlet' ) {
+					stat_inlet += tile_part.transfer;
+				}
+
+				if ( tile_part.category === 'heat_outlet' ) {
+					stat_outlet += tile_part.transfer;
+				}
+			}
 		}
 	}
 
@@ -486,6 +510,10 @@ var update_tiles = function() {
 	$max_power.innerHTML = fmt(max_power);
 	$max_heat.innerHTML = fmt(max_heat);
 
+	$stats_vent.innerHTML = fmt(stat_vent * (1 + vent_multiplier / 100), 2);
+	$stats_inlet.innerHTML = fmt(stat_inlet * (1 + transfer_multiplier / 100), 2);
+	$stats_outlet.innerHTML = fmt(stat_outlet * (1 + transfer_multiplier / 100), 2);
+
 	if ( debug ) {
 		for ( ri = 0; ri < rows; ri++ ) {
 			row = tiles[ri];
@@ -519,6 +547,13 @@ var $exotic_particles = $('#exotic_particles');
 var $current_exotic_particles = $('#current_exotic_particles');
 var $reboot_exotic_particles = $('#reboot_exotic_particles');
 var $refund_exotic_particles = $('#refund_exotic_particles');
+
+var $stats_vent = $('#stats_vent');
+var $stats_inlet = $('#stats_inlet');
+var $stats_outlet = $('#stats_outlet');
+var $stats_cash = $('#stats_cash');
+var $stats_power = $('#stats_power');
+var $stats_heat = $('#stats_heat');
 
 // Tooltip
 var $tooltip = $('#tooltip');
@@ -785,8 +820,8 @@ var parts = [
 		level: 1,
 		base_cost: 500,
 		cost_multiplier: 10,
-		base_power_increase: 5,
-		power_increase_multiplier: 1,
+		base_power_increase: 1,
+		power_increase_multiplier: 2,
 		base_ticks: 100,
 		ticks_multiplier: 12.5
 	},
@@ -1191,6 +1226,11 @@ var create_part = function(part, level) {
 			if ( part.base_ep_heat && part.ep_heat_multiplier ) {
 				part.base_ep_heat = part.base_ep_heat * Math.pow(part.ep_heat_multiplier, level - 1);
 			}
+
+			if ( part.base_power_increase && part.power_increase_multiplier ) {
+				part.base_power_increase = part.base_power_increase * Math.pow(part.power_increase_multiplier, level - 1);
+			}
+
 		}
 	}
 
@@ -1458,7 +1498,7 @@ var upgrades = [
 			// TODO: 6
 			for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * .1 * (upgrade.level + 1) * Math.pow(2, upgrade_objects['full_spectrum_reflectors'].level);
+				part.power_increase = part.part.base_power_increase * (upgrade.level + 1) * Math.pow(2, upgrade_objects['full_spectrum_reflectors'].level);
 				part.updateDescription();
 			}
 		}
@@ -1512,7 +1552,7 @@ var upgrades = [
 		id: 'reinforced_heat_exchangers',
 		type: 'exchangers',
 		title: 'Reinforced Heat Exchangers',
-		description: 'Each plating increases the effectiveness of exchangers by 1% per level of upgrade per level of plating.',
+		description: 'Each plating increases the amout of heat that exchangers can exchange by 1% per level of upgrade per level of plating.',
 		cost: 1000,
 		multiplier: 100,
 		onclick: function(upgrade) {
@@ -1523,7 +1563,7 @@ var upgrades = [
 		id: 'active_exchangers',
 		type: 'exchangers',
 		title: 'Active Exchangers',
-		description: 'Each capacitor increases the effectiveness of exchangers by 1% per level of upgrade per level of capacitor.',
+		description: 'Each capacitor increases the amout of heat that exchangers can exchange by 1% per level of upgrade per level of capacitor.',
 		cost: 1000,
 		multiplier: 100,
 		onclick: function(upgrade) {
@@ -1553,7 +1593,7 @@ var upgrades = [
 		id: 'improved_heatsinks',
 		type: 'vents',
 		title: 'Improved Heatsinks',
-		description: 'Each plating increases the effectiveness of vents by 1% per level of upgrade per level of plating.',
+		description: 'Each plating increases the amount of heat that vents can vent by 1% per level of upgrade per level of plating.',
 		cost: 1000,
 		multiplier: 100,
 		onclick: function(upgrade) {
@@ -1564,7 +1604,7 @@ var upgrades = [
 		id: 'active_venting',
 		type: 'vents',
 		title: 'Active Venting',
-		description: 'Each capacitor increases the effectiveness of vents by 1% per level of upgrade per level of capacitor.',
+		description: 'Each capacitor increases the effectiveness of heat that vents can vent by 1% per level of upgrade per level of capacitor.',
 		cost: 1000,
 		multiplier: 100,
 		onclick: function(upgrade) {
@@ -1684,11 +1724,11 @@ var upgrades = [
 		onclick: function(upgrade) {
 			var part;
 			// TODO: 6
-			for ( var i = 1; i <= 5; i++ ) {
+			/*for ( var i = 1; i <= 5; i++ ) {
 				part = part_objects['reflector' + i];
 				part.power_increase = part.part.base_power_increase * .1 * (upgrade_objects['improved_neutron_reflection'].level + 1) * Math.pow(2, upgrade.level);
 				part.updateDescription();
-			}
+			}*/
 		}
 	},
 	{
@@ -2788,7 +2828,8 @@ var game_loop = function() {
 
 	current_heat += heat_add;
 
-	$heat_per_tick.innerHTML = fmt(heat_add);
+	//$heat_per_tick.innerHTML = fmt(heat_add);
+	$stats_heat.innerHTML = fmt(heat_add, 2);
 
 	// Reduce reactor heat parts
 	max_shared_heat = current_heat / heat_outlet_countainments_count;
@@ -2997,7 +3038,8 @@ var game_loop = function() {
 	// Add power
 	current_power += power_add;
 
-	$power_per_tick.innerHTML = fmt(power_add);
+	//$power_per_tick.innerHTML = fmt(power_add);
+	$stats_power.innerHTML = fmt(power_add, 2);
 
 	// Try to place parts in the queue
 	if ( tile_queue.length ) {
@@ -3090,7 +3132,8 @@ var game_loop = function() {
 
 			current_power -= sell_amount;
 			current_money += sell_amount;
-			$money_per_tick.innerHTML = fmt(sell_amount);
+			//$money_per_tick.innerHTML = fmt(sell_amount);
+			$stats_cash.innerHTML = fmt(sell_amount, 2);
 			$money.innerHTML = fmt(current_money);
 
 			// Extreme capacitors frying themselves

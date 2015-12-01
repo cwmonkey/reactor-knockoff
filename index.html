@@ -26,9 +26,6 @@
 							<span id="heat_wrapper">
 								<span id="current_heat">0</span>/<span id="max_heat">0</span>
 							</span>
-							<span id="heat_per_tick_wrapper">
-								(<span id="heat_per_tick"></span>/tick)
-							</span>
 						</span>
 						<span id="heat_percentage"></span>
 					</p>
@@ -46,9 +43,6 @@
 							<span id="power_text">
 								<span id="current_power">0</span>/<span id="max_power">0</span>
 							</span>
-							<span id="power_per_tick_wrapper">
-								(<span id="power_per_tick"></span>/tick)
-							</span>
 
 							<span id="power_percentage"></span>
 						</p>
@@ -59,7 +53,7 @@
 				<!-- Currency -->
 				<p id="currency">
 					<span id="money_wrapper">
-						$<span id="money">0</span> ($<span id="money_per_tick">0</span>/tick)
+						$<span id="money">0</span>
 					</span>
 					<span id="exotic_particles_wrapper">
 						(<span id="current_exotic_particles">0</span>/<span id="exotic_particles">0</span> EP)
@@ -123,14 +117,15 @@
 				<menu id="nav">
 					<menu id="game_nav">
 						<button id="save">Save</button>
-						<button id="options">Options</button>
+						<button id="options" class="nav" data-section="reactor_upgrades" data-page="options_section">Options</button>
+						<button id="show_help" class="nav" data-section="reactor_upgrades" data-page="help_section">Help</button>
+						<button id="show_about" class="nav" data-section="reactor_upgrades" data-page="about_section">About</button>
 					</menu>
 
 					<menu id="pages_nav">
 						<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">Reactor</button>
 						<button id="show_upgrades" class="nav" data-section="reactor_upgrades" data-page="upgrades_section">Upgrades</button>
 						<button id="show_experiments" class="nav" data-section="reactor_upgrades" data-page="experimental_upgrades_section">Experiments</button>
-						<button id="show_help" class="nav" data-section="reactor_upgrades" data-page="help_section">Help</button>
 					</menu>
 
 					<menu id="controls_nav">
@@ -148,7 +143,17 @@
 			<div id="reactor_upgrades" class="panel">
 				<!-- Reactor -->
 				<section id="reactor_section" class="page showing">
-					<h2 class="heading">Reactor</h2>
+					<header id="reactor_header">
+						<h2 class="heading">Reactor</h2>
+						<div id="reactor_stats">
+							<span id="stats_vent" class="stat" title="Total potential heat venting per tick">0</span>
+							<span id="stats_inlet" class="stat" title="Total potential heat inletting per tick">0</span>
+							<span id="stats_outlet" class="stat" title="Total potential heat outletting per tick">0</span>
+							<span id="stats_power" class="stat" title="Total power per tick">0</span>
+							<span id="stats_heat" class="stat" title="Total heat per tick">0</span>
+							<span id="stats_cash" class="stat" title="Total autosell cash per tick">0</span>
+						</div>
+					</header>
 					<div id="reactor" class="subpanel">
 					</div>
 				</section>
@@ -163,6 +168,16 @@
 						<p>Lots of money = particle accelerators</p>
 						<p>Particle accelerators = exotic particles (EP)</p>
 						<p>EP = more upgrades and new toys for more power, heat and money!</p>
+					</div>
+				</section>
+
+				<!-- About -->
+				<section id="about_section" class="page">
+					<h2 class="heading">About</h2>
+					<div id="about" class="subpanel explanitory">
+						<p>Based on <a href="http://www.kongregate.com/games/Cael/reactor-incremental" target="_blank">Reactor Incremental</a> by <a href="http://www.kongregate.com/accounts/Cael" target="_blank">Cael</a>.</p>
+						<p>UI based on <a href="http://opengameart.org/content/sci-fi-user-interface-elements" target="_blank">Sci-fi User Interface Elements</a> by <a href="http://opengameart.org/users/buch" target="_blank">Buch</a>.</p>
+						<p>Fonts from <a href="https://www.google.com/fonts" target="_blank">Google Fonts</a>.</p>
 					</div>
 				</section>
 
