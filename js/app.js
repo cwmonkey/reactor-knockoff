@@ -9,7 +9,40 @@ right click to sell upgrades?
 Increase reactor size via upgrades
 "story" objectives
 Auto save
-
+reflector6
+particle accelerator6
+adjust ui
+header buttons
+stats borders
+finish help section
+fix icons to not be smooshed
+fix upgrade/experiment display
+new cells
+full reset
+tooltip
+modal messages
+figure out reflector experiment upgrade
+parts ui adjust (up/down go away)
+Options page - exponential formatting
+refactor code
+break into multiple files?
+achievement system
+Statistics
+shift+click on empty tiles to fill them
+Bundling cells to 9+
+save layouts
+forceful fusion testing
+shorten reflector lifespan
+towns with different power needs and compensation
+multiple reactors
+round base numbers
+mobile ui - sliding panels
+unshift vents - vent6 power issue?
+test speed of loops
+try big int library
+ui.js - put purely ui control stuff in there
+browser testing
+fix close/delete buttons on tooltip - don't show if ('ontouchstart' in window)
 
 console.log
 */
@@ -168,6 +201,11 @@ var set_defaults = function() {
 };
 
 set_defaults();
+
+// Mark ios since it's an idiot with mouseover events
+
+
+var is_ios = navigator.userAgent.match(/(iPod|iPhone|iPad)/) ? true : false;
 
   /////////////////////////////
  // Reboot
@@ -569,6 +607,8 @@ var $tooltip_max_heat = $('#tooltip_max_heat');
 var $tooltip_ticks_wrapper = $('#tooltip_ticks_wrapper');
 var $tooltip_ticks = $('#tooltip_ticks');
 var $tooltip_max_ticks = $('#tooltip_max_ticks');
+var $tooltip_delete = $('#tooltip_delete');
+var $tooltip_close = $('#tooltip_close');
 
 if ( debug ) {
 	$main.className += ' debug';
@@ -596,32 +636,43 @@ for ( ri = 0; ri < rows; ri++ ) {
 // Tile tooltips
 
 // TODO: DRY this
+var tooltip_tile = null;
 var tile_tooltip_show = function(e) {
 	var tile = this.tile;
 	var part = tile.part;
 
 	if ( !part ) return;
 
+	if ( !tooltip_showing ) {
+		$main.className += ' tooltip_showing';
+	}
+
 	part.showTooltip(tile);
 	tooltip_showing = true;
+	tooltip_tile = tile;
 	tooltip_update = (function(tile) {
 		return function() {
 			part.updateTooltip(tile);
 		};
 	})(tile);
-	$main.className += ' tooltip_showing';
 };
 
 var tile_tooltip_hide = function(e) {
 	tooltip_showing = false;
 	tooltip_update = null;
+	tooltip_tile = null;
 	$main.className = $main.className.replace(tooltip_showing_replace, '');
 };
 
-$reactor.delegate('tile', 'mouseover', tile_tooltip_show);
+if ( !is_ios ) {
+	$reactor.delegate('tile', 'mouseover', tile_tooltip_show);
+	$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
+} else {
+	$reactor.delegate('tile', 'touchend', tile_tooltip_show);
+}
+
 $reactor.delegate('tile', 'focus', tile_tooltip_show);
 $reactor.delegate('tile', 'blur', tile_tooltip_hide);
-$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
 
   /////////////////////////////
  // Show Pages
@@ -665,6 +716,7 @@ var $heat_outlets = $('#heat_outlets');
 var $coolant_cells = $('#coolant_cells');
 var $reactor_platings = $('#reactor_platings');
 var $particle_accelerators = $('#particle_accelerators');
+var $parts = $('#parts');
 
 var parts = [
 	// Cells
@@ -1117,6 +1169,8 @@ Part.prototype.showTooltip = function(tile) {
 		$tooltip_cost.style.display = 'none';
 		$tooltip_sells.style.display = null;
 
+		$tooltip_delete.style.display = null;
+
 		if ( tile.activated && tile.part.containment ) {
 			$tooltip_heat_wrapper.style.display = null;
 		} else {
@@ -1129,6 +1183,8 @@ Part.prototype.showTooltip = function(tile) {
 			$tooltip_ticks_wrapper.style.display = 'none';
 		}
 	} else {
+		$tooltip_delete.style.display = 'none';
+
 		this.updateDescription();
 		$tooltip_cost.style.display = null;
 		$tooltip_sells.style.display = 'none';
@@ -1290,27 +1346,33 @@ var part_tooltip_update = function() {
 var part_tooltip_show = function(e) {
 	var part = this.part;
 
+	if ( !tooltip_showing ) {
+		$main.className += ' tooltip_showing';
+	}
+
 	part.showTooltip();
 	tooltip_showing = true;
 	tooltip_part = part;
 	tooltip_update = part_tooltip_update;
-	$main.className += ' tooltip_showing';
 };
 
 var part_tooltip_hide = function(e) {
-	var part = this.part;
-
 	tooltip_showing = false;
 	tooltip_update = null;
 	tooltip_part = null;
 	$main.className = $main.className.replace(tooltip_showing_replace, '');
+
 };
 
-$all_parts.delegate('part', 'mouseover', part_tooltip_show);
+if ( !is_ios ) {
+	$all_parts.delegate('part', 'mouseover', part_tooltip_show);
+	$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
+} else {
+	$all_parts.delegate('part', 'touchend', part_tooltip_show);
+}
+
 $all_parts.delegate('part', 'focus', part_tooltip_show);
 $all_parts.delegate('part', 'blur', part_tooltip_hide);
-$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
-$all_parts.delegate('part', 'mouseup', part_tooltip_hide);
 
   /////////////////////////////
  // Reduce Heat Manually
@@ -2016,6 +2078,7 @@ Upgrade.prototype.showTooltip = function() {
 	$tooltip_heat_wrapper.style.display = 'none';
 	$tooltip_heat.style.display = 'none';
 	$tooltip_max_heat.style.display = 'none';
+	$tooltip_delete.style.display = 'none';
 
 	this.updateTooltip();
 };
@@ -2031,27 +2094,37 @@ Upgrade.prototype.updateTooltip = function(tile) {
 };
 
 // Upgrade tooltips
+// TODO: DRY this
+var tooltip_upgrade = null;
 var upgrade_tooltip_show = function(e) {
 	var upgrade = this.upgrade;
 
 	upgrade.showTooltip();
+	if ( !tooltip_showing ) {
+		$main.className += ' tooltip_showing';
+	}
+
 	tooltip_showing = true;
+	tooltip_upgrade = upgrade;
 	//tooltip_update = upgrade.updateTooltip;
-	$main.className += ' tooltip_showing';
 };
 
 var upgrade_tooltip_hide = function(e) {
-	var upgrade = this.upgrade;
-
 	tooltip_showing = false;
+	tooltip_upgrade = null;
 	//tooltip_update = null;
 	$main.className = $main.className.replace(tooltip_showing_replace, '');
 };
 
-$all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
+if ( !is_ios ) {
+	$all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
+	$all_upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
+} else {
+	$all_upgrades.delegate('upgrade', 'touchend', upgrade_tooltip_show);
+}
+
 $all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
 $all_upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
-$all_upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
 
 // More stuff I guess
 
@@ -2319,10 +2392,12 @@ $all_parts.delegate('part', 'click', function() {
 	if ( clicked_part && clicked_part === this.part ) {
 		clicked_part = null;
 		this.className = this.className.replace(active_replace, '');
+		part_tooltip_hide();
 	} else {
 		if ( clicked_part ) {
 			clicked_part.$el.className = clicked_part.$el.className.replace(active_replace, '');
 		}
+
 		clicked_part = this.part;
 		this.className += ' active';
 	}
@@ -2397,6 +2472,20 @@ var remove_part = function(tile, skip_update) {
 	}
 
 	tile_tooltip_hide();
+};
+
+$tooltip_delete.onclick = function() {
+	remove_part(tooltip_tile);
+};
+
+$tooltip_close.onclick = function() {
+	if ( tooltip_tile ) {
+		tile_tooltip_hide();
+	} else if ( tooltip_part ) {
+		part_tooltip_hide();
+	} else if ( tooltip_upgrade ) {
+		upgrade_tooltip_hide();
+	}
 };
 
 var mouse_apply_to_tile = function(e) {

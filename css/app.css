@@ -27,6 +27,7 @@ a:visited {
 button {
 	padding: 0;
 	outline: 0;
+	margin: 0;
 	border: none;
 	box-shadow: none;
 	-webkit-appearance: none;
@@ -80,10 +81,10 @@ h6 {
 }
 
 #secondary {
-	width: 260px;
+	width: 261px;
 	flex-grow: 1;
 	display: flex;
-	flex-direction: column;;
+	flex-direction: column;
 }
 
 #primary {
@@ -435,6 +436,7 @@ h6 {
 
 #reboot,
 #refund,
+#tooltip button,
 #nav button {
 	border: 2px solid #888;
 	padding: 0 1em .15em;
@@ -472,6 +474,8 @@ body:before {
 #reboot:focus,
 #stats_section button:hover,
 #stats_section button:focus,
+#tooltip button:hover,
+#tooltip button:focus,
 #nav button:hover,
 #nav button:focus {
 	border-image: url("../img/button_border_alt_active.png") 8 8 stretch;
@@ -481,6 +485,7 @@ body:before {
 #refund:active,
 #reboot:active,
 #stats_section button:active,
+#tooltip button:active,
 #nav button:active {
 	border-image: url("../img/button_border_alt_down_active.png") 8 8 stretch;
 	background-color: #91a1c8;
