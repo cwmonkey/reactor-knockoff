@@ -6,7 +6,6 @@ shift + right click on spent cells also gets rid of unspent cells
 document part/upgrade keys
 selling
 right click to sell upgrades?
-Increase reactor size via upgrades
 "story" objectives
 Auto save
 reflector6
@@ -43,6 +42,9 @@ try big int library
 ui.js - put purely ui control stuff in there
 browser testing
 fix close/delete buttons on tooltip - don't show if ('ontouchstart' in window)
+Make sure clicking on upgrades only purchases if that upgrade's tooltip is visible (mobile)
+hide ticks on upgrade tooltips
+hide various stats on un-enabled parts' tooltips
 
 console.log
 */
@@ -141,8 +143,10 @@ var fmt = function(num, places) {
 /////////////////////////////
 
 // settings
-var cols = 19;
-var rows = 16;
+var base_cols = 8;
+var base_rows = 5;
+var max_cols = 19;
+var max_rows = 16;
 var debug = false;
 var base_loop_wait = 1000;
 var base_power_multiplier = 1;
@@ -171,6 +175,8 @@ var heat_power_multiplier;
 var heat_controlled;
 var altered_max_heat;
 var altered_max_power;
+var cols;
+var rows;
 
 var paused = false;
 var auto_sell_disabled = false;
@@ -183,6 +189,8 @@ var set_defaults = function() {
 	current_heat = 0;
 	current_power = 0;
 	current_money = 10;
+	cols = base_cols;
+	rows = base_rows;
 	max_heat = base_max_heat;
 	auto_sell_multiplier = 0;
 	max_power = base_max_power;
@@ -229,6 +237,10 @@ var reboot = function(refund) {
 		for ( ci = 0; ci < cols; ci++ ) {
 			tile = row[ci];
 			remove_part(tile, true);
+
+			if ( ri >= rows || ci >= cols ) {
+				tile.disable();
+			}
 		}
 	}
 
@@ -295,6 +307,9 @@ var unaffordable_replace = /[\s\b]unaffordable\b/;
  // Tiles
 /////////////////////////////
 
+var enabled_class = 'enabled';
+var enabled_find = new RegExp('[\\s\\b]' + enabled_class + '\\b');
+
 var Tile = function(row, col) {
 	this.$el = $('<button class="tile">');
 	this.$el.tile = this;
@@ -309,6 +324,7 @@ var Tile = function(row, col) {
 	this.activated = false;
 	this.row = row;
 	this.col = col;
+	this.enabled = false;
 
 	var $percent_wrapper_wrapper = $('<div class="percent_wrapper_wrapper">');
 	var $percent_wrapper = $('<div class="percent_wrapper">');
@@ -327,6 +343,16 @@ var Tile = function(row, col) {
 		this.$power.innerHTML = fmt(this.power);
 		this.$el.appendChild(this.$power);
 	}
+};
+
+Tile.prototype.disable = function() {
+	this.$el.className = this.$el.className.replace(enabled_find, '');
+	this.enabled = false;
+};
+
+Tile.prototype.enable = function() {
+	this.$el.className += ' ' + enabled_class;
+	this.enabled = true;
 };
 
 // Operations
@@ -357,6 +383,18 @@ var update_tiles = function() {
 	stat_vent = 0;
 	stat_inlet = 0;
 	stat_outlet = 0;
+
+	for ( ri = 0; ri < max_rows; ri++ ) {
+		row = tiles[ri];
+
+		for ( ci = 0; ci < max_cols; ci++ ) {
+			tile = row[ci];
+
+			if ( tile.enabled === false && ci < cols && ri < rows ) {
+				tile.enable();
+			}
+		}
+	}
 
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
@@ -619,15 +657,19 @@ $max_power.innerHTML = fmt(max_power);
 
 // create tiles
 var $row;
-for ( ri = 0; ri < rows; ri++ ) {
+for ( ri = 0; ri < max_rows; ri++ ) {
 	$row = $('<div class="row">');
 	$reactor.appendChild($row);
 	row = [];
 
-	for ( ci = 0; ci < cols; ci++ ) {
+	for ( ci = 0; ci < max_cols; ci++ ) {
 		tile = new Tile(ri, ci);
 		row.push(tile);
 		$row.appendChild(tile.$el);
+
+		if ( ci <= cols || ri <= rows ) {
+			tile.disable();
+		}
 	}
 
 	tiles.push(row);
@@ -785,7 +827,7 @@ var parts = [
 		title: 'Thorium Cell',
 		base_description: single_cell_description,
 		category: 'cell',
-		base_cost: 4737000,
+		base_cost: 4700000,
 		base_ticks: 900,
 		base_power: 7400,
 		base_heat: 7400,
@@ -793,7 +835,7 @@ var parts = [
 		cell_tick_upgrade_multiplier: 10,
 		cell_power_upgrade_cost: 25000000,
 		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 4737000000
+		cell_perpetual_upgrade_cost: 4700000000
 	},
 	{
 		id: 'seaborgium',
@@ -802,15 +844,15 @@ var parts = [
 		title: 'Seaborgium Cell',
 		base_description: single_cell_description,
 		category: 'cell',
-		base_cost: 3939000000,
+		base_cost: 4000000000,
 		base_ticks: 3600,
-		base_power: 1582000,
-		base_heat: 1582000,
+		base_power: 1600000,
+		base_heat: 1600000,
 		cell_tick_upgrade_cost: 20000000000,
 		cell_tick_upgrade_multiplier: 10,
 		cell_power_upgrade_cost: 20000000000,
 		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 3989000000000
+		cell_perpetual_upgrade_cost: 4000000000000
 	},
 	{
 		id: 'dolorium',
@@ -819,15 +861,15 @@ var parts = [
 		title: 'Dolorium Cell',
 		base_description: single_cell_description,
 		category: 'cell',
-		base_cost: 3922000000000,
-		base_ticks: 21600,
-		base_power: 226966000,
-		base_heat: 226966000,
+		base_cost: 3900000000000,
+		base_ticks: 22000,
+		base_power: 230000000,
+		base_heat: 230000000,
 		cell_tick_upgrade_cost: 20000000000000,
 		cell_tick_upgrade_multiplier: 10,
 		cell_power_upgrade_cost: 20000000000000,
 		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 3922000000000000
+		cell_perpetual_upgrade_cost: 3900000000000000
 	},
 	{
 		id: 'nefastium',
@@ -836,15 +878,15 @@ var parts = [
 		title: 'Nefastium Cell',
 		base_description: single_cell_description,
 		category: 'cell',
-		base_cost: 3586000000000000,
-		base_ticks: 86400,
-		base_power: 51871000000,
-		base_heat: 51871000000,
+		base_cost: 3600000000000000,
+		base_ticks: 86000,
+		base_power: 52000000000,
+		base_heat: 52000000000,
 		cell_tick_upgrade_cost: 17500000000000000,
 		cell_tick_upgrade_multiplier: 10,
 		cell_power_upgrade_cost: 17500000000000000,
 		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 3586000000000000000
+		cell_perpetual_upgrade_cost: 3600000000000000000
 	},
 	{
 		id: 'protium',
@@ -901,9 +943,9 @@ var parts = [
 		experimental: true,
 		erequires: 'experimental_capacitance',
 		level: 6,
-		base_cost: 104857000000000,
-		base_reactor_power: 2065000000000000,
-		base_containment: 5378000000000
+		base_cost: 105000000000000,
+		base_reactor_power: 2100000000000000,
+		base_containment: 5400000000000
 	},
 
 	// Heat
@@ -1043,7 +1085,7 @@ var parts = [
 		erequires: 'thermionic_conversion',
 		level: 6,
 		base_cost: 160000000000000,
-		base_containment: 377820000000000
+		base_containment: 380000000000000
 	},
 	{
 		id: 'reactor_plating',
@@ -1432,6 +1474,7 @@ var upgrades = [
 		type: 'other',
 		title: 'Heat Control Operator',
 		description: 'When below maximum heat, reactor stays at a constant temperature.',
+		// TODO: Figure out a good price for this
 		cost: 10000000000000000000,
 		levels: 1,
 		onclick: function(upgrade) {
@@ -1688,6 +1731,28 @@ var upgrades = [
 				part.ep_heat = part.part.base_ep_heat * (upgrade.level + 1) * Math.pow(2, upgrade_objects['force_particle_research'].level);
 				part.updateDescription();
 			}
+		}
+	},
+	{
+		id: 'expand_reactor_rows',
+		type: 'other',
+		title: 'Expand Reactor Rows',
+		description: 'Add one row to the reactor for each level of the upgrade.',
+		cost: 800,
+		multiplier: 100,
+		onclick: function(upgrade) {
+			rows = base_rows + upgrade.level;
+		}
+	},
+	{
+		id: 'expand_reactor_cols',
+		type: 'other',
+		title: 'Expand Reactor Cols',
+		description: 'Add one column to the reactor for each level of the upgrade.',
+		cost: 800,
+		multiplier: 100,
+		onclick: function(upgrade) {
+			cols = base_cols + upgrade.level;
 		}
 	},
 
@@ -2385,21 +2450,25 @@ var save = function() {
 $save.onclick = save;
 
 // Select part
-var active_replace = /[\b\s]active\b/;
+var active_replace = /[\b\s]part_active\b/;
 var clicked_part = null;
 
 $all_parts.delegate('part', 'click', function() {
 	if ( clicked_part && clicked_part === this.part ) {
 		clicked_part = null;
 		this.className = this.className.replace(active_replace, '');
+		$main.className = $main.className.replace(active_replace, '');
 		part_tooltip_hide();
 	} else {
 		if ( clicked_part ) {
 			clicked_part.$el.className = clicked_part.$el.className.replace(active_replace, '');
+			$main.className = $main.className.replace(active_replace, '');
 		}
 
 		clicked_part = this.part;
-		this.className += ' active';
+		// TODO: DRY
+		this.className += ' part_active';
+		$main.className += ' part_active';
 	}
 });
 

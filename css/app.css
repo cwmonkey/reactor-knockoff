@@ -35,6 +35,7 @@ button {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	background: transparent;
 }
 
 button,
@@ -261,7 +262,7 @@ h6 {
 	opacity: .5;
 }
 
-#parts_section .part.active {
+#parts_section .part.part_active {
 	outline: 2em dashed blue;
 	outline-offset: -2em;
 }
@@ -355,7 +356,13 @@ h6 {
 }
 
 #reactor .tile {
-  background: transparent url("../img/tile.png") left top no-repeat;
+	background: transparent url("../img/tile.png") left top no-repeat;
+	display: none;
+	float: left;
+}
+
+#reactor .tile.enabled {
+	display: block;
 }
 
 #reactor .tile.disabled:after {
@@ -1146,6 +1153,14 @@ body:before {
 	background-image: url("../img/upgrade_computer.gif");
 }
 
+#expand_reactor_cols.upgrade .image:after {
+	background-image: url("../img/upgrade_cols.gif");
+}
+
+#expand_reactor_rows.upgrade .image:after {
+	background-image: url("../img/upgrade_rows.gif");
+}
+
 #all_upgrades .unaffordable .image {
 	opacity: .5;
 }
@@ -1323,4 +1338,86 @@ body:before {
 #parts_nav_bottom:active {
 	border-image: url("../img/inner_border_alt_flip_down.png") 8 8 stretch;
 	background-color: #96a0bb;
+}
+
+@media all and (max-width: 938px) {
+	#main {
+		display: block;
+	}
+
+	#main:before {
+		display: none;
+	}
+
+	#secondary {
+		width: auto;
+		margin-bottom: 4px;
+	}
+
+	#stats_section {
+		height: auto;
+	}
+
+	#heat,
+	#power_section,
+	#currency {
+		max-width: 228px;
+		float: left;
+		width: 30%;
+		margin-right: 5%;
+	}
+
+	#currency {
+		margin-right: 0;
+	}
+
+	#parts_nav,
+	#top,
+	#bottom {
+		display: none;
+	}
+
+	#parts #power {
+		float: left;
+	}
+
+	#parts #cooling {
+		display: inline;
+	}
+
+	#parts #power > menu,
+	#parts #cooling > menu {
+		margin-right: 8px;
+		float: left;
+	}
+
+	#main #parts #cells {
+		max-height: 192px;
+		display: block;
+		max-width: 216px;
+	}
+
+	#parts button {
+		display: block;
+	}
+
+	#main.part_active #parts button {
+		display: none;
+	}
+
+	#main.part_active #parts button.part_active {
+		display: block;
+	}
+
+	#cells button {
+		float: left;
+	}
+
+	#parts #cells .part {
+		margin: 0 4px 0 0;
+	}
+
+	/*#parts_section .cells .part.unaffordable + .locked {
+		display: block;
+	}*/
 }
