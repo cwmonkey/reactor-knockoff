@@ -2201,8 +2201,6 @@ Upgrade.prototype.showTooltip = function() {
 	$tooltip_heat_per.style.display = 'none';
 	$tooltip_power_per.style.display = 'none';
 	$tooltip_heat_wrapper.style.display = 'none';
-	$tooltip_heat.style.display = 'none';
-	$tooltip_max_heat.style.display = 'none';
 	$tooltip_delete.style.display = 'none';
 
 	this.updateTooltip();
@@ -2713,6 +2711,30 @@ $enable_auto_buy.onclick = enable_auto_buy;
  // Load
 /////////////////////////////
 
+var $heat_percentage = $('#heat_percentage');
+var $power_percentage = $('#power_percentage');
+
+var update_heat_and_power = function() {
+	$current_heat.innerHTML = fmt(current_heat);
+
+	if ( current_heat < max_heat ) {
+		$heat_percentage.style.width = current_heat / max_heat * 100 + '%';
+	} else {
+		$heat_percentage.style.width = '100%';
+	}
+
+	$current_power.innerHTML = fmt(current_power);
+	$power_percentage.style.width = current_power / max_power * 100 + '%';
+
+	if ( current_heat <= max_heat ) {
+		$reactor.style.backgroundColor = 'transparent';
+	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
+		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
+	} else {
+		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
+	}
+};
+
 var update_nodes = function() {
 	$current_heat.innerHTML = fmt(current_heat);
 	$current_power.innerHTML = fmt(current_power);
@@ -2798,6 +2820,7 @@ if ( rks ) {
 
 	update_nodes();
 	update_tiles();
+	update_heat_and_power();
 }
 
   /////////////////////////////
@@ -2896,9 +2919,6 @@ $scrounge.onclick = function() {
   /////////////////////////////
  // Game Loop
 /////////////////////////////
-
-var $heat_percentage = $('#heat_percentage');
-var $power_percentage = $('#power_percentage');
 
 var loop_timeout;
 var do_update;
@@ -3383,24 +3403,10 @@ var game_loop = function() {
 	}
 
 	if ( meltdown ) {
-		current_heat = max_heat * 2;
+		current_heat = max_heat * 2 + 1;
 	}
 
-	$current_heat.innerHTML = fmt(current_heat);
-	if ( current_heat < max_heat ) {
-		$heat_percentage.style.width = current_heat / max_heat * 100 + '%';
-	} else {
-		$heat_percentage.style.width = '100%';
-	}
-
-	$current_power.innerHTML = fmt(current_power);
-	$power_percentage.style.width = current_power / max_power * 100 + '%';
-
-	if ( !meltdown && current_heat <= max_heat ) {
-		$reactor.style.backgroundColor = 'transparent';
-	} else if ( !meltdown && current_heat > max_heat && current_heat <= max_heat * 2 ) {
-		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
-	} else {
+	if ( meltdown || current_heat > max_heat * 2 ) {
 		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
 
 		do_update = false;
@@ -3422,6 +3428,8 @@ var game_loop = function() {
 			update_tiles();
 		}
 	}
+
+	update_heat_and_power();
 
 	if ( !paused ) {
 		loop_timeout = setTimeout(game_loop, loop_wait);
