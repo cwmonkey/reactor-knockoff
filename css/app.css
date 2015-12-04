@@ -494,20 +494,9 @@ body:before {
 	background-color: #91a1c8;
 }
 
-#tooltip_delete,
-#tooltip_close {
-	display: none;
-}
-
 #main.touch #tooltip_delete,
 #main.touch #tooltip_close {
 	display: inline-block;
-}
-
-#tooltip_ticks_wrapper {
-	position: absolute;
-	right: 0;
-	bottom: 0;
 }
 
 #refund:active,
@@ -1203,10 +1192,26 @@ body:before {
 
 #tooltip {
 	display: none;
-	text-align: center;
-	position: relative;
 	height: 100%;
-	padding: 0 4em;
+	flex-grow: 1;
+}
+
+#tooltip_delete,
+#tooltip_close {
+	display: none;
+}
+
+#tooltip_text {
+	margin-right: .6em;
+	padding: .2em .3em;
+	text-align: center;
+	flex: 1;
+}
+
+#tooltip_data {
+	width: 10em;
+	text-align: left;
+	padding: 0 .3em;
 }
 
 #tooltip_name {
@@ -1222,17 +1227,11 @@ body:before {
 }
 
 #main.tooltip_showing #tooltip {
-	display: block;
+	display: flex;
 }
 
 #main.tooltip_showing #nav {
 	display: none;
-}
-
-#tooltip_cost {
-	position: absolute;
-	left: 0;
-	bottom: 0;
 }
 
   /* //////////////////////////

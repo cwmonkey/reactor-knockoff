@@ -102,18 +102,22 @@
 			<div id="tooltip_nav" class="panel">
 				<!-- Tooltip -->
 				<section id="tooltip">
-					<h2 class="headline" id="tooltip_name" title="Name"></h2>
-					<p id="tooltip_description" title="Description" class="explanitory"></p>
-					<p id="tooltip_cost" title="Cost"></p>
-					<p id="tooltip_sells" title="Sells for"></p>
-					<p id="tooltip_heat_per" title="Heat per tick"></p>
-					<p id="tooltip_power_per" title="Power per tick"></p>
-					<p id="tooltip_ticks_wrapper" title="Ticks remaining">
-						Durability: <span id="tooltip_ticks"></span>/<span id="tooltip_max_ticks"></span>
-					</p>
-					<p id="tooltip_heat_wrapper" title="Heat contained">
-						Heat: <span id="tooltip_heat"></span>/<span id="tooltip_max_heat"></span>
-					</p>
+					<div id="tooltip_text" class="subpanel">
+						<h2 class="headline" id="tooltip_name" title="Name"></h2>
+						<p id="tooltip_description" title="Description" class="explanitory"></p>
+					</div>
+					<div id="tooltip_data" class="subpanel">
+						<p id="tooltip_cost" title="Cost"></p>
+						<p id="tooltip_sells" title="Sells for"></p>
+						<p id="tooltip_heat_per" title="Heat per tick"></p>
+						<p id="tooltip_power_per" title="Power per tick"></p>
+						<p id="tooltip_ticks_wrapper" title="Ticks remaining">
+							Durability: <span id="tooltip_ticks"></span>/<span id="tooltip_max_ticks"></span>
+						</p>
+						<p id="tooltip_heat_wrapper" title="Heat contained">
+							Heat: <span id="tooltip_heat"></span>/<span id="tooltip_max_heat"></span>
+						</p>
+					</div>
 					<button id="tooltip_delete">Delete</button>
 					<button id="tooltip_close">Close</button>
 				</section>
