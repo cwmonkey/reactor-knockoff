@@ -305,17 +305,12 @@ h6 {
 	font-family: monospace;
 	font-size: 13px;
 	display: inline-block;
-	width: 84px;
+	width: 102px;
 	line-height: 16px;
 	text-align: right;
 	position: relative;
-	border: 2px solid #737D98;
-	border-top-color: #354249;
-	border-right-color: #354249;
-	border-radius: 6px;
-	margin-left: 18px;
-	padding-right: 2px;
 	background: #222C38;
+	padding-right: 2px;
 }
 
 #reactor_stats .stat:before {
@@ -323,7 +318,7 @@ h6 {
 	height: 16px;
 	content: " ";
 	position: absolute;
-	left: -20px;
+	left: 0;
 }
 
 #stats_vent:before {
@@ -446,14 +441,15 @@ h6 {
 #tooltip button,
 #nav button {
 	border: 2px solid #888;
-	padding: 0 1em .15em;
+	padding: 0 1em .1em;
 	margin: 0;
 	border: 8px solid #eee;
-	border-image: url("../img/button_border_alt.png") 8 8 stretch;
-	background-color: #7181a8;
+	border-image: url("../img/small_button_off.png") 8 8 stretch;
+	background-color: #76809b;
 	color: #fff;
 	outline: none;
 	transition: background-color .01s linear;
+	line-height: 1;
 }
 
 #nav button {
@@ -468,7 +464,9 @@ body:before {
 		url("../img/inner_border_alt_active.png"),
 		url("../img/inner_border_alt_down.png"),
 		url("../img/inner_border_alt_flip_active.png"),
-		url("../img/inner_border_alt_flip_down.png")
+		url("../img/inner_border_alt_flip_down.png"),
+		url("../img/small_button_on.png"),
+		url("../img/small_button_down.png")
 	;
 	content: " ";
 	position: absolute;
@@ -485,8 +483,24 @@ body:before {
 #tooltip button:focus,
 #nav button:hover,
 #nav button:focus {
-	border-image: url("../img/button_border_alt_active.png") 8 8 stretch;
+	border-image: url("../img/small_button_on.png") 8 8 stretch;
 	background-color: #91a1c8;
+}
+
+#tooltip_delete,
+#tooltip_close {
+	display: none;
+}
+
+#main.touch #tooltip_delete,
+#main.touch #tooltip_close {
+	display: inline-block;
+}
+
+#tooltip_ticks_wrapper {
+	position: absolute;
+	right: 0;
+	bottom: 0;
 }
 
 #refund:active,
@@ -494,7 +508,7 @@ body:before {
 #stats_section button:active,
 #tooltip button:active,
 #nav button:active {
-	border-image: url("../img/button_border_alt_down_active.png") 8 8 stretch;
+	border-image: url("../img/small_button_down.png") 8 8 stretch;
 	background-color: #91a1c8;
 }
 
@@ -605,6 +619,11 @@ body:before {
 .part .description {
 	position: absolute;
 	clip: rect(1px 1px 1px 1px);
+}
+
+#reactor_wrapper {
+	background: #5C6166;
+	float: left;
 }
 
 #reactor .tile.spent:after {
@@ -767,6 +786,12 @@ body:before {
 #experimental_upgrades #full_spectrum_reflectors .image:after,
 #reactor .tile.part_reflector5:after {
 	background-image: url("../img/reflector_5.gif");
+}
+
+#parts .part.part_reflector6 .image:after,
+#experimental_upgrades #heat_reflection .image:after,
+#reactor .tile.part_reflector6:after {
+	background-image: url("../img/reflector_6.gif");
 }
 
   /* //////////////////////////
@@ -1283,10 +1308,10 @@ body:before {
 	flex: 1;
 }
 
+#reactor_stats .stat,
 #main .subpanel {
-	border: 6px solid #eee;
-	border-image: url("../img/inner_border.png") 6 6 stretch;
-	background-clip: padding-box;
+	border: 4px solid #eee;
+	border-image: url("../img/inner_border.png") 4 4 stretch;
 }
 
 #parts_nav_top,

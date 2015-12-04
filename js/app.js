@@ -2,49 +2,50 @@
 
 TODO:
 
-shift + right click on spent cells also gets rid of unspent cells
-document part/upgrade keys
+Before release:
 selling
-right click to sell upgrades?
-"story" objectives
 Auto save
-reflector6
 particle accelerator6
 adjust ui
 header buttons
-stats borders
 finish help section
-fix icons to not be smooshed
 fix upgrade/experiment display
-new cells
 full reset
-tooltip
-modal messages
 figure out reflector experiment upgrade
-parts ui adjust (up/down go away)
 Options page - exponential formatting
-refactor code
-break into multiple files?
-achievement system
 Statistics
-shift+click on empty tiles to fill them
-Bundling cells to 9+
-save layouts
 forceful fusion testing
-shorten reflector lifespan
-towns with different power needs and compensation
-multiple reactors
-round base numbers
 mobile ui - sliding panels
 unshift vents - vent6 power issue?
 test speed of loops
 try big int library
 ui.js - put purely ui control stuff in there
+parts ui adjust (up/down go away)
 browser testing
-fix close/delete buttons on tooltip - don't show if ('ontouchstart' in window)
+fix close/delete buttons on tooltip
 Make sure clicking on upgrades only purchases if that upgrade's tooltip is visible (mobile)
 hide ticks on upgrade tooltips
 hide various stats on un-enabled parts' tooltips
+make stats unlockable
+
+Maybe before:
+"story" objectives
+new cells
+tooltip
+modal messages
+Bundling cells to 9+
+towns with different power needs and compensation
+
+After:
+shift + right click on spent cells also gets rid of unspent cells
+document part/upgrade keys
+right click to sell upgrades?
+refactor code
+break into multiple files?
+shift+click on empty tiles to fill them
+achievement system
+save layouts
+multiple reactors
 
 console.log
 */
@@ -143,10 +144,10 @@ var fmt = function(num, places) {
 /////////////////////////////
 
 // settings
-var base_cols = 8;
-var base_rows = 5;
-var max_cols = 19;
-var max_rows = 16;
+var base_cols = 12;
+var base_rows = 9;
+var max_cols = 22;
+var max_rows = 19;
 var debug = false;
 var base_loop_wait = 1000;
 var base_power_multiplier = 1;
@@ -231,10 +232,10 @@ var reboot = function(refund) {
 
 	set_defaults();
 
-	for ( ri = 0; ri < rows; ri++ ) {
+	for ( ri = 0; ri < max_rows; ri++ ) {
 		row = tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < max_cols; ci++ ) {
 			tile = row[ci];
 			remove_part(tile, true);
 
@@ -412,14 +413,6 @@ var update_tiles = function() {
 				if ( tile_part.vent ) {
 					stat_vent += tile_part.vent;
 				}
-
-				if ( tile_part.category === 'heat_inlet' ) {
-					stat_inlet += tile_part.transfer;
-				}
-
-				if ( tile_part.category === 'heat_outlet' ) {
-					stat_outlet += tile_part.transfer;
-				}
 			}
 		}
 	}
@@ -448,7 +441,11 @@ var update_tiles = function() {
 							tile2 = tiles[ri2][ci2];
 
 							if ( tile2.part && tile2.activated && tile2.part.containment ) {
-								tile.containments.push(tile2);
+								if ( tile.part.category === 'vent' || tile.part.id === 'coolant_cell6' ) {
+									tile.containments.unshift(tile2);
+								} else {
+									tile.containments.push(tile2);
+								}
 							} else if ( tile2.part && tile2.activated && tile2.part.category === 'cell' ) {
 								tile.cells.push(tile2);
 							}
@@ -478,8 +475,15 @@ var update_tiles = function() {
 					transfer_multiplier += tile_part.part.level * transfer_plating_multiplier;
 					vent_multiplier += tile_part.part.level * vent_plating_multiplier;
 				}
-			}
 
+				if ( tile_part.category === 'heat_inlet' ) {
+					stat_inlet += tile_part.transfer * tile.containments.length;
+				}
+
+				if ( tile_part.category === 'heat_outlet' ) {
+					stat_outlet += tile_part.transfer * tile.containments.length;
+				}
+			}
 		}
 	}
 
@@ -554,6 +558,10 @@ var update_tiles = function() {
 						for ( i = 0; i < l; i++ ) {
 							tile_cell = tile.cells[i];
 							tile.power += tile_cell.power * ( tile_part.power_increase / 100 );
+
+							if ( tile_part.heat_increase ) {
+								tile.heat += tile_cell.heat * ( tile_part.heat_increase / 100 );
+							}
 						}
 					}
 				}
@@ -650,6 +658,10 @@ var $tooltip_close = $('#tooltip_close');
 
 if ( debug ) {
 	$main.className += ' debug';
+}
+
+if ( 'ontouchstart' in window ) {
+	$main.className += ' touch';
 }
 
 $max_heat.innerHTML = fmt(max_heat);
@@ -913,11 +925,25 @@ var parts = [
 		category: 'reflector',
 		level: 1,
 		base_cost: 500,
-		cost_multiplier: 10,
+		cost_multiplier: 50,
 		base_power_increase: 1,
 		power_increase_multiplier: 2,
 		base_ticks: 100,
-		ticks_multiplier: 12.5
+		ticks_multiplier: 2
+	},
+	{
+		id: 'reflector6',
+		type: 'reflector',
+		title: 'Thermal Neutron Reflector',
+		base_description: 'Increases adjacent cell power output by %power_increase% and heat output by %heat_increase% for %ticks total pulses.',
+		category: 'reflector',
+		experimental: true,
+		erequires: 'heat_reflection',
+		level: 6,
+		base_cost: 100000000000000,
+		base_power_increase: 32,
+		base_heat_increase: 50,
+		base_ticks: 3200
 	},
 	{
 		id: 'capacitor',
@@ -961,7 +987,7 @@ var parts = [
 		cost_multiplier: 250,
 		base_containment: 80,
 		containment_multiplier: 75,
-		base_vent: 8,
+		base_vent: 4,
 		vent_multiplier: 75,
 		location: 'cooling'
 	},
@@ -969,7 +995,7 @@ var parts = [
 		id: 'vent6',
 		type: 'vent',
 		title: 'Extreme Vent',
-		base_description: 'Lowers heat of itself by %vent per tick. Holds a maximum of %containment heat. Must consume power from the reactor at a rate of 200% of the heat removed from itself.',
+		base_description: 'Lowers heat of itself by %vent per tick. Holds a maximum of %containment heat. Must consume power from the reactor at a rate of 100% of the heat removed from itself.',
 		category: 'vent',
 		experimental: true,
 		erequires: 'vortex_cooling',
@@ -1146,6 +1172,7 @@ var Part = function(part) {
 	this.heat_multiplier = part.base_heat_multiplier;
 	this.power_multiplier = part.base_power_multiplier;
 	this.power_increase = part.base_power_increase;
+	this.heat_increase = part.base_heat_increase;
 	this.ticks = part.base_ticks;
 	this.containment = part.base_containment;
 	this.vent = part.base_vent;
@@ -1171,6 +1198,7 @@ var Part = function(part) {
 Part.prototype.updateDescription = function(tile) {
 	var description = this.part.base_description
 		.replace(/%power_increase/, fmt(this.power_increase))
+		.replace(/%heat_increase/, fmt(this.heat_increase))
 		.replace(/%reactor_power/, fmt(this.reactor_power))
 		.replace(/%reactor_heat/, fmt(this.reactor_heat))
 		.replace(/%ticks/, fmt(this.ticks))
@@ -1329,6 +1357,10 @@ var create_part = function(part, level) {
 				part.base_power_increase = part.base_power_increase * Math.pow(part.power_increase_multiplier, level - 1);
 			}
 
+			if ( part.base_heat_increase ) {
+				part.base_heat_increase = part.base_heat_increase;
+			}
+
 		}
 	}
 
@@ -1445,6 +1477,24 @@ var set_auto_heat_reduce = function() {
   /////////////////////////////
  // Upgrades
 /////////////////////////////
+
+var epart_onclick = function(upgrade) {
+	var eparts_count = 0;
+
+	for ( var i = 0, l = upgrade_objects_array.length; i < l; i++) {
+		if ( upgrade_objects_array[i].upgrade.type === 'experimental_parts' && upgrade_objects_array[i].level ) {
+			eparts_count++;
+		}
+	}
+
+	for ( var i = 0, l = upgrade_objects_array.length; i < l; i++) {
+		if ( upgrade_objects_array[i].upgrade.type === 'experimental_parts' && !upgrade_objects_array[i].level ) {
+			upgrade_objects_array[i].ecost = upgrade_objects_array[i].upgrade.ecost * (eparts_count + 1);
+			// TODO: Maybe find a better way to do this
+			upgrade_objects_array[i].display_cost = fmt(upgrade_objects_array[i].ecost);
+		}
+	}
+};
 
 var upgrades = [
 	{
@@ -1600,10 +1650,9 @@ var upgrades = [
 		multiplier: 100,
 		onclick: function(upgrade) {
 			var part;
-			// TODO: 6
-			for ( var i = 1; i <= 5; i++ ) {
+			for ( var i = 1; i <= 6; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (upgrade.level + 1) * Math.pow(2, upgrade_objects['full_spectrum_reflectors'].level);
+				part.power_increase = part.part.base_power_increase * (1 + (upgrade.level / 100)) * Math.pow(2, upgrade_objects['full_spectrum_reflectors'].level);
 				part.updateDescription();
 			}
 		}
@@ -1850,12 +1899,11 @@ var upgrades = [
 		multiplier: 2,
 		onclick: function(upgrade) {
 			var part;
-			// TODO: 6
-			/*for ( var i = 1; i <= 5; i++ ) {
+			for ( var i = 1; i <= 6; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * .1 * (upgrade_objects['improved_neutron_reflection'].level + 1) * Math.pow(2, upgrade.level);
+				part.power_increase = part.part.base_power_increase * (1 + (upgrade_objects['improved_neutron_reflection'].level / 100)) * Math.pow(2, upgrade.level);
 				part.updateDescription();
-			}*/
+			}
 		}
 	},
 	{
@@ -1988,87 +2036,99 @@ var upgrades = [
 		}
 	},
 	{
-		id: 'experimental_capacitance',
-		type: 'experimental_other',
-		title: 'Experimental Capacitance',
-		description: 'Allows you to use Extreme Capacitors.',
+		id: 'heat_reflection',
+		type: 'experimental_parts',
+		title: 'Heat Reflection',
+		description: 'Allows you to use Thermal Neutron Reflectors. When purchased, the EP cost of other parts goes up.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
 		onclick: function(upgrade) {
-			// Nothing, just required for placing parts
+			epart_onclick(upgrade);
+		}
+	},
+	{
+		id: 'experimental_capacitance',
+		type: 'experimental_parts',
+		title: 'Experimental Capacitance',
+		description: 'Allows you to use Extreme Capacitors. When purchased, the EP cost of other parts goes up.',
+		erequires: 'laboratory',
+		ecost: 10000,
+		levels: 1,
+		onclick: function(upgrade) {
+			epart_onclick(upgrade);
 		}
 	},
 	{
 		id: 'vortex_cooling',
-		type: 'experimental_other',
+		type: 'experimental_parts',
 		title: 'Vortex Cooling',
-		description: 'Allows you to use Extreme Vents.',
+		description: 'Allows you to use Extreme Vents. When purchased, the EP cost of other parts goes up.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
 		onclick: function(upgrade) {
-			// Nothing, just required for placing parts
+			epart_onclick(upgrade);
 		}
 	},
 	{
 		id: 'underground_heat_extraction',
-		type: 'experimental_other',
+		type: 'experimental_parts',
 		title: 'Underground Heat Extraction',
-		description: 'Allows you to use Extreme Heat Exchangers.',
+		description: 'Allows you to use Extreme Heat Exchangers. When purchased, the EP cost of other parts goes up.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
 		onclick: function(upgrade) {
-			// Nothing, just required for placing parts
+			epart_onclick(upgrade);
 		}
 	},
 	{
 		id: 'vortex_extraction',
-		type: 'experimental_other',
+		type: 'experimental_parts',
 		title: 'Vortex Extraction',
-		description: 'Allows you to use Extreme Heat Inlets.',
+		description: 'Allows you to use Extreme Heat Inlets. When purchased, the EP cost of other parts goes up.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
 		onclick: function(upgrade) {
-			// Nothing, just required for placing parts
+			epart_onclick(upgrade);
 		}
 	},
 	{
 		id: 'explosive_ejection',
-		type: 'experimental_other',
+		type: 'experimental_parts',
 		title: 'Explosive Ejection',
-		description: 'Allows you to use Extreme Heat Outlets.',
+		description: 'Allows you to use Extreme Heat Outlets. When purchased, the EP cost of other parts goes up.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
 		onclick: function(upgrade) {
-			// Nothing, just required for placing parts
+			epart_onclick(upgrade);
 		}
 	},
 	{
 		id: 'thermionic_conversion',
-		type: 'experimental_other',
+		type: 'experimental_parts',
 		title: 'Thermionic Conversion',
-		description: 'Allows you to use Thermionic Coolant Cells.',
+		description: 'Allows you to use Thermionic Coolant Cells. When purchased, the EP cost of other parts goes up.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
 		onclick: function(upgrade) {
-			// Nothing, just required for placing parts
+			epart_onclick(upgrade);
 		}
 	},
 	{
 		id: 'micro_capacitance',
-		type: 'experimental_other',
+		type: 'experimental_parts',
 		title: 'Micro Capacitance',
-		description: 'Allows you to use Charged Reactor Plating.',
+		description: 'Allows you to use Charged Reactor Plating. When purchased, the EP cost of other parts goes up.',
 		erequires: 'laboratory',
 		ecost: 10000,
 		levels: 1,
 		onclick: function(upgrade) {
-			// Nothing, just required for placing parts
+			epart_onclick(upgrade);
 		}
 	}
 
@@ -2204,7 +2264,7 @@ var upgrade_locations = {
 	experimental_boost: $('#experimental_boost'),
 	experimental_cells: $('#experimental_cells'),
 	experimental_cells_boost: $('#experimental_cell_boost'),
-	experimental_other: $('#experimental_other')
+	experimental_parts: $('#experimental_parts')
 };
 
 var upgrade_objects = {};
@@ -2324,7 +2384,7 @@ $all_upgrades.delegate('upgrade', 'click', function(event) {
 		$current_exotic_particles.innerHTML = fmt(current_exotic_particles);
 		$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
 		upgrade.setLevel(upgrade.level + 1);
-	} else if ( current_money >= upgrade.cost ) {
+	} else if ( upgrade.cost && current_money >= upgrade.cost ) {
 		current_money -= upgrade.cost;
 		$money.innerHTML = fmt(current_money);
 		upgrade.setLevel(upgrade.level + 1);
@@ -2484,7 +2544,11 @@ var tile_queue = [];
 var qi;
 var tile2;
 
-var apply_to_tile = function(tile, part) {
+var apply_to_tile = function(tile, part, force) {
+	if ( !tile.enabled && !force ) {
+		return;
+	}
+
 	tile.part = part;
 	tile.$el.className = tile.$el.className
 		.replace(part_replace, '')
@@ -2696,12 +2760,12 @@ if ( rks ) {
 	set_auto_heat_reduce();
 
 	// Tiles
-	for ( ri = 0; ri < rows; ri++ ) {
+	for ( ri = 0; ri < max_rows; ri++ ) {
 		row = tiles[ri];
 		srow = rks.tiles[ri];
 
 		if ( srow ) {
-			for ( ci = 0; ci < cols; ci++ ) {
+			for ( ci = 0; ci < max_cols; ci++ ) {
 				stile = srow[ci];
 
 				if ( stile ) {
@@ -2710,7 +2774,7 @@ if ( rks ) {
 					tile.activated = stile.activated;
 					tile.heat_contained = stile.heat_contained;
 					part = part_objects[stile.id];
-					apply_to_tile(tile, part);
+					apply_to_tile(tile, part, true);
 				}
 			}
 		}
@@ -2902,6 +2966,7 @@ var game_loop = function() {
 					}
 				} else if ( tile.part.category === 'reflector' ) {
 					power_add += tile.power;
+					heat_add += tile.heat;
 					tile.ticks -= tile.cells.length;
 
 					// TODO: dedupe this and cell ticks
@@ -3236,11 +3301,11 @@ var game_loop = function() {
 					}
 
 					if ( tile.part.id === 'vent6' ) {
-						if ( current_power < vent_reduce * 2 ) {
-							vent_reduce = current_power / 2;
+						if ( current_power < vent_reduce ) {
+							vent_reduce = current_power;
 						}
 
-						current_power -= vent_reduce * 2;
+						current_power -= vent_reduce;
 					}
 
 					tile.heat_contained -= vent_reduce;
@@ -3394,6 +3459,8 @@ var check_affordability = function() {
 };
 
 check_affordability();
+update_tiles();
+
 if ( !paused ) {
 	loop_timeout = setTimeout(game_loop, loop_wait);
 }
