@@ -62,7 +62,7 @@ Element.prototype.delegate = function(className, type, fn) {
 	var test = new RegExp('\\b' + className + '\\b');
 	var $self = this;
 
-	this['on' + type] = function(event) {
+	var onfn = function(event) {
 		event = event || window.event;
 		var $target = event.target || event.srcElement;
 
@@ -73,6 +73,12 @@ Element.prototype.delegate = function(className, type, fn) {
 
 			$target = $target.parentNode;
 		}
+	}
+
+	if ( type === 'focus' || type === 'blur' ) {
+		this.addEventListener(type, onfn, true);
+	} else {
+		this['on' + type] = onfn;
 	}
 }
 

@@ -252,6 +252,13 @@ h6 {
 #parts_section .part {
 	background: transparent;
 	margin-right: 4px;
+	transition: all .1s linear;
+}
+
+#parts_section .part:hover,
+#parts_section .part:focus {
+	box-shadow: 0px 0px 2px 1px #76809b;
+	background: #76809b;
 }
 
 #parts_section .part:nth-child(6n) {
@@ -263,8 +270,8 @@ h6 {
 }
 
 #parts_section .part.part_active {
-	outline: 2em dashed blue;
-	outline-offset: -2em;
+	box-shadow: 0px 0px 1px 1px #59c435;
+	background: #59c435;
 }
 
 #parts_section .part .image:after,
