@@ -378,8 +378,7 @@ h6 {
 	float: left;
 }
 
-#reactor .tile:hover,
-#reactor .tile:focus {
+#reactor .tile.tile_active {
 	box-shadow: 0px 0px 1px 1px #59c435;
 	background: #59c435;
 }
@@ -1492,14 +1491,19 @@ body:before {
 	#main.touch.tooltip_showing #tooltip {
 		position: fixed;
 		z-index: 7;
-		left: 46px;
+		left: 0;
 		top: 60px;
+		right: 0;
 		border-top: 0;
 		border: 12px solid #eee;
 		border-image: url("../img/panel_border.png") 12 12 stretch;
 		background-color: #485667;
 		background-clip: padding-box;
 		height: auto;
+	}
+
+	#main.part_active.touch.tooltip_showing #tooltip {
+		left: 46px;
 	}
 
 	#main.touch #controls_nav,

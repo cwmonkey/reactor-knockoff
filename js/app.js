@@ -3,7 +3,6 @@
 TODO:
 
 Before release:
-selling
 Auto save
 particle accelerator6
 adjust ui
@@ -22,7 +21,6 @@ ui.js - put purely ui control stuff in there
 parts ui adjust (up/down go away)
 browser testing
 fix close/delete buttons on tooltip
-Make sure clicking on upgrades only purchases if that upgrade's tooltip is visible (mobile)
 hide ticks on upgrade tooltips
 hide various stats on un-enabled parts' tooltips
 make stats unlockable
@@ -55,6 +53,11 @@ console.log
 ;(function() {
 'use strict';
 
+var is_touch = false;
+if ( 'ontouchstart' in window ) {
+	is_touch = true;
+}
+
   /////////////////////////////
  // Delegate
 /////////////////////////////
@@ -65,6 +68,8 @@ Element.prototype.delegate = function(className, type, fn) {
 
 	var onfn = function(event) {
 		event = event || window.event;
+		event.preventDefault();
+
 		var $target = event.target || event.srcElement;
 
 		while( $target != $self ) {
@@ -78,6 +83,12 @@ Element.prototype.delegate = function(className, type, fn) {
 
 	if ( type === 'focus' || type === 'blur' ) {
 		this.addEventListener(type, onfn, true);
+	} else if ( type === 'click' ) {
+		this['on' + type] = onfn;
+
+		if ( is_touch ) {
+			this['ontouchend'] = onfn;
+		}
 	} else {
 		this['on' + type] = onfn;
 	}
@@ -288,11 +299,21 @@ var reboot = function(refund) {
 	game_loop();
 };
 
-$reboot.onclick = reboot;
+var reboot_click = function(event) {
+	event.preventDefault();
+	reboot();
+};
 
-$refund.onclick = function() {
+$reboot.onclick = reboot_click;
+$reboot.ontouchend = reboot_click;
+
+var refund = function(event) {
+	event.preventDefault();
 	reboot(true);
-}
+};
+
+$refund.onclick = refund;
+$refund.ontouchend = refund;
 
 // For iteration
 var i;
@@ -690,10 +711,8 @@ if ( debug ) {
 	$main.className += ' debug';
 }
 
-var is_touch = false;
-if ( 'ontouchstart' in window ) {
+if ( is_touch ) {
 	$main.className += ' touch';
-	is_touch = true;
 }
 
 $max_heat.innerHTML = fmt(max_heat);
@@ -703,14 +722,21 @@ $max_power.innerHTML = fmt(max_power);
 var $nav_more = $('#nav_more');
 var $nav_less = $('#nav_less');
 var nav_more_find = /[\s\b]nav_more\b/;
-
-$nav_more.onclick = function() {
+var nav_more = function(event) {
+	event.preventDefault();
 	$main.className += ' nav_more';
 };
 
-$nav_less.onclick = function() {
-	$main.className += $main.className.replace(nav_more_find, '');
+$nav_more.onclick = nav_more;
+$nav_more.ontouchend = nav_more;
+
+var nav_less = function(event) {
+	event.preventDefault();
+	$main.className = $main.className.replace(nav_more_find, '');
 };
+
+$nav_less.onclick = nav_less;
+$nav_less.ontouchend = nav_less;
 
 // create tiles
 var $row;
@@ -736,6 +762,7 @@ for ( ri = 0; ri < max_rows; ri++ ) {
 
 // TODO: DRY this
 var tooltip_tile = null;
+var tile_active_find = /[\s\b]tile_active\b/g;
 var tile_tooltip_show = function(e) {
 	var tile = this.tile;
 	var part = tile.part;
@@ -746,8 +773,17 @@ var tile_tooltip_show = function(e) {
 		$main.className += ' tooltip_showing';
 	}
 
+	if ( is_touch ) {
+		if ( tooltip_tile ) {
+			tooltip_tile.$el.className = tooltip_tile.$el.className.replace(tile_active_find, '');
+		}
+
+		tile.$el.className += ' tile_active';
+	}
+
 	part.showTooltip(tile);
 	tooltip_showing = true;
+
 	tooltip_tile = tile;
 	tooltip_update = (function(tile) {
 		return function() {
@@ -757,6 +793,10 @@ var tile_tooltip_show = function(e) {
 };
 
 var tile_tooltip_hide = function(e) {
+	if ( is_touch && tooltip_tile ) {
+		tooltip_tile.$el.className = tooltip_tile.$el.className.replace(tile_active_find, '');
+	}
+
 	tooltip_showing = false;
 	tooltip_update = null;
 	tooltip_tile = null;
@@ -766,8 +806,6 @@ var tile_tooltip_hide = function(e) {
 if ( !is_ios ) {
 	$reactor.delegate('tile', 'mouseover', tile_tooltip_show);
 	$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
-} else {
-	$reactor.delegate('tile', 'touchend', tile_tooltip_show);
 }
 
 $reactor.delegate('tile', 'focus', tile_tooltip_show);
@@ -779,7 +817,9 @@ $reactor.delegate('tile', 'blur', tile_tooltip_hide);
 
 var showing_find = /[\b\s]showing\b/;
 
-$main.delegate('nav', 'click', function(event) {
+var show_page = function(event) {
+	event.preventDefault();
+
 	var id = this.getAttribute('data-page');
 	var section = this.getAttribute('data-section');
 	var $page = $('#' + id);
@@ -799,7 +839,10 @@ $main.delegate('nav', 'click', function(event) {
 	} else {
 		clearTimeout(check_upgrades_affordability_timeout);
 	}
-});
+};
+
+$main.delegate('nav', 'click', show_page);
+$main.delegate('nav', 'touchend', show_page);
 
   /////////////////////////////
  // Parts
@@ -1526,11 +1569,10 @@ var part_tooltip_hide = function(e) {
 if ( !is_ios ) {
 	$all_parts.delegate('part', 'mouseover', part_tooltip_show);
 	$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
-	$all_parts.delegate('part', 'focus', part_tooltip_show);
-	$all_parts.delegate('part', 'blur', part_tooltip_hide);
-} else {
-	$all_parts.delegate('part', 'mouseup', part_tooltip_show);
 }
+
+$all_parts.delegate('part', 'focus', part_tooltip_show);
+$all_parts.delegate('part', 'blur', part_tooltip_hide);
 
   /////////////////////////////
  // Reduce Heat Manually
@@ -1540,7 +1582,9 @@ var $reduce_heat = $('#reduce_heat');
 var $manual_heat_reduce = $('#manual_heat_reduce');
 var $auto_heat_reduce = $('#auto_heat_reduce');
 
-$reduce_heat.onclick = function() {
+var reduce_heat = function(event) {
+	event.preventDefault();
+
 	current_heat -= manual_heat_reduce;
 
 	if ( current_heat < 0 ) {
@@ -1549,6 +1593,9 @@ $reduce_heat.onclick = function() {
 
 	$current_heat.innerHTML = fmt(current_heat);
 };
+
+$reduce_heat.onclick = reduce_heat;
+$reduce_heat.ontouchend = reduce_heat;
 
 var set_manual_heat_reduce = function() {
 	$manual_heat_reduce.innerHTML = '-' + fmt(manual_heat_reduce);
@@ -2327,8 +2374,6 @@ var upgrade_tooltip_hide = function(e) {
 if ( !is_ios ) {
 	$all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
 	$all_upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
-} else {
-	$all_upgrades.delegate('upgrade', 'touchend', upgrade_tooltip_show);
 }
 
 $all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
@@ -2455,8 +2500,8 @@ for ( var i = 0, l = upgrade_objects_array.length; i < l; i++ ) {
 // Upgrade delegate event
 $all_upgrades.delegate('upgrade', 'click', function(event) {
 	var upgrade = this.upgrade;
-
 	if ( is_touch && !upgrade.clicked ) {
+		upgrade_tooltip_show.apply(this, event);
 		upgrade.clicked = true;
 		return;
 	}
@@ -2533,7 +2578,11 @@ var spart;
 var sstring;
 var squeue;
 var supgrades;
-var save = function() {
+var save = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
 	srows = [];
 
 	// Tiles
@@ -2596,18 +2645,21 @@ var save = function() {
 };
 
 $save.onclick = save;
+$save.touchend = save;
 
 // Select part
 var active_replace = /[\b\s]part_active\b/;
 var clicked_part = null;
 
-$all_parts.delegate('part', 'click', function() {
+$all_parts.delegate('part', 'click', function(e) {
 	if ( clicked_part && clicked_part === this.part ) {
 		clicked_part = null;
 		this.className = this.className.replace(active_replace, '');
 		$main.className = $main.className.replace(active_replace, '');
 		part_tooltip_hide();
 	} else {
+		part_tooltip_show.apply(this, e);
+
 		if ( clicked_part ) {
 			clicked_part.$el.className = clicked_part.$el.className.replace(active_replace, '');
 			$main.className = $main.className.replace(active_replace, '');
@@ -2709,11 +2761,14 @@ var remove_part = function(tile, skip_update, sell) {
 	tile_tooltip_hide();
 };
 
-$tooltip_delete.onclick = function() {
+var tooltip_delete = function() {
 	remove_part(tooltip_tile, false, true);
 };
 
-$tooltip_close.onclick = function() {
+$tooltip_delete.onclick = tooltip_delete;
+$tooltip_delete.ontouchend = tooltip_delete;
+
+var tooltip_close = function() {
 	if ( tooltip_tile ) {
 		tile_tooltip_hide();
 	} else if ( tooltip_part ) {
@@ -2722,6 +2777,9 @@ $tooltip_close.onclick = function() {
 		upgrade_tooltip_hide();
 	}
 };
+
+$tooltip_close.onclick = tooltip_close;
+$tooltip_close.ontouchend = tooltip_close;
 
 var mouse_apply_to_tile = function(e) {
 	tile = this.tile;
@@ -2756,42 +2814,51 @@ var mouse_apply_to_tile = function(e) {
 var pause_replace = /[\b\s]paused\b/;
 var $pause = $('#pause');
 
-var pause = function() {
+var pause = function(event) {
+	event.preventDefault();
 	clearTimeout(loop_timeout);
 	$main.className += ' paused';
 	paused = true;
 };
 
 $pause.onclick = pause;
+$pause.ontouchend = pause;
 
 // Unpause
 var $unpause = $('#unpause');
 
-var unpause = function() {
+var unpause = function(event) {
+	event.preventDefault();
 	loop_timeout = setTimeout(game_loop, loop_wait);
 	$main.className = $main.className.replace(pause_replace, '');
 	paused = false;
 };
 
 $unpause.onclick = unpause;
+$unpause.ontouchend = unpause;
 
 // Enable/Disable auto sell
 var $disable_auto_sell = $('#disable_auto_sell');
 var $enable_auto_sell = $('#enable_auto_sell');
 var auto_sell_disabled_find = /[\b\s]auto_sell_disabled\b/;
 
-var disable_auto_sell = function() {
+var disable_auto_sell = function(event) {
+	event.preventDefault();
 	$main.className += ' auto_sell_disabled';
 	auto_sell_disabled = true;
 };
 
-var enable_auto_sell = function() {
+var enable_auto_sell = function(event) {
+	event.preventDefault();
 	$main.className = $main.className.replace(auto_sell_disabled_find, '');
 	auto_sell_disabled = false;
 };
 
 $disable_auto_sell.onclick = disable_auto_sell;
+$disable_auto_sell.ontouchend = disable_auto_sell;
+
 $enable_auto_sell.onclick = enable_auto_sell;
+$enable_auto_sell.ontouchend = enable_auto_sell;
 
 // Enable/Disable auto buy
 var $disable_auto_buy = $('#disable_auto_buy');
@@ -2809,7 +2876,10 @@ var enable_auto_buy = function() {
 };
 
 $disable_auto_buy.onclick = disable_auto_buy;
+$disable_auto_buy.ontouchend = disable_auto_buy;
+
 $enable_auto_buy.onclick = enable_auto_buy;
+$enable_auto_buy.ontouchend = enable_auto_buy;
 
   /////////////////////////////
  // Load
@@ -2943,6 +3013,8 @@ document.oncontextmenu = function(e) {
 };
 
 $reactor.delegate('tile', 'click', function(e) {
+	tile_tooltip_show.apply(this, e);
+
 	if ( !tile_mousedown ) {
 		mouse_apply_to_tile.call(this, e);
 	}
@@ -2995,7 +3067,9 @@ $reactor.delegate('tile', 'mousemove', function(e) {
 /////////////////////////////
 var $sell = $('#sell');
 
-$sell.onclick = function() {
+var sell = function(event) {
+	event.preventDefault();
+
 	if ( current_power ) {
 		current_money += current_power;
 		current_power = 0;
@@ -3007,6 +3081,9 @@ $sell.onclick = function() {
 		check_affordability();
 	}
 };
+
+$sell.onclick = sell;
+$sell.ontouchend = sell;
 
   /////////////////////////////
  // Scrounge
