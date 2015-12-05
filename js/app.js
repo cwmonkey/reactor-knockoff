@@ -12,7 +12,6 @@ finish help section
 fix upgrade/experiment display
 full reset
 figure out reflector experiment upgrade
-Options page - exponential formatting
 Statistics
 forceful fusion testing
 mobile ui - sliding panels
@@ -27,6 +26,7 @@ Make sure clicking on upgrades only purchases if that upgrade's tooltip is visib
 hide ticks on upgrade tooltips
 hide various stats on un-enabled parts' tooltips
 make stats unlockable
+unlock part when visible
 
 Maybe before:
 "story" objectives
@@ -35,6 +35,7 @@ tooltip
 modal messages
 Bundling cells to 9+
 towns with different power needs and compensation
+Options page - exponential formatting
 
 After:
 shift + right click on spent cells also gets rid of unspent cells
@@ -323,6 +324,7 @@ var Tile = function(row, col) {
 	this.part = null;
 	this.heat = 0;
 	this.heat_contained = 0;
+	this.display_power = null;
 	this.display_heat = null;
 	this.power = 0;
 	this.ticks = 0;
@@ -379,6 +381,8 @@ var range;
 var stat_vent;
 var stat_inlet;
 var stat_outlet;
+var total_heat;
+var total_power;
 
 var update_tiles = function() {
 	heat_outlet_countainments_count = 0;
@@ -386,6 +390,8 @@ var update_tiles = function() {
 	vent_multiplier = 0;
 	max_power = altered_max_power;
 	max_heat = altered_max_heat;
+	total_heat = 0;
+	total_power = 0;
 
 	stat_vent = 0;
 	stat_inlet = 0;
@@ -604,6 +610,21 @@ var update_tiles = function() {
 	$stats_inlet.innerHTML = fmt(stat_inlet * (1 + transfer_multiplier / 100), 2);
 	$stats_outlet.innerHTML = fmt(stat_outlet * (1 + transfer_multiplier / 100), 2);
 
+	// heat and power stats
+	for ( ri = 0; ri < rows; ri++ ) {
+		row = tiles[ri];
+
+		for ( ci = 0; ci < cols; ci++ ) {
+			tile = row[ci];
+			total_heat += tile.heat;
+			total_power += tile.power;
+		}
+	}
+
+	$stats_heat.innerHTML = fmt(total_heat, 2);
+	$stats_power.innerHTML = fmt(total_power, 2);
+	$stats_cash.innerHTML = fmt(Math.ceil(total_power * auto_sell_multiplier), 2);
+
 	if ( debug ) {
 		for ( ri = 0; ri < rows; ri++ ) {
 			row = tiles[ri];
@@ -650,9 +671,12 @@ var $tooltip = $('#tooltip');
 var $tooltip_name = $('#tooltip_name');
 var $tooltip_description = $('#tooltip_description');
 var $tooltip_cost = $('#tooltip_cost');
+var $tooltip_sells_wrapper = $('#tooltip_sells_wrapper');
 var $tooltip_sells = $('#tooltip_sells');
 var $tooltip_heat_per = $('#tooltip_heat_per');
 var $tooltip_power_per = $('#tooltip_power_per');
+var $tooltip_heat_per_wrapper = $('#tooltip_heat_per_wrapper');
+var $tooltip_power_per_wrapper = $('#tooltip_power_per_wrapper');
 var $tooltip_heat_wrapper = $('#tooltip_heat_wrapper');
 var $tooltip_heat = $('#tooltip_heat');
 var $tooltip_max_heat = $('#tooltip_max_heat');
@@ -666,12 +690,27 @@ if ( debug ) {
 	$main.className += ' debug';
 }
 
+var is_touch = false;
 if ( 'ontouchstart' in window ) {
 	$main.className += ' touch';
+	is_touch = true;
 }
 
 $max_heat.innerHTML = fmt(max_heat);
 $max_power.innerHTML = fmt(max_power);
+
+// Nav more/less
+var $nav_more = $('#nav_more');
+var $nav_less = $('#nav_less');
+var nav_more_find = /[\s\b]nav_more\b/;
+
+$nav_more.onclick = function() {
+	$main.className += ' nav_more';
+};
+
+$nav_less.onclick = function() {
+	$main.className += $main.className.replace(nav_more_find, '');
+};
 
 // create tiles
 var $row;
@@ -1070,7 +1109,7 @@ var parts = [
 		id: 'heat_outlet',
 		type: 'heat_outlet',
 		title: 'Heat Outlet',
-		base_description: 'For each adjacent component %transfer is taken out of the reactor and put into the adjacent component.',
+		base_description: '%transfer heat is taken out of the reactor and put into each adjacent component.',
 		levels: 5,
 		category: 'heat_outlet',
 		level: 1,
@@ -1167,7 +1206,7 @@ var locked_find = /[\b\s]locked\b/;
 var Part = function(part) {
 	this.className = 'part_' + part.id;
 	this.$el = document.createElement('BUTTON');
-	this.$el.className = 'part locked ' + this.className;
+	this.$el.className = 'part locked unaffordable ' + this.className;
 	this.$el.part = this;
 
 	this.part = part;
@@ -1189,7 +1228,7 @@ var Part = function(part) {
 	this.ep_heat = part.base_ep_heat;
 	this.erequires = part.erequires || null;
 	this.cost = part.base_cost;
-	this.affordable = true;
+	this.affordable = false;
 	this.perpetual = false;
 	this.description = '';
 	this.sells = 0;
@@ -1243,8 +1282,6 @@ Part.prototype.showTooltip = function(tile) {
 	if ( tile ) {
 		this.updateDescription(tile);
 		$tooltip_cost.style.display = 'none';
-		$tooltip_sells.style.display = null;
-
 		$tooltip_delete.style.display = null;
 
 		if ( tile.activated && tile.part.containment ) {
@@ -1258,19 +1295,45 @@ Part.prototype.showTooltip = function(tile) {
 		} else {
 			$tooltip_ticks_wrapper.style.display = 'none';
 		}
+
+		if ( tile.activated && tile.part.heat ) {
+			$tooltip_heat_per_wrapper.style.display = null;
+		} else {
+			$tooltip_heat_per_wrapper.style.display = 'none';
+		}
+
+		if ( tile.activated && tile.part.power ) {
+			$tooltip_power_per_wrapper.style.display = null;
+		} else {
+			$tooltip_power_per_wrapper.style.display = 'none';
+		}
+
+		if ( tile.activated && tile.part.power ) {
+			$tooltip_power_per_wrapper.style.display = null;
+		} else {
+			$tooltip_power_per_wrapper.style.display = 'none';
+		}
+
+		if ( tile.activated && tile.part.category === 'cell' ) {
+			$tooltip_sells_wrapper.style.display = 'none';
+			$tooltip_delete.innerHTML = 'Delete';
+		} else {
+			$tooltip_sells_wrapper.style.display = null;
+			$tooltip_delete.innerHTML = 'Sell';
+		}
 	} else {
 		$tooltip_delete.style.display = 'none';
 
 		this.updateDescription();
 		$tooltip_cost.style.display = null;
-		$tooltip_sells.style.display = 'none';
+		$tooltip_sells_wrapper.style.display = 'none';
 
 		$tooltip_heat_wrapper.style.display = 'none';
 		$tooltip_ticks_wrapper.style.display = 'none';
-	}
 
-	$tooltip_heat_per.style.display = 'none';
-	$tooltip_power_per.style.display = 'none';
+		$tooltip_heat_per_wrapper.style.display = 'none';
+		$tooltip_power_per_wrapper.style.display = 'none';
+	}
 
 	this.updateTooltip(tile);
 };
@@ -1289,6 +1352,22 @@ Part.prototype.updateTooltip = function(tile) {
 		if ( tile.activated && tile.part.ticks ) {
 			$tooltip_ticks.innerHTML = fmt(tile.ticks);
 			$tooltip_max_ticks.innerHTML = fmt(tile.part.ticks);
+		}
+
+		if ( tile.activated && tile.part.heat ) {
+			$tooltip_heat_per.innerHTML = fmt(tile.display_heat);
+		}
+
+		if ( tile.activated && tile.part.power ) {
+			$tooltip_power_per.innerHTML = fmt(tile.display_power);
+		}
+
+		if ( tile.activated && tile.part.category !== 'cell' ) {
+			if ( tile.part.ticks ) {
+				$tooltip_sells.innerHTML = fmt(tile.part.cost - Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost));
+			} else if ( tile.part.containment ) {
+				$tooltip_sells.innerHTML = fmt(tile.part.cost - Math.ceil(tile.heat_contained / tile.part.containment * tile.part.cost));
+			}
 		}
 	} else {
 		$tooltip_description.innerHTML = this.description;
@@ -1447,12 +1526,11 @@ var part_tooltip_hide = function(e) {
 if ( !is_ios ) {
 	$all_parts.delegate('part', 'mouseover', part_tooltip_show);
 	$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
+	$all_parts.delegate('part', 'focus', part_tooltip_show);
+	$all_parts.delegate('part', 'blur', part_tooltip_hide);
 } else {
-	$all_parts.delegate('part', 'touchend', part_tooltip_show);
+	$all_parts.delegate('part', 'mouseup', part_tooltip_show);
 }
-
-$all_parts.delegate('part', 'focus', part_tooltip_show);
-$all_parts.delegate('part', 'blur', part_tooltip_hide);
 
   /////////////////////////////
  // Reduce Heat Manually
@@ -2203,9 +2281,10 @@ Upgrade.prototype.showTooltip = function() {
 	$tooltip_name.innerHTML = this.upgrade.title;
 
 	$tooltip_cost.style.display = null;
-	$tooltip_sells.style.display = 'none';
-	$tooltip_heat_per.style.display = 'none';
-	$tooltip_power_per.style.display = 'none';
+	$tooltip_ticks_wrapper.style.display = 'none';
+	$tooltip_sells_wrapper.style.display = 'none';
+	$tooltip_heat_per_wrapper.style.display = 'none';
+	$tooltip_power_per_wrapper.style.display = 'none';
 	$tooltip_heat_wrapper.style.display = 'none';
 	$tooltip_delete.style.display = 'none';
 
@@ -2376,6 +2455,11 @@ for ( var i = 0, l = upgrade_objects_array.length; i < l; i++ ) {
 // Upgrade delegate event
 $all_upgrades.delegate('upgrade', 'click', function(event) {
 	var upgrade = this.upgrade;
+
+	if ( is_touch && !upgrade.clicked ) {
+		upgrade.clicked = true;
+		return;
+	}
 
 	if ( upgrade.level >= upgrade.upgrade.levels ) {
 		return;
@@ -2579,8 +2663,22 @@ var apply_to_tile = function(tile, part, force) {
 
 var rpl;
 var rpqi;
-var remove_part = function(tile, skip_update) {
+var remove_part = function(tile, skip_update, sell) {
 	skip_update = skip_update || false;
+	sell = sell || false;
+
+	if ( sell ) {
+		if ( tile.activated && tile.part.category !== 'cell' ) {
+			if ( tile.part.ticks ) {
+				current_money += tile.part.cost - Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost);
+				$money.innerHTML = fmt(current_money);
+			} else if ( tile.part.containment ) {
+				current_money += tile.part.cost - Math.ceil(tile.heat_contained / tile.part.containment * tile.part.cost);
+				$money.innerHTML = fmt(current_money);
+			}
+		}
+	}
+
 	tile.part = null;
 	tile.ticks = 0;
 	tile.heat_contained = 0;
@@ -2612,7 +2710,7 @@ var remove_part = function(tile, skip_update) {
 };
 
 $tooltip_delete.onclick = function() {
-	remove_part(tooltip_tile);
+	remove_part(tooltip_tile, false, true);
 };
 
 $tooltip_close.onclick = function() {
@@ -2629,7 +2727,7 @@ var mouse_apply_to_tile = function(e) {
 	tile = this.tile;
 
 	if ( tile_mousedown_right ) {
-		remove_part(tile);
+		remove_part(tile, false, true);
 	} else if (
 		clicked_part
 		&& (
@@ -2853,7 +2951,7 @@ $reactor.delegate('tile', 'click', function(e) {
 $reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown = true;
 	tile_mousedown_right = e.which === 3;
-	e.preventDefault();
+	//e.preventDefault();
 
 	if ( e.shiftKey ) {
 		if ( this.tile.part ) {
@@ -2905,6 +3003,8 @@ $sell.onclick = function() {
 		$money.innerHTML = fmt(current_money);
 		$current_power.innerHTML = 0;
 		$power_percentage.style.width = 0;
+
+		check_affordability();
 	}
 };
 
@@ -3078,7 +3178,6 @@ var game_loop = function() {
 	current_heat += heat_add;
 
 	//$heat_per_tick.innerHTML = fmt(heat_add);
-	$stats_heat.innerHTML = fmt(heat_add, 2);
 
 	// Reduce reactor heat parts
 	max_shared_heat = current_heat / heat_outlet_countainments_count;
@@ -3288,7 +3387,6 @@ var game_loop = function() {
 	current_power += power_add;
 
 	//$power_per_tick.innerHTML = fmt(power_add);
-	$stats_power.innerHTML = fmt(power_add, 2);
 
 	// Try to place parts in the queue
 	if ( tile_queue.length ) {
@@ -3446,8 +3544,11 @@ var game_loop = function() {
 	}
 };
 
+var prev_part;
 // affordability loop
 var check_affordability = function() {
+	prev_part = null;
+
 	for ( i = 0, l = part_objects_array.length; i < l; i++ ) {
 		part = part_objects_array[i];
 
@@ -3461,13 +3562,16 @@ var check_affordability = function() {
 		) {
 			part.affordable = false;
 			part.$el.className += ' unaffordable';
-		} else if (
-			!part.affordable
-			&& part.cost <= current_money
-			&& (!part.erequires || upgrade_objects[part.erequires].level)
-		) {
-			part.affordable = true;
-			part.$el.className = part.$el.className.replace(unaffordable_replace, '').replace(locked_find, '');
+		} else if ( !part.affordable ) {
+			if ( 
+				part.cost <= current_money
+				&& (!part.erequires || upgrade_objects[part.erequires].level)
+			) {
+				part.affordable = true;
+				part.$el.className = part.$el.className.replace(unaffordable_replace, '').replace(locked_find, '');
+			} else if ( prev_part && prev_part.affordable ) {
+				part.$el.className = part.$el.className.replace(locked_find, '');
+			}
 		}
 	}
 };

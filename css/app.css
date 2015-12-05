@@ -2,6 +2,7 @@
 
 html {
   box-sizing: border-box;
+	height: 100%;
 }
 
 *,
@@ -14,6 +15,10 @@ body {
 	font-size: 16px;
 	background: #000204;
 	color: #fff;
+	height: 100%;
+	display: table;
+	margin: auto;
+	-webkit-text-size-adjust: none;
 }
 
 a {
@@ -41,13 +46,14 @@ button {
 button,
 #parts_nav_top,
 #parts_nav_bottom {
-	font-family: 'Play';
+	font-family: 'Play', sans-serif;
 	font-weight: 400;
 	font-size: 13.5px;
 	text-shadow: 1px 1px 0 #000;
 	cursor: pointer;
 	text-decoration: none;
 	text-align: center;
+	text-rendering: optimizeLegibility;
 }
 
 button::-moz-focus-inner {
@@ -55,8 +61,8 @@ button::-moz-focus-inner {
 	border: 0
 }
 
-p {
-	font-family: sans-serif;
+#main p {
+	font-family: Arial, sans-serif;
 	font-size: .875em;
 	line-height: 1.4;
 	font-weight: normal;
@@ -68,17 +74,22 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: 'Quantico';
+	font-family: 'Quantico', sans-serif;
 	font-weight: 400;
 	text-shadow: 1px 1px 3px rgba(0, 0, 0, 1);
 	font-size: 18px;
 }
 
+#wrapper {
+	display: table-cell;
+	height: 100%;
+	vertical-align: middle;
+}
+
 #main {
 	display: flex;
 	position: relative;
-	margin: 4px;
-	float: left;
+	margin: 4px auto;
 }
 
 #secondary {
@@ -195,6 +206,10 @@ h6 {
 	margin: 2px 0 0 2px;
 	background: #76809b;
 	background-clip: padding-box;
+}
+
+#more_nav {
+	display: none;
 }
 
 #power_section,
@@ -361,6 +376,12 @@ h6 {
 	background: transparent url("../img/tile.png") left top no-repeat;
 	display: none;
 	float: left;
+}
+
+#reactor .tile:hover,
+#reactor .tile:focus {
+	box-shadow: 0px 0px 1px 1px #59c435;
+	background: #59c435;
 }
 
 #reactor .tile.enabled {
@@ -608,7 +629,7 @@ body:before {
 	margin-right: 0;
 }
 
-#parts_section .cells .part.unaffordable + .locked {
+#parts_section .locked + .locked {
 	display: none;
 }
 
@@ -1201,8 +1222,11 @@ body:before {
 	display: none;
 }
 
-#tooltip_text {
+#tooltip > :first-child {
 	margin-right: .6em;
+}
+
+#tooltip_text {
 	padding: .2em .3em;
 	text-align: center;
 	flex: 1;
@@ -1374,6 +1398,7 @@ body:before {
 @media all and (max-width: 938px) {
 	#main {
 		display: block;
+		padding-top: 52px;
 	}
 
 	#main:before {
@@ -1451,4 +1476,135 @@ body:before {
 	/*#parts_section .cells .part.unaffordable + .locked {
 		display: block;
 	}*/
+
+	#main.part_active #primary {
+		padding-left: 46px;
+	}
+
+	#main.touch.touch #tooltip_nav {
+		height: auto;
+	}
+
+	#main.touch.tooltip_showing #nav {
+		display: block;
+	}
+
+	#main.touch.tooltip_showing #tooltip {
+		position: fixed;
+		z-index: 7;
+		left: 46px;
+		top: 60px;
+		border-top: 0;
+		border: 12px solid #eee;
+		border-image: url("../img/panel_border.png") 12 12 stretch;
+		background-color: #485667;
+		background-clip: padding-box;
+		height: auto;
+	}
+
+	#main.touch #controls_nav,
+	#main.touch #pages_nav {
+		position: static;
+	}
+
+	#main.touch #controls_nav button {
+		clear: none;
+		float: none;
+	}
+
+	#main.touch #game_nav {
+		display: none;
+	}
+
+	#main.touch #pages_nav,
+	#main.touch #game_nav,
+	#main.touch #controls_nav {
+		margin-bottom: 2px;
+	}
+
+	#main.touch #tooltip_nav {
+		border: 2px solid #eee;
+		border-image: url("../img/medium_panel.png") 2 2 stretch;
+		padding: 10px 6px 2px 12px;
+	}
+
+	#main.touch #more_nav {
+		position: absolute;
+		top: 0;
+		right: 0;
+		display: block;
+	}
+
+	#main.touch.nav_more #nav_more,
+	#main.touch #nav_less {
+		display: none;
+	}
+
+	#main.touch.nav_more #nav_less,
+	#main.touch.nav_more #game_nav {
+		display: block;
+	}
+
+	#main #parts_section,
+	#main #stats_section {
+		border: 12px solid #eee;
+		border-image: url("../img/panel_border.png") 12 12 stretch;
+		border-top: 0;
+	}
+
+	#main #stats_section {
+		position: fixed;
+		z-index: 10;
+		top: 0;
+		left: 0;
+		width: 100%;
+		padding: 2px 0 0 0;
+	}
+
+	#stats_section button {
+		font-size: .75em;
+	}
+
+	#heat_indicator,
+	#power_indicator {
+		padding: 2px 0;
+	}
+
+	#heat,
+	#power_section {
+		margin-bottom: 0;
+	}
+
+	#main #parts_section {
+		padding: 12px 2px 2px 2px;
+	}
+
+	#main.part_active #parts_section {
+		position: fixed;
+		z-index: 8;
+		left: -12px;
+		top: 56px;
+		padding: 11px 0 0 4px;
+	}
+
+	#main.part_active #power > menu,
+	#main.part_active #cooling > menu {
+		margin: 0;
+	}
+
+	#main.part_active #parts .part {
+		margin: 0;
+	}
+
+	#power_section,
+	#currency,
+	#heat {
+		max-width: none;
+		width: 32%;
+	}
+
+	#power_section,
+	#heat {
+		margin-right: 2%;
+	}
 }
