@@ -9,6 +9,13 @@ html {
 *:before,
 *:after {
   box-sizing: inherit;
+
+  -ms-interpolation-mode: nearest-neighbor; /*// IE 7+ (non-standard property)*/
+  image-rendering: -webkit-optimize-contrast; /*// Safari 6, UC Browser 9.9*/
+  image-rendering: -webkit-crisp-edges; /*// Safari 7+*/
+  image-rendering: -moz-crisp-edges; /*// Firefox 3.6+*/
+  image-rendering: -o-crisp-edges; /*// Opera 12*/
+  image-rendering: pixelated; /*// Chrome 41+ and Opera 26+*/
 }
 
 body {
@@ -206,6 +213,7 @@ h6 {
 	background-clip: padding-box;
 }
 
+#more_stats,
 #more_nav {
 	display: none;
 }
@@ -1570,7 +1578,9 @@ body:before {
 		top: 0;
 		left: 0;
 		width: 100%;
-		padding: 2px 0 0 0;
+		padding: 0;
+		border-left: 0;
+		border-right: 0;
 	}
 
 	#stats_section button {
@@ -1580,6 +1590,7 @@ body:before {
 	#heat_indicator,
 	#power_indicator {
 		padding: 2px 0;
+		border-top: 0;
 	}
 
 	#heat,
@@ -1595,7 +1606,7 @@ body:before {
 		position: fixed;
 		z-index: 8;
 		left: -12px;
-		top: 56px;
+		top: 52px;
 		padding: 11px 0 0 4px;
 	}
 
@@ -1612,11 +1623,51 @@ body:before {
 	#currency,
 	#heat {
 		max-width: none;
-		width: 32%;
+		width: 30%;
 	}
 
 	#power_section,
 	#heat {
-		margin-right: 2%;
+		margin-right: 1%;
+		margin-left: 1%;
+	}
+
+	#currency {
+		margin-left: 1%;
+	}
+
+	#more_stats {
+		display: block;
+		position: absolute;
+		right: 0;
+		top: -4px;
+	}
+
+	/* Hide more stats */
+	#hide_more_stats,
+	#money_per_tick_wrapper,
+	#power_per_tick_wrapper,
+	#heat_per_tick_wrapper {
+		display: none;
+	}
+
+	/* Show more stats */
+	#main.show_more_stats {
+		padding-top: 70px;
+	}
+
+	#main.part_active.show_more_stats #parts_section {
+		top: 70px;
+	}
+
+	#main.show_more_stats #hide_more_stats,
+	#main.show_more_stats #money_per_tick_wrapper,
+	#main.show_more_stats #power_per_tick_wrapper,
+	#main.show_more_stats #heat_per_tick_wrapper {
+		display: block;
+	}
+
+	#main.show_more_stats #show_more_stats {
+		display: none;
 	}
 }

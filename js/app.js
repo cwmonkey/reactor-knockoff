@@ -18,11 +18,12 @@ ui.js - put purely ui control stuff in there
 parts ui adjust (up/down go away)
 browser testing
 hide various stats on un-enabled parts' tooltips
-make stats unlockable
 disable heat controller button
-protium mechanics
+Add "sell all of type" button
 
 Maybe before:
+multiple reactors
+make stats unlockable
 header buttons
 fix close/delete buttons on tooltip
 fix upgrade/experiment display
@@ -43,7 +44,6 @@ break into multiple files?
 shift+click on empty tiles to fill them
 achievement system
 save layouts
-multiple reactors
 
 console.log
 */
@@ -195,6 +195,7 @@ var altered_max_heat;
 var altered_max_power;
 var cols;
 var rows;
+var protium_particles;
 
 var paused = false;
 var auto_sell_disabled = false;
@@ -224,6 +225,7 @@ var set_defaults = function() {
 	heat_controlled = 0;
 	altered_max_heat = base_max_heat;
 	altered_max_power = base_max_power;
+	protium_particles = 0;
 };
 
 set_defaults();
@@ -489,7 +491,7 @@ var update_tiles = function() {
 								} else {
 									tile.containments.push(tile2);
 								}
-							} else if ( tile2.part && tile2.activated && tile2.part.category === 'cell' ) {
+							} else if ( tile2.part && tile2.activated && tile2.part.category === 'cell' && tile2.ticks !== 0 ) {
 								tile.cells.push(tile2);
 							} else if ( tile2.part && tile2.activated && tile2.part.category === 'reflector' ) {
 								tile.reflectors.push(tile2);
@@ -746,6 +748,7 @@ if ( is_touch ) {
 $max_heat.innerHTML = fmt(max_heat);
 $max_power.innerHTML = fmt(max_power);
 
+// TODO: Save preference
 // Nav more/less
 var $nav_more = $('#nav_more');
 var $nav_less = $('#nav_less');
@@ -765,6 +768,27 @@ var nav_less = function(event) {
 
 $nav_less.onclick = nav_less;
 $nav_less.ontouchend = nav_less;
+
+// TODO: Save preference
+// Stats more/less
+var $show_more_stats = $('#show_more_stats');
+var $hide_more_stats = $('#hide_more_stats');
+var show_more_stats_find = /[\s\b]show_more_stats\b/;
+var show_more_stats = function(event) {
+	event.preventDefault();
+	$main.className += ' show_more_stats';
+};
+
+$show_more_stats.onclick = show_more_stats;
+$show_more_stats.ontouchend = show_more_stats;
+
+var hide_more_stats = function(event) {
+	event.preventDefault();
+	$main.className = $main.className.replace(show_more_stats_find, '');
+};
+
+$hide_more_stats.onclick = hide_more_stats;
+$hide_more_stats.ontouchend = hide_more_stats;
 
 // create tiles
 var $row;
@@ -1340,21 +1364,19 @@ Part.prototype.updateDescription = function(tile) {
 		.replace(/%ep_heat/, fmt(this.ep_heat))
 		.replace(/%range/, fmt(this.range))
 		.replace(/%count/, [1, 2, 4][this.part.level - 1])
+		.replace(/%power/, fmt(this.power))
+		.replace(/%heat/, fmt(this.heat))
 		;
 
 	if ( tile ) {
 		description = description
 			.replace(/%transfer/, fmt(this.transfer * (1 + transfer_multiplier / 100)))
 			.replace(/%vent/, fmt(this.vent * (1 + vent_multiplier / 100) ))
-			.replace(/%power/, fmt(tile.display_power))
-			.replace(/%heat/, fmt(tile.display_heat))
 			;
 	} else {
 		description = description
 			.replace(/%transfer/, fmt(this.transfer))
 			.replace(/%vent/, fmt(this.vent))
-			.replace(/%power/, fmt(this.power))
-			.replace(/%heat/, fmt(this.heat))
 			;
 	}
 
@@ -1428,6 +1450,8 @@ Part.prototype.showTooltip = function(tile) {
 
 		$tooltip_heat_per_wrapper.style.display = 'none';
 		$tooltip_power_per_wrapper.style.display = 'none';
+
+		$tooltip_chance_wrapper.style.display = 'none';
 	}
 
 	this.updateTooltip(tile);
@@ -1595,6 +1619,26 @@ for ( pi = 0, pl = parts.length; pi < pl; pi++ ) {
 		create_part(part_settings);
 	}
 }
+
+var update_cell_power = function() {
+	var part;
+
+	for ( var i = 0, l = part_objects_array.length; i < l; i++ ) {
+		part = part_objects_array[i];
+
+		if ( part.category === 'cell' ) {
+			if ( upgrade_objects['cell_power_' + part.part.type] ) {
+				part.power = part.part.base_power * (upgrade_objects['cell_power_' + part.part.type].level + upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
+			} else {
+				part.power = part.part.base_power * (upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
+			}
+
+			if ( part.part.type === 'protium' ) {
+				part.power *= (1 + protium_particles / 10);
+			}
+		}
+	}
+};
 
 // Part tooltips
 var tooltip_showing_replace = /[\s\b]tooltip_showing\b/;
@@ -2019,18 +2063,7 @@ var upgrades = [
 		ecost: 50,
 		multiplier: 2,
 		onclick: function(upgrade) {
-			var part;
-			for ( var i = 0, l = part_objects_array.length; i < l; i++ ) {
-				part = part_objects_array[i];
-
-				if ( part.category === 'cell' ) {
-					if ( upgrade_objects['cell_power_' + part.part.type] ) {
-						part.power = part.part.base_power * (upgrade_objects['cell_power_' + part.part.type].level + upgrade.level + 1) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
-					} else {
-						part.power = part.part.base_power * (upgrade.level + 1) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
-					}
-				}
-			}
+			update_cell_power();
 		}
 	},
 	{
@@ -2043,18 +2076,15 @@ var upgrades = [
 		multiplier: 2,
 		onclick: function(upgrade) {
 			var part;
+
 			for ( var i = 0, l = part_objects_array.length; i < l; i++ ) {
 				part = part_objects_array[i];
 				if ( part.category === 'cell' ) {
-					if ( upgrade_objects['cell_power_' + part.part.type] ) {
-						part.power = part.part.base_power * (upgrade_objects['cell_power_' + part.part.type].level + upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade.level);
-					} else {
-						part.power = part.part.base_power * (upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade.level);
-					}
-
 					part.heat = part.part.base_heat * Math.pow(2, upgrade.level);
 				}
 			}
+
+			update_cell_power();
 		}
 	},
 	{
@@ -2711,7 +2741,8 @@ var save = function(event) {
 		total_exotic_particles: total_exotic_particles,
 		paused: paused,
 		auto_sell_disabled: auto_sell_disabled,
-		auto_buy_disabled: auto_buy_disabled
+		auto_buy_disabled: auto_buy_disabled,
+		protium_particles: protium_particles
 	})));
 };
 
@@ -3020,6 +3051,7 @@ if ( rks ) {
 	paused = rks.paused || paused;
 	auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
 	auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
+	protium_particles = rks.protium_particles || protium_particles;
 
 	if ( paused ) {
 		pause();
@@ -3121,7 +3153,13 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 
 					if ( !tile_mousedown_right && tile.part && type === tile.part.part.type ) {
 						mouse_apply_to_tile.call(tile.$el, e);
-					} else if ( tile_mousedown_right && tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
+					} else if (
+						tile_mousedown_right
+						&& tile.part
+						&& type === tile.part.part.type
+						&& level === tile.part.part.level
+ 						&& ( !tile.part.part.base_ticks || this.tile.ticks || (!tile.ticks && !this.tile.ticks) )
+ 					) {
 						mouse_apply_to_tile.call(tile.$el, e);
 					}
 				}
@@ -3267,6 +3305,11 @@ var game_loop = function() {
 								tile.ticks = tile.part.ticks;
 								tile.$percent.style.width = '100%';
 							} else {
+								if ( tile.part.part.type === 'protium' ) {
+									protium_particles += tile.part.cell_count;
+									update_cell_power();
+								}
+
 								tile.$percent.style.width = '0';
 								tile.$el.className += ' spent';
 								update_tiles();
@@ -3294,9 +3337,6 @@ var game_loop = function() {
 						lower_heat = tile.heat_contained > tile.part.ep_heat ? tile.part.ep_heat : tile.heat_contained;
 						ep_chance_percent = lower_heat / tile.part.part.base_ep_heat;
 						ep_chance = Math.log(lower_heat) / Math.pow(10, 5 - tile.part.part.level) * ep_chance_percent;
-
-						// TODO: show the ep chance to indicate maximum efficiency
-						// console.log(ep_chance)
 
 						tile.display_chance = ep_chance * 100;
 						tile.display_chance_percent_of_total = ep_chance_percent * 100;
@@ -3745,6 +3785,7 @@ var check_affordability = function() {
 	}
 };
 
+update_cell_power();
 check_affordability();
 update_tiles();
 
