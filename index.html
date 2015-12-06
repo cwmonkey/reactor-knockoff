@@ -29,6 +29,7 @@
 							<span id="heat_text">
 								<span id="heat_wrapper">
 									<span id="current_heat">0</span>/<span id="max_heat">0</span>
+									<span id="heat_per_tick_wrapper">(<span id="heat_per_tick">0</span> last tick)</span>
 								</span>
 							</span>
 							<span id="heat_percentage"></span>
@@ -47,6 +48,7 @@
 								<span id="power_text">
 									<span id="current_power">0</span>/<span id="max_power">0</span>
 								</span>
+								<span id="power_per_tick_wrapper">(<span id="power_per_tick">0</span> last tick)</span>
 
 								<span id="power_percentage"></span>
 							</p>
@@ -58,6 +60,7 @@
 					<p id="currency">
 						<span id="money_wrapper">
 							$<span id="money">0</span>
+							<span id="money_per_tick_wrapper">(<span id="money_per_tick">0</span> last tick)</span>
 						</span>
 						<span id="exotic_particles_wrapper">
 							(<span id="current_exotic_particles">0</span>/<span id="exotic_particles">0</span> EP)
@@ -147,8 +150,11 @@
 							<p id="tooltip_heat_wrapper" title="Heat contained">
 								Heat: <span id="tooltip_heat"></span>/<span id="tooltip_max_heat"></span>
 							</p>
-							<p id="tooltip_sells_wrapper" title="Sells for">
+							<p id="tooltip_sells_wrapper">
 								Sells for: <span id="tooltip_sells"></span>
+							</p>
+							<p id="tooltip_chance_wrapper" title="Sells for">
+								EP chance: <span id="tooltip_chance"></span>% (<span id="tooltip_chance_percent_of_total"></span>%)
 							</p>
 						</div>
 						<div id="tooltip_text" class="subpanel">
