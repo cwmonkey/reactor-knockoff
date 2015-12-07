@@ -9,13 +9,6 @@ html {
 *:before,
 *:after {
   box-sizing: inherit;
-
-  -ms-interpolation-mode: nearest-neighbor; /*// IE 7+ (non-standard property)*/
-  image-rendering: -webkit-optimize-contrast; /*// Safari 6, UC Browser 9.9*/
-  image-rendering: -webkit-crisp-edges; /*// Safari 7+*/
-  image-rendering: -moz-crisp-edges; /*// Firefox 3.6+*/
-  image-rendering: -o-crisp-edges; /*// Opera 12*/
-  image-rendering: pixelated; /*// Chrome 41+ and Opera 26+*/
 }
 
 body {
@@ -47,6 +40,16 @@ button {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	background: transparent;
+}
+
+button:after,
+button:before {
+	-ms-interpolation-mode: nearest-neighbor; /*// IE 7+ (non-standard property)*/
+	image-rendering: -webkit-optimize-contrast; /*// Safari 6, UC Browser 9.9*/
+	image-rendering: -webkit-crisp-edges; /*// Safari 7+*/
+	image-rendering: -moz-crisp-edges; /*// Firefox 3.6+*/
+	image-rendering: -o-crisp-edges; /*// Opera 12*/
+	image-rendering: pixelated; /*// Chrome 41+ and Opera 26+*/
 }
 
 button,
@@ -524,9 +527,17 @@ body:before {
 	background-color: #91a1c8;
 }
 
-#main.touch #tooltip_delete,
-#main.touch #tooltip_close {
+#main.touch #tooltip_text button {
 	display: inline-block;
+}
+
+#tooltip #tooltip_close {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	padding: 4px 5px 0 0;
+	border-right: 0;
+	border-top: 0;
 }
 
 #refund:active,
@@ -1232,8 +1243,7 @@ body:before {
 	flex-grow: 1;
 }
 
-#tooltip_delete,
-#tooltip_close {
+#tooltip_text button {
 	display: none;
 }
 
@@ -1411,6 +1421,11 @@ body:before {
 }
 
 @media all and (max-width: 938px) {
+	#wrapper {
+		display: block;
+		height: auto;
+	}
+
 	#main {
 		display: block;
 		padding-top: 52px;
@@ -1442,6 +1457,13 @@ body:before {
 		margin-right: 0;
 	}
 
+	/* Parts */
+
+	#parts {
+		overflow-y: auto;
+		max-height: 82px;
+	}
+
 	#parts_nav,
 	#top,
 	#bottom {
@@ -1459,12 +1481,12 @@ body:before {
 	#parts #power > menu,
 	#parts #cooling > menu {
 		margin-right: 8px;
-		float: left;
+		display: table-cell;
+		vertical-align: bottom;
+		float: none;
 	}
 
 	#main #parts #cells {
-		max-height: 192px;
-		display: block;
 		max-width: 216px;
 	}
 
@@ -1481,7 +1503,8 @@ body:before {
 	}
 
 	#cells button {
-		float: left;
+		display: inline-block;
+		vertical-align: top;
 	}
 
 	#parts #cells .part {
@@ -1498,6 +1521,11 @@ body:before {
 
 	#main.touch.touch #tooltip_nav {
 		height: auto;
+		padding: 0;
+	}
+
+	#main.touch.touch #nav {
+		padding: 8px;
 	}
 
 	#main.touch.tooltip_showing #nav {
@@ -1516,6 +1544,7 @@ body:before {
 		background-color: #485667;
 		background-clip: padding-box;
 		height: auto;
+		padding: 2px;
 	}
 
 	#main.part_active.touch.tooltip_showing #tooltip {
@@ -1553,6 +1582,15 @@ body:before {
 		top: 0;
 		right: 0;
 		display: block;
+	}
+
+	#more_nav button {
+		border-top: 0;
+		border-right: 0;
+		vertical-align: top;
+		padding: 3px 4px 0 0;
+		font-family: monospace;
+		margin: 0;
 	}
 
 	#main.touch.nav_more #nav_more,
@@ -1623,7 +1661,7 @@ body:before {
 	#currency,
 	#heat {
 		max-width: none;
-		width: 30%;
+		width: 29.5%;
 	}
 
 	#power_section,
@@ -1640,7 +1678,15 @@ body:before {
 		display: block;
 		position: absolute;
 		right: 0;
-		top: -4px;
+		top: 0;
+	}
+
+	#more_stats button {
+		border-top: 0;
+		border-right: 0;
+		vertical-align: top;
+		padding: 3px 4px 0 0;
+		font-family: monospace;
 	}
 
 	/* Hide more stats */

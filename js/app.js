@@ -20,8 +20,11 @@ browser testing
 hide various stats on un-enabled parts' tooltips
 disable heat controller button
 Add "sell all of type" button
+Add "purchase" to tooltip for upgrades?
+when placed, change tooltip/focus to tile
 
 Maybe before:
+Hotkeys for place part, delete/sell all, close tooltip, focus navs, pages, pause, etc
 multiple reactors
 make stats unlockable
 header buttons
@@ -34,6 +37,7 @@ modal messages
 Bundling cells to 9+
 towns with different power needs and compensation
 Options page - exponential formatting
+save over multiple devices
 
 After:
 shift + right click on spent cells also gets rid of unspent cells
@@ -173,6 +177,7 @@ var base_manual_heat_reduce = 1;
 var upgrade_max_level = 32;
 var base_max_heat = 1000;
 var base_max_power = 100;
+var base_money = 10;
 
 // Current
 var current_heat;
@@ -207,7 +212,7 @@ var total_exotic_particles = 0;
 var set_defaults = function() {
 	current_heat = 0;
 	current_power = 0;
-	current_money = 10;
+	current_money = base_money;
 	cols = base_cols;
 	rows = base_rows;
 	max_heat = base_max_heat;
@@ -416,6 +421,8 @@ var tile_power_mult;
 var tile_heat_mult;
 var pack_multipliers = [1, 4, 12];
 
+var part_count;
+
 var update_tiles = function() {
 	heat_outlet_countainments_count = 0;
 	transfer_multiplier = 0;
@@ -428,6 +435,8 @@ var update_tiles = function() {
 	stat_vent = 0;
 	stat_inlet = 0;
 	stat_outlet = 0;
+
+	part_count = 0;
 
 	for ( ri = 0; ri < max_rows; ri++ ) {
 		row = tiles[ri];
@@ -454,6 +463,8 @@ var update_tiles = function() {
 
 			// collect stats
 			if ( tile_part && tile.activated ) {
+				part_count++;
+
 				if ( tile_part.vent ) {
 					stat_vent += tile_part.vent;
 				}
@@ -668,6 +679,11 @@ var update_tiles = function() {
 		}
 	}
 
+	if ( part_count === 0 && current_power + current_money < base_money ) {
+		current_money = base_money - current_power;
+		$money.innerHTML = fmt(current_money);
+	}
+
 	$stats_heat.innerHTML = fmt(total_heat, 2);
 	$stats_power.innerHTML = fmt(total_power, 2);
 	$stats_cash.innerHTML = fmt(Math.ceil(total_power * auto_sell_multiplier), 2);
@@ -731,6 +747,9 @@ var $tooltip_ticks_wrapper = $('#tooltip_ticks_wrapper');
 var $tooltip_ticks = $('#tooltip_ticks');
 var $tooltip_max_ticks = $('#tooltip_max_ticks');
 var $tooltip_delete = $('#tooltip_delete');
+var $tooltip_delete_all = $('#tooltip_delete_all');
+var $tooltip_replace_all = $('#tooltip_replace_all');
+var $tooltip_upgrade_all = $('#tooltip_upgrade_all');
 var $tooltip_close = $('#tooltip_close');
 
 var $tooltip_chance_wrapper = $('#tooltip_chance_wrapper');
@@ -860,8 +879,10 @@ if ( !is_ios ) {
 	$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
 }
 
-$reactor.delegate('tile', 'focus', tile_tooltip_show);
-$reactor.delegate('tile', 'blur', tile_tooltip_hide);
+if ( !is_touch ) {
+	$reactor.delegate('tile', 'focus', tile_tooltip_show);
+	$reactor.delegate('tile', 'blur', tile_tooltip_hide);
+}
 
   /////////////////////////////
  // Show Pages
@@ -1394,6 +1415,9 @@ Part.prototype.showTooltip = function(tile) {
 		this.updateDescription(tile);
 		$tooltip_cost.style.display = 'none';
 		$tooltip_delete.style.display = null;
+		$tooltip_delete_all.style.display = null;
+		$tooltip_replace_all.style.display = null;
+		$tooltip_upgrade_all.style.display = 'none';
 
 		if ( tile.activated && tile.part.containment ) {
 			$tooltip_heat_wrapper.style.display = null;
@@ -1428,9 +1452,11 @@ Part.prototype.showTooltip = function(tile) {
 		if ( tile.activated && tile.part.category === 'cell' ) {
 			$tooltip_sells_wrapper.style.display = 'none';
 			$tooltip_delete.innerHTML = 'Delete';
+			$tooltip_delete_all.innerHTML = 'Delete All';
 		} else {
 			$tooltip_sells_wrapper.style.display = null;
 			$tooltip_delete.innerHTML = 'Sell';
+			$tooltip_delete_all.innerHTML = 'Sell All';
 		}
 
 		if ( tile.activated && tile.part.category === 'particle_accelerator' ) {
@@ -1440,6 +1466,9 @@ Part.prototype.showTooltip = function(tile) {
 		}
 	} else {
 		$tooltip_delete.style.display = 'none';
+		$tooltip_delete_all.style.display = null;
+		$tooltip_replace_all.style.display = null;
+		$tooltip_upgrade_all.style.display = null;
 
 		this.updateDescription();
 		$tooltip_cost.style.display = null;
@@ -1676,8 +1705,10 @@ if ( !is_ios ) {
 	$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
 }
 
-$all_parts.delegate('part', 'focus', part_tooltip_show);
-$all_parts.delegate('part', 'blur', part_tooltip_hide);
+if ( !is_touch ) {
+	$all_parts.delegate('part', 'focus', part_tooltip_show);
+	$all_parts.delegate('part', 'blur', part_tooltip_hide);
+}
 
   /////////////////////////////
  // Reduce Heat Manually
@@ -2435,6 +2466,9 @@ Upgrade.prototype.showTooltip = function() {
 	$tooltip_power_per_wrapper.style.display = 'none';
 	$tooltip_heat_wrapper.style.display = 'none';
 	$tooltip_delete.style.display = 'none';
+	$tooltip_delete_all.style.display = 'none';
+	$tooltip_replace_all.style.display = 'none';
+	$tooltip_upgrade_all.style.display = 'none';
 
 	this.updateTooltip();
 };
@@ -2477,8 +2511,10 @@ if ( !is_ios ) {
 	$all_upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
 }
 
-$all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
-$all_upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
+if ( is_touch ) {
+	$all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
+	$all_upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
+}
 
 // More stuff I guess
 
@@ -2747,7 +2783,7 @@ var save = function(event) {
 };
 
 $save.onclick = save;
-$save.touchend = save;
+$save.ontouchend = save;
 
 // Select part
 var active_replace = /[\b\s]part_active\b/;
@@ -2863,13 +2899,126 @@ var remove_part = function(tile, skip_update, sell) {
 	tile_tooltip_hide();
 };
 
-var tooltip_delete = function() {
+// tooltip buttons
+// Delete
+var tooltip_delete = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
 	remove_part(tooltip_tile, false, true);
+	tooltip_close();
 };
 
 $tooltip_delete.onclick = tooltip_delete;
 $tooltip_delete.ontouchend = tooltip_delete;
 
+// Delete all
+var tooltip_delete_all = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
+	var type;
+	var level;
+
+	if ( tooltip_tile ) {
+		type = tooltip_tile.part.part.type;
+		level = tooltip_tile.part.part.level;
+	} else if ( tooltip_part ) {
+		type = tooltip_part.part.type;
+		level = tooltip_part.part.level;
+	}
+
+	for ( var ri = 0; ri < rows; ri++ ) {
+		var row = tiles[ri];
+
+		for ( var ci = 0; ci < cols; ci++ ) {
+			var tile = row[ci];
+
+			if ( tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
+				remove_part(tile, false, true);
+			}
+		}
+	}
+
+	tooltip_close();
+};
+
+$tooltip_delete_all.onclick = tooltip_delete_all;
+$tooltip_delete_all.ontouchend = tooltip_delete_all;
+
+// Replace all
+var tooltip_replace_all = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
+	var type;
+	var level;
+
+	if ( tooltip_tile ) {
+		type = tooltip_tile.part.part.type;
+		level = tooltip_tile.part.part.level;
+	} else if ( tooltip_part ) {
+		type = tooltip_part.part.type;
+		level = tooltip_part.part.level;
+	}
+
+	for ( var ri = 0; ri < rows; ri++ ) {
+		var row = tiles[ri];
+
+		for ( var ci = 0; ci < cols; ci++ ) {
+			var tile = row[ci];
+
+			if ( tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
+				mouse_apply_to_tile.call(tile.$el, event);
+			}
+		}
+	}
+
+	tooltip_close();
+};
+
+$tooltip_replace_all.onclick = tooltip_replace_all;
+$tooltip_replace_all.ontouchend = tooltip_replace_all;
+
+// Upgrade all
+var tooltip_upgrade_all = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
+	var type;
+	var level;
+
+	if ( tooltip_tile ) {
+		type = tooltip_tile.part.part.type;
+		level = tooltip_tile.part.part.level;
+	} else if ( tooltip_part ) {
+		type = tooltip_part.part.type;
+		level = tooltip_part.part.level;
+	}
+
+	for ( var ri = 0; ri < rows; ri++ ) {
+		var row = tiles[ri];
+
+		for ( var ci = 0; ci < cols; ci++ ) {
+			var tile = row[ci];
+
+			if ( tile.part && type === tile.part.part.type && level > tile.part.part.level ) {
+				mouse_apply_to_tile.call(tile.$el, event);
+			}
+		}
+	}
+
+	tooltip_close();
+};
+
+$tooltip_upgrade_all.onclick = tooltip_upgrade_all;
+$tooltip_upgrade_all.ontouchend = tooltip_upgrade_all;
+
+// TODO: Move this
 var tooltip_close = function() {
 	if ( tooltip_tile ) {
 		tile_tooltip_hide();
@@ -3133,17 +3282,23 @@ $reactor.delegate('tile', 'click', function(e) {
 	}
 });
 
+var double_click_tile = null;
+var clear_double_click = function() {
+	double_click_tile = null;
+};
+
 $reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown = true;
 	tile_mousedown_right = e.which === 3;
 	//e.preventDefault();
 
-	if ( e.shiftKey ) {
+	if ( e.shiftKey || double_click_tile === this.tile ) {
 		if ( this.tile.part ) {
 			var ri, ci, row, tile;
 			var level = this.tile.part.part.level;
 			var type = this.tile.part.part.type;
 			var active = this.tile.part.active;
+
 			// All matching tiles
 			for ( ri = 0; ri < rows; ri++ ) {
 				row = tiles[ri];
@@ -3158,8 +3313,8 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 						&& tile.part
 						&& type === tile.part.part.type
 						&& level === tile.part.part.level
- 						&& ( !tile.part.part.base_ticks || this.tile.ticks || (!tile.ticks && !this.tile.ticks) )
- 					) {
+						&& ( !tile.part.part.base_ticks || this.tile.ticks || (!tile.ticks && !this.tile.ticks) )
+					) {
 						mouse_apply_to_tile.call(tile.$el, e);
 					}
 				}
@@ -3170,6 +3325,9 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	} else {
 		mouse_apply_to_tile.call(this, e);
 	}
+
+	double_click_tile = this.tile;
+	setTimeout(clear_double_click, 300);
 });
 
 $reactor.onmouseup = tile_mouseup_fn;
