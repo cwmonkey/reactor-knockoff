@@ -89,6 +89,10 @@ h6 {
 	font-size: 18px;
 }
 
+menu {
+	margin: 0;
+}
+
 #wrapper {
 	display: table-cell;
 	height: 100%;
@@ -533,9 +537,9 @@ body:before {
 
 #tooltip #tooltip_close {
 	position: absolute;
-	top: 2px;
-	right: 2px;
-	padding: 4px 5px 0 0;
+	top: 10px;
+	right: 6px;
+	padding: 8px 9px 4px 4px;
 	border-right: 0;
 	border-top: 0;
 }
@@ -1515,16 +1519,20 @@ body:before {
 		display: block;
 	}*/
 
-	#main.part_active #primary {
+	#main #primary {
 		padding-left: 46px;
 	}
 
-	#main.touch.touch #tooltip_nav {
-		height: auto;
-		padding: 0;
+	#main #nav {
+		position: static;
 	}
 
-	#main.touch.touch #nav {
+	#main.touch #tooltip_nav {
+		height: auto;
+		/*padding: 0;*/
+	}
+
+	/*#main.touch.touch #nav {
 		padding: 8px;
 	}
 
@@ -1549,6 +1557,24 @@ body:before {
 
 	#main.part_active.touch.tooltip_showing #tooltip {
 		left: 46px;
+	}*/
+
+	#tooltip_info {
+		text-align: left;
+		padding: 0 20px 0 2px;
+		margin-bottom: .5em;
+	}
+
+	#tooltip_name {
+		display: inline;
+	}
+
+	#tooltip_name:after {
+		content: " - ";
+	}
+
+	#tooltip_description {
+		display: inline;
 	}
 
 	#main.touch #controls_nav,
@@ -1574,7 +1600,8 @@ body:before {
 	#main.touch #tooltip_nav {
 		border: 2px solid #eee;
 		border-image: url("../img/medium_panel.png") 2 2 stretch;
-		padding: 10px 6px 2px 12px;
+		padding: 10px 6px 6px 12px;
+		position: relative;
 	}
 
 	#main.touch #more_nav {
@@ -1588,7 +1615,7 @@ body:before {
 		border-top: 0;
 		border-right: 0;
 		vertical-align: top;
-		padding: 3px 4px 0 0;
+		padding: 8px 4px 4px 0;
 		font-family: monospace;
 		margin: 0;
 	}
@@ -1685,7 +1712,7 @@ body:before {
 		border-top: 0;
 		border-right: 0;
 		vertical-align: top;
-		padding: 3px 4px 0 0;
+		padding: 8px 4px 4px 0;
 		font-family: monospace;
 	}
 

@@ -237,8 +237,29 @@ set_defaults();
 
 // Mark ios since it's an idiot with mouseover events
 
-
 var is_ios = navigator.userAgent.match(/(iPod|iPhone|iPad)/) ? true : false;
+
+  /////////////////////////////
+ // Online Saves
+/////////////////////////////
+
+/* window.signinCallback = function(a) {
+
+};
+
+// Sign in button
+var $enable_online_save = $('#enable_online_save');
+
+var enable_online_save = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
+
+};
+
+$enable_online_save.onclick = enable_online_save;
+$enable_online_save.ontouchend = enable_online_save;*/
 
   /////////////////////////////
  // Reboot
@@ -2795,6 +2816,10 @@ $all_parts.delegate('part', 'click', function(e) {
 		this.className = this.className.replace(active_replace, '');
 		$main.className = $main.className.replace(active_replace, '');
 		part_tooltip_hide();
+
+		if ( is_touch ) {
+			document.body.scrollTop = 0;
+		}
 	} else {
 		part_tooltip_show.apply(this, e);
 
@@ -3274,11 +3299,31 @@ document.oncontextmenu = function(e) {
 	}
 };
 
+var is_scrolling = false;
+var scrolling_timeout;
+window.onscroll = function() {
+	clearTimeout(scrolling_timeout);
+	is_scrolling = true;
+
+	scrolling_timeout = setTimeout(function() {
+		is_scrolling = false;
+	}, 100);
+};
+
 $reactor.delegate('tile', 'click', function(e) {
-	tile_tooltip_show.apply(this, e);
+	if ( is_scrolling === true ) {
+		clearTimeout(scrolling_timeout);
+		is_scrolling = false;
+		return;
+	}
+
 
 	if ( !tile_mousedown ) {
 		mouse_apply_to_tile.call(this, e);
+	}
+
+	if ( !tooltip_part || tooltip_showing === true ) {
+		tile_tooltip_show.apply(this, e);
 	}
 });
 

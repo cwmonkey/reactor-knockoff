@@ -112,7 +112,7 @@
 					<menu id="nav">
 						<menu id="game_nav">
 							<button id="save">Save</button>
-							<!-- button id="options" class="nav" data-section="reactor_upgrades" data-page="options_section">Options</button -->
+							<button id="options" class="nav" data-section="reactor_upgrades" data-page="options_section">Options</button>
 							<button id="show_help" class="nav" data-section="reactor_upgrades" data-page="help_section">Help</button>
 							<button id="show_about" class="nav" data-section="reactor_upgrades" data-page="about_section">About</button>
 						</menu>
@@ -162,13 +162,18 @@
 							</p>
 						</div>
 						<div id="tooltip_text" class="subpanel">
-							<h2 class="headline" id="tooltip_name" title="Name"></h2>
-							<p id="tooltip_description" title="Description" class="explanitory"></p>
-							<button id="tooltip_delete">Delete</button>
-							<button id="tooltip_delete_all">Delete All</button>
-							<button id="tooltip_replace_all">Replace All</button>
-							<button id="tooltip_upgrade_all">Upgrade All</button>
-							<button id="tooltip_close">&#10006;</button>
+							<div id="tooltip_info">
+								<h2 class="headline" id="tooltip_name" title="Name"></h2>
+								<p id="tooltip_description" title="Description" class="explanitory"></p>
+							</div>
+
+							<div id="tooltip_controls">
+								<button id="tooltip_delete">Delete</button>
+								<button id="tooltip_delete_all">Delete All</button>
+								<button id="tooltip_replace_all">Replace All</button>
+								<button id="tooltip_upgrade_all">Upgrade All</button>
+								<button id="tooltip_close">&times;</button>
+							</div>
 						</div>
 					</section>
 				</div>
@@ -204,6 +209,14 @@
 							<p>Lots of money = particle accelerators</p>
 							<p>Particle accelerators = exotic particles (EP)</p>
 							<p>EP = more upgrades and new toys for more power, heat and money!</p>
+						</div>
+					</section>
+
+					<!-- Options -->
+					<section id="options_section" class="page">
+						<h2 class="heading">Options</h2>
+						<div id="options" class="subpanel explanitory">
+							<!-- p><button id="enable_online_save">Enable Online Save</button></p -->
 						</div>
 					</section>
 
