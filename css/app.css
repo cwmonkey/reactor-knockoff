@@ -17,6 +17,7 @@ body {
 	color: #fff;
 	height: 100%;
 	display: table;
+	margin: auto;
 	-webkit-text-size-adjust: none;
 }
 
@@ -96,6 +97,7 @@ menu {
 #wrapper {
 	display: table-cell;
 	height: 100%;
+	width: 100%;
 	vertical-align: middle;
 }
 
@@ -107,7 +109,6 @@ menu {
 
 #secondary {
 	width: 261px;
-	flex-grow: 1;
 	display: flex;
 	flex-direction: column;
 }
@@ -480,8 +481,7 @@ menu {
 	height: 100%;
 }
 
-#reboot,
-#refund,
+#reactor_upgrades .explanitory button,
 #tooltip button,
 #nav button {
 	border: 2px solid #888;
@@ -517,10 +517,8 @@ body:before {
 	visibility: hidden;
 }
 
-#refund:hover,
-#refund:focus,
-#reboot:hover,
-#reboot:focus,
+#reactor_upgrades .explanitory button:hover,
+#reactor_upgrades .explanitory button:focus,
 #stats_section button:hover,
 #stats_section button:focus,
 #tooltip button:hover,
@@ -544,8 +542,7 @@ body:before {
 	border-top: 0;
 }
 
-#refund:active,
-#reboot:active,
+#reactor_upgrades .explanitory button:active,
 #stats_section button:active,
 #tooltip button:active,
 #nav button:active {
@@ -626,13 +623,12 @@ body:before {
 
 #reboot_section,
 #refund_section {
-	width: 80%;
+	max-width: 37em;
 	margin: 2em auto 0;
 	text-align: center;
 }
 
-#reboot,
-#refund {
+#reactor_upgrades .explanitory button {
 	margin-bottom: 1em;
 }
 
@@ -1287,6 +1283,10 @@ body:before {
 	display: none;
 }
 
+#tooltip_controls {
+	display: none;
+}
+
   /* //////////////////////////
  // Debug
 ////////////////////////// */
@@ -1531,6 +1531,11 @@ body:before {
 		height: auto;
 		/*padding: 0;*/
 	}
+
+	#main.touch #tooltip_controls {
+		display: block;
+	}
+
 
 	/*#main.touch.touch #nav {
 		padding: 8px;

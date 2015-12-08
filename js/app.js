@@ -243,23 +243,302 @@ var is_ios = navigator.userAgent.match(/(iPod|iPhone|iPad)/) ? true : false;
  // Online Saves
 /////////////////////////////
 
-/* window.signinCallback = function(a) {
+var $enable_google_drive_save = $('#enable_google_drive_save');
+var $enable_local_save = $('#enable_local_save');
+
+var LocalSaver = function() {
+	this.save = function(data, callback) {
+		window.localStorage.setItem('rks', data);
+
+		if ( callback ) {
+			callback();
+		}
+	}
+
+	this.enable = function() {
+		// Nothing
+	}
+
+	this.load = function(callback) {
+		var rks = window.localStorage.getItem('rks');
+		callback(rks);
+	}
+};
+
+var local_saver = new LocalSaver();
+
+var google_loaded = false;
+
+window.set_google_loaded = function() {
+	google_loaded = true;
+
+	if ( google_saver.authChecked === false ) {
+		google_saver.checkAuth();
+	}
+};
+
+var GoogleSaver = function() {
+	var CLIENT_ID = '572695445092-e8j1ueahak5bidennfsesndrtrd5hfhi.apps.googleusercontent.com';
+	var SCOPES = ['https://www.googleapis.com/auth/drive.appfolder'];
+	var src = 'https://apis.google.com/js/client.js?onload=set_google_loaded';
+	var filename = 'save.txt'
+	var file_id = null;
+	var file_meta = null;
+	var tried_load = false;
+	var load_callback = null;
+	var self = this;
+
+	this.authChecked = false;
+
+	this.enable = function() {
+		if ( google_loaded ) return;
+
+		var el = document.createElement('script');
+		el.setAttribute('type', 'text/javascript');
+		el.setAttribute('src', src);
+
+		document.getElementsByTagName('head')[0].appendChild(el);
+	};
+
+	this.save = function(data, callback) {
+		if ( google_loaded === true && this.authChecked === true && file_id !== null ) {
+			update_file(data, callback);
+		}
+
+		local_saver.save(data);
+	};
+
+	this.load = function(callback) {
+		if ( file_meta !== null ) {
+			download_file(file_meta, callback);
+		} else {
+			tried_load = true;
+			load_callback = callback;
+		}
+	};
+
+	/**
+	 * Check if the current user has authorized the application.
+	 */
+	this.checkAuth = function() {
+		gapi.auth.authorize(
+			{
+				'client_id': CLIENT_ID,
+				'scope': SCOPES,
+				'immediate': true
+			},
+			function(authResult) {
+				google_loaded = true;
+
+				if ( authResult && !authResult.error ) {
+					self.authChecked = true;
+					// Access token has been successfully retrieved, requests can be sent to the API.
+					localStorage.setItem('google_drive_save', 1);
+
+					gapi.client.load('drive', 'v2', function() {
+						get_file();
+					});
+				} else {
+					// No access token could be retrieved
+					local_saver.enable();
+					save_game = local_saver;
+					localStorage.removeItem('google_drive_save');
+					enable_local_save();
+				}
+			}
+		);
+	};
+
+	var update_file = function(data, callback) { 
+		const boundary = '-------314159265358979323846';
+		const delimiter = "\r\n--" + boundary + "\r\n";
+		const close_delim = "\r\n--" + boundary + "--";
+
+		var contentType = 'text/plain';
+		var base64Data = btoa(data);
+		var multipartRequestBody =
+			delimiter +
+			'Content-Type: application/json\r\n\r\n' +
+			JSON.stringify(file_meta) +
+			delimiter +
+			'Content-Type: ' + contentType + '\r\n' +
+			'Content-Transfer-Encoding: base64\r\n' +
+			'\r\n' +
+			base64Data +
+			close_delim;
+
+		var request = gapi.client.request({
+			'path': '/upload/drive/v2/files/' + file_id,
+			'method': 'PUT',
+			'params': {
+				uploadType: 'multipart',
+				alt: 'json'
+			},
+			'headers': {
+				'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+			},
+			'body': multipartRequestBody
+		});
+
+		request.execute(callback);
+	}
+
+	var get_file = function() {
+		/**
+		 * List all files contained in the Application Data folder.
+		 *
+		 * @param {Function} callback Function to call when the request is complete.
+		 */
+		function listFilesInApplicationDataFolder(callback) {
+			var retrievePageOfFiles = function(request, result) {
+				request.execute(function(resp) {
+					result = result.concat(resp.items);
+					var nextPageToken = resp.nextPageToken;
+					if (nextPageToken) {
+						request = gapi.client.drive.files.list({
+							'pageToken': nextPageToken
+						});
+						retrievePageOfFiles(request, result);
+					} else {
+						callback(result);
+					}
+				});
+			}
+			var initialRequest = gapi.client.drive.files.list({
+				'q': '\'appfolder\' in parents'
+			});
+			retrievePageOfFiles(initialRequest, []);
+		}
+
+		listFilesInApplicationDataFolder(function(result) {
+			for ( var i = 0, l = result.length; i < l; i++ ) {
+				var file = result[i];
+
+				// Found save file
+				if ( file.title === filename ) {
+					file_id = file.id;
+					file_meta = file;
+
+					if ( tried_load ) {
+						self.load(load_callback);
+					}
+					return;
+				}
+			}
+
+			// No save file found, make a new one
+			new_save_file();
+		});
+	};
+
+	var new_save_file = function() {
+		const boundary = '-------314159265358979323846264';
+		const delimiter = "\r\n--" + boundary + "\r\n";
+		const close_delim = "\r\n--" + boundary + "--";
+
+		var contentType = 'text/plain';
+		var metadata = {
+			'title': filename,
+			'mimeType': contentType,
+			'parents': [{'id': 'appfolder'}]
+		};
+		var base64Data = btoa(btoa(JSON.stringify({})));
+		var multipartRequestBody =
+			delimiter +
+			'Content-Type: application/json\r\n\r\n' +
+			JSON.stringify(metadata) +
+			delimiter +
+			'Content-Type: ' + contentType + '\r\n' +
+			'Content-Transfer-Encoding: base64\r\n' +
+			'\r\n' +
+			base64Data +
+			close_delim;
+		var request = gapi.client.request({
+			'path': '/upload/drive/v2/files',
+			'method': 'POST',
+			'params': {
+				uploadType: 'multipart'
+			},
+			'headers': {
+				'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+			},
+			'body': multipartRequestBody
+		});
+
+		request.execute(function(arg) {
+			file_id = arg.id;
+			file_meta = arg;
+		});
+	};
+
+	/**
+	 * Download a file's content.
+	 *
+	 * @param {File} file Drive File instance.
+	 * @param {Function} callback Function to call when the request is complete.
+	 */
+	var download_file = function(file, callback) {
+		if ( file.downloadUrl ) {
+			var accessToken = gapi.auth.getToken().access_token;
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', file.downloadUrl);
+			xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+			xhr.onload = function() {
+				callback(xhr.responseText);
+			};
+			xhr.onerror = function() {
+				callback(null);
+			};
+			xhr.send();
+		} else {
+			callback(null);
+		}
+	}
 
 };
 
-// Sign in button
-var $enable_online_save = $('#enable_online_save');
+var google_saver = new GoogleSaver();
 
-var enable_online_save = function(event) {
+var save_game = local_saver;
+
+if ( localStorage.getItem('google_drive_save') ) {
+	save_game = google_saver;
+	$enable_google_drive_save.style.display = 'none';
+} else {
+	$enable_local_save.style.display = 'none';
+}
+
+save_game.enable();
+
+// Local
+var enable_local_save = function(event) {
 	if ( event ) {
 		event.preventDefault();
 	}
 
-
+	save_game = local_saver;
+	$enable_local_save.style.display = 'none';
+	$enable_google_drive_save.style.display = null;
+	save_game.enable();
 };
 
-$enable_online_save.onclick = enable_online_save;
-$enable_online_save.ontouchend = enable_online_save;*/
+$enable_local_save.onclick = enable_local_save;
+$enable_local_save.ontouchend = enable_local_save;
+
+// Google Drive
+var enable_google_drive_save = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
+	save_game = google_saver;
+	$enable_google_drive_save.style.display = 'none';
+	$enable_local_save.style.display = null;
+	save_game.enable();
+};
+
+$enable_google_drive_save.onclick = enable_google_drive_save;
+$enable_google_drive_save.ontouchend = enable_google_drive_save;
 
   /////////////////////////////
  // Reboot
@@ -2786,21 +3065,26 @@ var save = function(event) {
 		});
 	}
 
-	window.localStorage.setItem('rks', window.btoa(JSON.stringify({
-		tiles: srows,
-		tile_queue: squeue,
-		upgrades: supgrades,
-		current_power: current_power,
-		current_money: current_money,
-		current_heat: current_heat,
-		exotic_particles: exotic_particles,
-		current_exotic_particles: current_exotic_particles,
-		total_exotic_particles: total_exotic_particles,
-		paused: paused,
-		auto_sell_disabled: auto_sell_disabled,
-		auto_buy_disabled: auto_buy_disabled,
-		protium_particles: protium_particles
-	})));
+	save_game.save(
+		window.btoa(JSON.stringify({
+			tiles: srows,
+			tile_queue: squeue,
+			upgrades: supgrades,
+			current_power: current_power,
+			current_money: current_money,
+			current_heat: current_heat,
+			exotic_particles: exotic_particles,
+			current_exotic_particles: current_exotic_particles,
+			total_exotic_particles: total_exotic_particles,
+			paused: paused,
+			auto_sell_disabled: auto_sell_disabled,
+			auto_buy_disabled: auto_buy_disabled,
+			protium_particles: protium_particles
+		})),
+		function() {
+			alert('saved');
+		}
+	);
 };
 
 $save.onclick = save;
@@ -3166,123 +3450,6 @@ $disable_auto_buy.ontouchend = disable_auto_buy;
 
 $enable_auto_buy.onclick = enable_auto_buy;
 $enable_auto_buy.ontouchend = enable_auto_buy;
-
-  /////////////////////////////
- // Load
-/////////////////////////////
-
-var $heat_percentage = $('#heat_percentage');
-var $power_percentage = $('#power_percentage');
-
-var update_heat_and_power = function() {
-	$current_heat.innerHTML = fmt(current_heat);
-
-	if ( current_heat < max_heat ) {
-		$heat_percentage.style.width = current_heat / max_heat * 100 + '%';
-	} else {
-		$heat_percentage.style.width = '100%';
-	}
-
-	$current_power.innerHTML = fmt(current_power);
-	$power_percentage.style.width = current_power / max_power * 100 + '%';
-
-	if ( current_heat <= max_heat ) {
-		$reactor.style.backgroundColor = 'transparent';
-	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
-		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
-	} else {
-		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
-	}
-};
-
-var update_nodes = function() {
-	$current_heat.innerHTML = fmt(current_heat);
-	$current_power.innerHTML = fmt(current_power);
-	$money.innerHTML = fmt(current_money);
-	$exotic_particles.innerHTML = fmt(exotic_particles);
-	$current_exotic_particles.innerHTML = fmt(current_exotic_particles);
-	$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
-};
-
-var stile;
-var supgrade;
-var rks = window.localStorage.getItem('rks');
-var srow;
-var supgrade_object;
-if ( rks ) {
-	rks = JSON.parse(window.atob(rks));
-
-	// Current values
-	current_heat = rks.current_heat || current_heat;
-	current_power = rks.current_power || current_power;
-	current_money = rks.current_money || current_money;
-	exotic_particles = rks.exotic_particles || exotic_particles;
-	current_exotic_particles = rks.current_exotic_particles || current_exotic_particles;
-	total_exotic_particles = rks.total_exotic_particles || total_exotic_particles;
-
-	max_heat = rks.max_heat || max_heat;
-	manual_heat_reduce = rks.manual_heat_reduce || manual_heat_reduce;
-	paused = rks.paused || paused;
-	auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
-	auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
-	protium_particles = rks.protium_particles || protium_particles;
-
-	if ( paused ) {
-		pause();
-	}
-
-	if ( auto_sell_disabled ) {
-		disable_auto_sell();
-	}
-
-	if ( auto_buy_disabled ) {
-		disable_auto_buy();
-	}
-
-	set_manual_heat_reduce();
-	set_auto_heat_reduce();
-
-	// Tiles
-	for ( ri = 0; ri < max_rows; ri++ ) {
-		row = tiles[ri];
-		srow = rks.tiles[ri];
-
-		if ( srow ) {
-			for ( ci = 0; ci < max_cols; ci++ ) {
-				stile = srow[ci];
-
-				if ( stile ) {
-					tile = row[ci];
-					tile.ticks = stile.ticks;
-					tile.activated = stile.activated;
-					tile.heat_contained = stile.heat_contained;
-					part = part_objects[stile.id];
-					apply_to_tile(tile, part, true);
-				}
-			}
-		}
-	}
-
-	// Tile queue
-	for ( i = 0, l = rks.tile_queue.length; i < l; i++ ) {
-		stile = rks.tile_queue[i];
-		tile_queue.push(tiles[stile.row][stile.col]);
-	}
-
-	// Upgrades
-	for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
-		supgrade = rks.upgrades[i];
-		supgrade_object = upgrade_objects[supgrade.id];
-
-		if ( supgrade_object ) {
-			upgrade_objects[supgrade.id].setLevel(supgrade.level);
-		}
-	}
-
-	update_nodes();
-	update_tiles();
-	update_heat_and_power();
-}
 
   /////////////////////////////
  // Tile clicks
@@ -3988,14 +4155,141 @@ var check_affordability = function() {
 	}
 };
 
-update_cell_power();
-check_affordability();
-update_tiles();
+  /////////////////////////////
+ // Load
+/////////////////////////////
 
-if ( !paused ) {
-	loop_timeout = setTimeout(game_loop, loop_wait);
-}
+var $heat_percentage = $('#heat_percentage');
+var $power_percentage = $('#power_percentage');
 
-setInterval(check_affordability, 1000);
+var update_heat_and_power = function() {
+	$current_heat.innerHTML = fmt(current_heat);
+
+	if ( current_heat < max_heat ) {
+		$heat_percentage.style.width = current_heat / max_heat * 100 + '%';
+	} else {
+		$heat_percentage.style.width = '100%';
+	}
+
+	$current_power.innerHTML = fmt(current_power);
+	$power_percentage.style.width = current_power / max_power * 100 + '%';
+
+	if ( current_heat <= max_heat ) {
+		$reactor.style.backgroundColor = 'transparent';
+	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
+		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
+	} else {
+		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
+	}
+};
+
+var update_nodes = function() {
+	$current_heat.innerHTML = fmt(current_heat);
+	$current_power.innerHTML = fmt(current_power);
+	$money.innerHTML = fmt(current_money);
+	$exotic_particles.innerHTML = fmt(exotic_particles);
+	$current_exotic_particles.innerHTML = fmt(current_exotic_particles);
+	$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
+};
+
+var stile;
+var supgrade;
+var srow;
+var supgrade_object;
+
+save_game.load(function(rks) {
+	if ( rks ) {
+		rks = JSON.parse(window.atob(rks));
+
+		// Current values
+		current_heat = rks.current_heat || current_heat;
+		current_power = rks.current_power || current_power;
+		current_money = rks.current_money || 0;
+		exotic_particles = rks.exotic_particles || exotic_particles;
+		current_exotic_particles = rks.current_exotic_particles || current_exotic_particles;
+		total_exotic_particles = rks.total_exotic_particles || total_exotic_particles;
+
+		max_heat = rks.max_heat || max_heat;
+		manual_heat_reduce = rks.manual_heat_reduce || manual_heat_reduce;
+		paused = rks.paused || paused;
+		auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
+		auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
+		protium_particles = rks.protium_particles || protium_particles;
+
+		if ( paused ) {
+			pause();
+		}
+
+		if ( auto_sell_disabled ) {
+			disable_auto_sell();
+		}
+
+		if ( auto_buy_disabled ) {
+			disable_auto_buy();
+		}
+
+		set_manual_heat_reduce();
+		set_auto_heat_reduce();
+
+		// Tiles
+		if ( rks.tiles ) {
+			for ( ri = 0; ri < max_rows; ri++ ) {
+				row = tiles[ri];
+				srow = rks.tiles[ri];
+
+				if ( srow ) {
+					for ( ci = 0; ci < max_cols; ci++ ) {
+						stile = srow[ci];
+
+						if ( stile ) {
+							tile = row[ci];
+							tile.ticks = stile.ticks;
+							tile.activated = stile.activated;
+							tile.heat_contained = stile.heat_contained;
+							part = part_objects[stile.id];
+							apply_to_tile(tile, part, true);
+						}
+					}
+				}
+			}
+		}
+
+		// Tile queue
+		if ( rks.tile_queue ) {
+			for ( i = 0, l = rks.tile_queue.length; i < l; i++ ) {
+				stile = rks.tile_queue[i];
+				tile_queue.push(tiles[stile.row][stile.col]);
+			}
+		}
+
+		// Upgrades
+		if ( rks.upgrades ) {
+			for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
+				supgrade = rks.upgrades[i];
+				supgrade_object = upgrade_objects[supgrade.id];
+
+				if ( supgrade_object ) {
+					upgrade_objects[supgrade.id].setLevel(supgrade.level);
+				}
+			}
+		}
+
+		update_nodes();
+		update_tiles();
+		update_heat_and_power();
+	}
+
+	update_cell_power();
+	check_affordability();
+	update_nodes();
+	update_tiles();
+	update_heat_and_power();
+
+	if ( !paused ) {
+		loop_timeout = setTimeout(game_loop, loop_wait);
+	}
+
+	setInterval(check_affordability, 1000);
+});
 
 })();

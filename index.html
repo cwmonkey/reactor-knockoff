@@ -216,7 +216,8 @@
 					<section id="options_section" class="page">
 						<h2 class="heading">Options</h2>
 						<div id="options" class="subpanel explanitory">
-							<!-- p><button id="enable_online_save">Enable Online Save</button></p -->
+							<p><button id="enable_google_drive_save">Enable Google Drive Online Save</button></p>
+							<p><button id="enable_local_save">Enable Local Save Only</button></p>
 						</div>
 					</section>
 
@@ -275,16 +276,16 @@
 								<div id="experimental_parts"></div>
 							</div>
 
-							<div id="reboot_section">
+							<div id="reboot_section" class="explanitory">
 								<button id="reboot">Reboot for <span id="reboot_exotic_particles">0</span> Exotic Particles (EP)</button>
-								<p class="explanitory">
+								<p>
 									Rebooting the reactor will remove all parts, regular upgrades and money. Only your current experimental upgrades and EP will stay with you.
 								</p>
 							</div>
 
-							<div id="refund_section">
+							<div id="refund_section" class="explanitory">
 								<button id="refund">Reboot and refund <span id="refund_exotic_particles">0</span> Exotic Particles</button>
-								<p class="explanitory">
+								<p>
 									All of the above applies, however this will undo all your experiment upgrades and refund all your Exotic Particles.
 								</p>
 							</div>
@@ -296,5 +297,6 @@
 	</div>
 
 	<script src="js/app.js"></script>
+	<script src="https://apis.google.com/js/client.js?onload=checkAuth"></script>
 </body>
 </html>
