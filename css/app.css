@@ -252,10 +252,10 @@ menu {
 	overflow-y: hidden;
 }
 
-#top,
+/*#top,
 #bottom {
 	height: 30px;
-}
+}*/
 
 #parts_section .part .image,
 #all_upgrades .image,
@@ -519,8 +519,6 @@ body:before {
 
 #reactor_upgrades .explanitory button:hover,
 #reactor_upgrades .explanitory button:focus,
-#stats_section button:hover,
-#stats_section button:focus,
 #tooltip button:hover,
 #tooltip button:focus,
 #nav button:hover,
@@ -543,7 +541,6 @@ body:before {
 }
 
 #reactor_upgrades .explanitory button:active,
-#stats_section button:active,
 #tooltip button:active,
 #nav button:active {
 	border-image: url("../img/small_button_down.png") 8 8 stretch;
@@ -1373,7 +1370,7 @@ body:before {
 	border-image: url("../img/inner_border.png") 4 4 stretch;
 }
 
-#parts_nav_top,
+/*#parts_nav_top,
 #parts_nav_bottom {
 	position: absolute;
 	z-index: 1;
@@ -1399,10 +1396,9 @@ body:before {
 #parts_nav_top:active {
 	border-image: url("../img/inner_border_alt_down.png") 8 8 stretch;
 	background-color: #96a0bb;
-}
+}*/
 
-#stats_section button,
-#parts_nav_bottom {
+#stats_section button {
 	border: 8px solid #eee;
 	border-image: url("../img/inner_border_alt_flip.png") 8 8 stretch;
 	background-color: #76809b;
@@ -1411,15 +1407,12 @@ body:before {
 }
 
 #stats_section button:hover,
-#stats_section button:focus,
-#parts_nav_bottom:hover,
-#parts_nav_bottom:focus {
+#stats_section button:focus {
 	border-image: url("../img/inner_border_alt_flip_active.png") 8 8 stretch;
 	background-color: #96a0bb;
 }
 
-#stats_section button:active,
-#parts_nav_bottom:active {
+#stats_section button:active {
 	border-image: url("../img/inner_border_alt_flip_down.png") 8 8 stretch;
 	background-color: #96a0bb;
 }
@@ -1468,11 +1461,11 @@ body:before {
 		max-height: 82px;
 	}
 
-	#parts_nav,
+	/*#parts_nav,
 	#top,
 	#bottom {
 		display: none;
-	}
+	}*/
 
 	#parts #power {
 		float: left;

@@ -56,11 +56,6 @@ console.log
 ;(function() {
 'use strict';
 
-var is_touch = false;
-if ( 'ontouchstart' in window ) {
-	is_touch = true;
-}
-
   /////////////////////////////
  // Delegate
 /////////////////////////////
@@ -237,7 +232,14 @@ set_defaults();
 
 // Mark ios since it's an idiot with mouseover events
 
+var is_touch = false;
 var is_ios = navigator.userAgent.match(/(iPod|iPhone|iPad)/) ? true : false;
+
+document.body.ontouchstart = function() {
+	is_touch = true;
+	$main.className += ' touch';
+	document.body.ontouchstart = null;
+};
 
   /////////////////////////////
  // Online Saves
@@ -287,11 +289,20 @@ var GoogleSaver = function() {
 	var tried_load = false;
 	var load_callback = null;
 	var self = this;
+	var enable_callback;
 
 	this.authChecked = false;
 
-	this.enable = function() {
-		if ( google_loaded ) return;
+	this.enable = function(callback) {
+		enable_callback = callback;
+
+		if ( google_loaded ) {
+			if ( callback ) {
+				callback();
+			}
+
+			return;
+		}
 
 		var el = document.createElement('script');
 		el.setAttribute('type', 'text/javascript');
@@ -421,7 +432,10 @@ var GoogleSaver = function() {
 
 					if ( tried_load ) {
 						self.load(load_callback);
+					} else if ( enable_callback ) {
+						enable_callback();
 					}
+
 					return;
 				}
 			}
@@ -534,7 +548,10 @@ var enable_google_drive_save = function(event) {
 	save_game = google_saver;
 	$enable_google_drive_save.style.display = 'none';
 	$enable_local_save.style.display = null;
-	save_game.enable();
+
+	save_game.enable(function() {
+		document.location.reload();
+	});
 };
 
 $enable_google_drive_save.onclick = enable_google_drive_save;
@@ -1060,10 +1077,6 @@ if ( debug ) {
 	$main.className += ' debug';
 }
 
-if ( is_touch ) {
-	$main.className += ' touch';
-}
-
 $max_heat.innerHTML = fmt(max_heat);
 $max_power.innerHTML = fmt(max_power);
 
@@ -1243,6 +1256,7 @@ var parts = [
 		base_description: single_cell_description,
 		category: 'cell',
 		cell_count: 1,
+		pulse_multiplier: 1,
 		base_cost: 10,
 		base_ticks: 15,
 		base_power: 1,
@@ -1261,6 +1275,7 @@ var parts = [
 		base_description: multi_cell_description,
 		category: 'cell',
 		cell_count: 2,
+		pulse_multiplier: 1,
 		base_cost: 25,
 		base_ticks: 15,
 		base_power: 4,
@@ -1274,6 +1289,7 @@ var parts = [
 		base_description: multi_cell_description,
 		category: 'cell',
 		cell_count: 4,
+		pulse_multiplier: 1,
 		base_cost: 60,
 		base_ticks: 15,
 		base_power: 12,
@@ -2769,6 +2785,7 @@ Upgrade.prototype.showTooltip = function() {
 	$tooltip_delete_all.style.display = 'none';
 	$tooltip_replace_all.style.display = 'none';
 	$tooltip_upgrade_all.style.display = 'none';
+	$tooltip_chance_wrapper.style.display = 'none';
 
 	this.updateTooltip();
 };
@@ -2937,6 +2954,7 @@ for ( var i = 0, l = upgrade_objects_array.length; i < l; i++ ) {
 // Upgrade delegate event
 $all_upgrades.delegate('upgrade', 'click', function(event) {
 	var upgrade = this.upgrade;
+
 	if ( is_touch && !upgrade.clicked ) {
 		upgrade_tooltip_show.apply(this, event);
 		upgrade.clicked = true;
@@ -3502,7 +3520,6 @@ var clear_double_click = function() {
 $reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown = true;
 	tile_mousedown_right = e.which === 3;
-	//e.preventDefault();
 
 	if ( e.shiftKey || double_click_tile === this.tile ) {
 		if ( this.tile.part ) {
@@ -3510,6 +3527,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 			var level = this.tile.part.part.level;
 			var type = this.tile.part.part.type;
 			var active = this.tile.part.active;
+			var ticks = this.tile.ticks;
 
 			// All matching tiles
 			for ( ri = 0; ri < rows; ri++ ) {
@@ -3525,7 +3543,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 						&& tile.part
 						&& type === tile.part.part.type
 						&& level === tile.part.part.level
-						&& ( !tile.part.part.base_ticks || this.tile.ticks || (!tile.ticks && !this.tile.ticks) )
+						&& ( !tile.part.part.base_ticks || ticks || (!tile.ticks && !this.tile.ticks) )
 					) {
 						mouse_apply_to_tile.call(tile.$el, e);
 					}
@@ -3624,6 +3642,7 @@ var game_loop = function() {
 	heat_add = 0;
 	heat_remove = 0;
 	meltdown = false;
+	do_update = false;
 
 	if ( heat_add_next_loop > 0 ) {
 		heat_add = heat_add_next_loop;
@@ -3682,7 +3701,7 @@ var game_loop = function() {
 
 								tile.$percent.style.width = '0';
 								tile.$el.className += ' spent';
-								update_tiles();
+								do_update = true;
 							}
 						} else {
 							tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
@@ -3979,12 +3998,11 @@ var game_loop = function() {
 			tile.activated = true;
 			tile.$el.className = tile.$el.className.replace(disabled_replace, '');
 			tile_queue.splice(0, 1);
-			update_tiles();
+			do_update = true;
 		}
 	}
 
 	// Apply heat to containment parts
-	do_update = false;
 	for ( ri = 0; ri < rows; ri++ ) {
 		row = tiles[ri];
 
@@ -4041,10 +4059,6 @@ var game_loop = function() {
 		}
 	}
 
-	if ( do_update ) {
-		update_tiles();
-	}
-
 	// Auto Sell
 	if ( !auto_sell_disabled ) {
 		sell_amount = Math.ceil(max_power * auto_sell_multiplier);
@@ -4092,7 +4106,6 @@ var game_loop = function() {
 	if ( meltdown || current_heat > max_heat * 2 ) {
 		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
 
-		do_update = false;
 		for ( ri = 0; ri < rows; ri++ ) {
 			row = tiles[ri];
 
@@ -4106,10 +4119,10 @@ var game_loop = function() {
 				}
 			}
 		}
+	}
 
-		if ( do_update ) {
-			update_tiles();
-		}
+	if ( do_update ) {
+		update_tiles();
 	}
 
 	update_heat_and_power();
