@@ -22,6 +22,7 @@ disable heat controller button
 Add "sell all of type" button
 Add "purchase" to tooltip for upgrades?
 when placed, change tooltip/focus to tile
+Clear google account when switching to local save
 
 Maybe before:
 Hotkeys for place part, delete/sell all, close tooltip, focus navs, pages, pause, etc
@@ -160,8 +161,8 @@ var fmt = function(num, places) {
 /////////////////////////////
 
 // settings
-var base_cols = 12;
-var base_rows = 9;
+var base_cols = 14;
+var base_rows = 11;
 var max_cols = 22;
 var max_rows = 19;
 var debug = false;
@@ -2251,7 +2252,7 @@ var upgrades = [
 		type: 'other',
 		title: 'Perpetual Reflectors',
 		description: 'Reflectors are automtically replaced after being destroyed if they are on a cool surface. The replacement part will cost 1.5 times the normal cost.',
-		cost: 10000000000000000000,
+		cost: 1000000000,
 		levels: 1,
 		onclick: function(upgrade) {
 			var part;
@@ -2370,12 +2371,14 @@ var upgrades = [
 			}
 		}
 	},
+
+	// Expanding
 	{
 		id: 'expand_reactor_rows',
 		type: 'other',
 		title: 'Expand Reactor Rows',
 		description: 'Add one row to the reactor for each level of the upgrade.',
-		cost: 800,
+		cost: 100,
 		multiplier: 100,
 		onclick: function(upgrade) {
 			rows = base_rows + upgrade.level;
@@ -2386,7 +2389,7 @@ var upgrades = [
 		type: 'other',
 		title: 'Expand Reactor Cols',
 		description: 'Add one column to the reactor for each level of the upgrade.',
-		cost: 800,
+		cost: 100,
 		multiplier: 100,
 		onclick: function(upgrade) {
 			cols = base_cols + upgrade.level;
@@ -2497,7 +2500,7 @@ var upgrades = [
 				part.updateDescription();
 
 				part = part_objects['heat_outlet' + i];
-				part.transfer = part.part.base_transfer * (upgrade_objects['improved_heat_vents'].level + 1) * Math.pow(2, upgrade.level);
+				part.transfer = part.part.base_transfer * (upgrade_objects['improved_heat_exchangers'].level + 1) * Math.pow(2, upgrade.level);
 				part.updateDescription();
 
 				part = part_objects['heat_exchanger' + i];
