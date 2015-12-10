@@ -235,6 +235,8 @@ set_defaults();
 var is_touch = false;
 var is_ios = navigator.userAgent.match(/(iPod|iPhone|iPad)/) ? true : false;
 
+// Only mark as a touch device when the first touch happens
+
 document.body.ontouchstart = function() {
 	is_touch = true;
 	$main.className += ' touch';
@@ -550,7 +552,12 @@ var enable_google_drive_save = function(event) {
 	$enable_local_save.style.display = null;
 
 	save_game.enable(function() {
-		document.location.reload();
+		// If a saved game is found
+		if ( confirm("Save file found. Use Google Drive save file?")
+			|| !confirm("Really delete the Google Drive save file? This action cannot be undone.")
+		) {
+			document.location.reload();
+		}
 	});
 };
 
@@ -3180,27 +3187,27 @@ var apply_to_tile = function(tile, part, force) {
 
 var rpl;
 var rpqi;
-var remove_part = function(tile, skip_update, sell) {
+var remove_part = function(remove_tile, skip_update, sell) {
 	skip_update = skip_update || false;
 	sell = sell || false;
 
 	if ( sell ) {
-		if ( tile.activated && tile.part && tile.part.category !== 'cell' ) {
-			if ( tile.part.ticks ) {
-				current_money += tile.part.cost - Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost);
+		if ( remove_tile.activated && remove_tile.part && remove_tile.part.category !== 'cell' ) {
+			if ( remove_tile.part.ticks ) {
+				current_money += remove_tile.part.cost - Math.ceil(remove_tile.ticks / remove_tile.part.ticks * remove_tile.part.cost);
 				$money.innerHTML = fmt(current_money);
-			} else if ( tile.part.containment ) {
-				current_money += tile.part.cost - Math.ceil(tile.heat_contained / tile.part.containment * tile.part.cost);
+			} else if ( remove_tile.part.containment ) {
+				current_money += remove_tile.part.cost - Math.ceil(remove_tile.heat_contained / remove_tile.part.containment * remove_tile.part.cost);
 				$money.innerHTML = fmt(current_money);
 			}
 		}
 	}
 
-	tile.part = null;
-	tile.ticks = 0;
-	tile.heat_contained = 0;
-	tile.$percent.style.width = 0;
-	tile.$el.className = tile.$el.className
+	remove_tile.part = null;
+	remove_tile.ticks = 0;
+	remove_tile.heat_contained = 0;
+	remove_tile.$percent.style.width = 0;
+	remove_tile.$el.className = remove_tile.$el.className
 		.replace(part_replace, '')
 		.replace(category_replace, '')
 		.replace(spent_replace, '')
@@ -3678,9 +3685,9 @@ var game_loop = function() {
 										tile_reflector.$percent.style.width = '100%';
 									} else {
 										tile_reflector.$el.className += ' exploding';
-										remove_part(tile_reflector);
+										remove_part(tile_reflector, true);
 									}
-								} else {
+								} else if ( tile_reflector.part ) {
 									tile_reflector.$percent.style.width = tile_reflector.ticks / tile_reflector.part.ticks * 100 + '%';
 								}
 							}
