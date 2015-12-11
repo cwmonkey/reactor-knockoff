@@ -57,6 +57,14 @@ console.log
 ;(function() {
 'use strict';
 
+// Logging
+
+var consolelog = function() {
+	if ( console && console.log ) {
+		console.log.apply(console, arguments);
+	}
+};
+
   /////////////////////////////
  // Delegate
 /////////////////////////////
@@ -100,7 +108,7 @@ Element.prototype.delegate = function(className, type, fn) {
 var _div = document.createElement('div');
 var $ = function(a1) {
 	if ( typeof a1 === 'string' ) {
-		if ( a1.match(/^<[^>]+>$/) ) {
+		if ( a1.match(/^<.+>$/) ) {
 			_div.innerHTML = a1;
 			return _div.firstChild;
 		} else if ( a1.match(/^#[^ ]+$/) ) {
@@ -165,7 +173,7 @@ var base_cols = 14;
 var base_rows = 11;
 var max_cols = 22;
 var max_rows = 19;
-var debug = false;
+var debug = true;
 var base_loop_wait = 1000;
 var base_power_multiplier = 1;
 var base_heat_multiplier = 4;
@@ -253,6 +261,7 @@ var $enable_local_save = $('#enable_local_save');
 
 var LocalSaver = function() {
 	this.save = function(data, callback) {
+		consolelog('LocalSaver.save');
 		window.localStorage.setItem('rks', data);
 
 		if ( callback ) {
@@ -261,10 +270,12 @@ var LocalSaver = function() {
 	}
 
 	this.enable = function() {
-		// Nothing
+		consolelog('LocalSaver.enable');
+		localStorage.removeItem('google_drive_save');
 	}
 
 	this.load = function(callback) {
+		consolelog('LocalSaver.load');
 		var rks = window.localStorage.getItem('rks');
 		callback(rks);
 	}
@@ -275,6 +286,7 @@ var local_saver = new LocalSaver();
 var google_loaded = false;
 
 window.set_google_loaded = function() {
+	consolelog('set_google_loaded');
 	google_loaded = true;
 
 	if ( google_saver.authChecked === false ) {
@@ -293,10 +305,12 @@ var GoogleSaver = function() {
 	var load_callback = null;
 	var self = this;
 	var enable_callback;
+	var access_token;
 
 	this.authChecked = false;
 
 	this.enable = function(callback) {
+		consolelog('GoogleSaver.enable');
 		enable_callback = callback;
 
 		if ( google_loaded ) {
@@ -315,14 +329,16 @@ var GoogleSaver = function() {
 	};
 
 	this.save = function(data, callback) {
+		consolelog('GoogleSaver.save');
+		local_saver.save(data);
+
 		if ( google_loaded === true && this.authChecked === true && file_id !== null ) {
 			update_file(data, callback);
 		}
-
-		local_saver.save(data);
 	};
 
 	this.load = function(callback) {
+		consolelog('GoogleSaver.load');
 		if ( file_meta !== null ) {
 			download_file(file_meta, callback);
 		} else {
@@ -335,6 +351,7 @@ var GoogleSaver = function() {
 	 * Check if the current user has authorized the application.
 	 */
 	this.checkAuth = function() {
+		consolelog('GoogleSaver.checkAuth');
 		gapi.auth.authorize(
 			{
 				'client_id': CLIENT_ID,
@@ -342,14 +359,17 @@ var GoogleSaver = function() {
 				'immediate': true
 			},
 			function(authResult) {
-				google_loaded = true;
+				consolelog('gapi.auth.authorize CB', authResult);
 
 				if ( authResult && !authResult.error ) {
+					google_loaded = true;
 					self.authChecked = true;
+					access_token = authResult['access_token'];
 					// Access token has been successfully retrieved, requests can be sent to the API.
 					localStorage.setItem('google_drive_save', 1);
 
-					gapi.client.load('drive', 'v2', function() {
+					gapi.client.load('drive', 'v2', function(data) {
+						consolelog('gapi.client.load CB', data);
 						get_file();
 					});
 				} else {
@@ -364,6 +384,7 @@ var GoogleSaver = function() {
 	};
 
 	var update_file = function(data, callback) { 
+		consolelog('GoogleSaver update_file');
 		const boundary = '-------314159265358979323846';
 		const delimiter = "\r\n--" + boundary + "\r\n";
 		const close_delim = "\r\n--" + boundary + "--";
@@ -394,10 +415,17 @@ var GoogleSaver = function() {
 			'body': multipartRequestBody
 		});
 
-		request.execute(callback);
+		request.execute(function(data) {
+			consolelog('gapi.client.request CB', data);
+
+			if ( callback ) {
+				callback();
+			}
+		});
 	}
 
 	var get_file = function() {
+		consolelog('GoogleSaver get_file');
 		/**
 		 * List all files contained in the Application Data folder.
 		 *
@@ -414,6 +442,7 @@ var GoogleSaver = function() {
 						});
 						retrievePageOfFiles(request, result);
 					} else {
+						consolelog('GoogleSaver retrievePageOfFiles CB', result);
 						callback(result);
 					}
 				});
@@ -425,6 +454,8 @@ var GoogleSaver = function() {
 		}
 
 		listFilesInApplicationDataFolder(function(result) {
+			consolelog('GoogleSaver listFilesInApplicationDataFolder CB', result);
+
 			for ( var i = 0, l = result.length; i < l; i++ ) {
 				var file = result[i];
 
@@ -449,6 +480,7 @@ var GoogleSaver = function() {
 	};
 
 	var new_save_file = function() {
+		consolelog('GoogleSaver new_save_file');
 		const boundary = '-------314159265358979323846264';
 		const delimiter = "\r\n--" + boundary + "\r\n";
 		const close_delim = "\r\n--" + boundary + "--";
@@ -483,6 +515,7 @@ var GoogleSaver = function() {
 		});
 
 		request.execute(function(arg) {
+			consolelog('gapi.client.request CB', arg);
 			file_id = arg.id;
 			file_meta = arg;
 		});
@@ -495,6 +528,7 @@ var GoogleSaver = function() {
 	 * @param {Function} callback Function to call when the request is complete.
 	 */
 	var download_file = function(file, callback) {
+		consolelog('GoogleSaver download_file');
 		if ( file.downloadUrl ) {
 			var accessToken = gapi.auth.getToken().access_token;
 			var xhr = new XMLHttpRequest();
@@ -698,16 +732,6 @@ var Tile = function(row, col) {
 	$percent_wrapper_wrapper.appendChild($percent_wrapper);
 	$percent_wrapper.appendChild(this.$percent);
 	this.$el.appendChild($percent_wrapper_wrapper);
-
-	if ( debug ) {
-		this.$heat = $('<span class="heat">');
-		this.$heat.innerHTML = fmt(this.heat);
-		this.$el.appendChild(this.$heat);
-
-		this.$power = $('<span class="power">');
-		this.$power.innerHTML = fmt(this.power);
-		this.$el.appendChild(this.$power);
-	}
 };
 
 Tile.prototype.disable = function() {
@@ -1012,18 +1036,6 @@ var update_tiles = function() {
 	$stats_heat.innerHTML = fmt(total_heat, 2);
 	$stats_power.innerHTML = fmt(total_power, 2);
 	$stats_cash.innerHTML = fmt(Math.ceil(total_power * auto_sell_multiplier), 2);
-
-	if ( debug ) {
-		for ( ri = 0; ri < rows; ri++ ) {
-			row = tiles[ri];
-
-			for ( ci = 0; ci < cols; ci++ ) {
-				tile = row[ci];
-				tile.$heat.innerHTML = fmt(tile.heat);
-				tile.$power.innerHTML = fmt(tile.power);
-			}
-		}
-	}
 };
 
 // get dom nodes cached
@@ -3037,7 +3049,6 @@ var check_upgrades_affordability = function(do_timeout) {
  // Save game
 /////////////////////////////
 
-var $save = $('#save');
 var srows;
 var spart;
 var sstring;
@@ -3114,9 +3125,6 @@ var save = function(event) {
 		}
 	);
 };
-
-$save.onclick = save;
-$save.ontouchend = save;
 
 // Select part
 var active_replace = /[\b\s]part_active\b/;
@@ -4176,6 +4184,20 @@ var check_affordability = function() {
 			}
 		}
 	}
+};
+
+  /////////////////////////////
+ // Debug
+/////////////////////////////
+
+if ( debug ) {
+	var $game_nav = $('#game_nav');
+	var $save = $('<button id="save">Save</button>');
+	//var $save = $('#save');
+	$save.onclick = save;
+	$save.ontouchend = save;
+
+	$game_nav.appendChild($save);
 };
 
   /////////////////////////////
