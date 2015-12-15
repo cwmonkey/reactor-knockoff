@@ -3,7 +3,7 @@
 TODO:
 
 Before release:
-Auto save
+saving/loading indicator, cancel save/load button
 adjust ui
 finish help section
 full reset
@@ -25,6 +25,7 @@ when placed, change tooltip/focus to tile
 Clear google account when switching to local save
 
 Maybe before:
+idle countdown timer & upgrades
 Hotkeys for place part, delete/sell all, close tooltip, focus navs, pages, pause, etc
 multiple reactors
 make stats unlockable
@@ -173,7 +174,7 @@ var base_cols = 14;
 var base_rows = 11;
 var max_cols = 22;
 var max_rows = 19;
-var debug = true;
+var debug = false;
 var base_loop_wait = 1000;
 var base_power_multiplier = 1;
 var base_heat_multiplier = 4;
@@ -182,6 +183,7 @@ var upgrade_max_level = 32;
 var base_max_heat = 1000;
 var base_max_power = 100;
 var base_money = 10;
+var save_interval = 60000;
 
 // Current
 var current_heat;
@@ -339,6 +341,7 @@ var GoogleSaver = function() {
 
 	this.load = function(callback) {
 		consolelog('GoogleSaver.load');
+
 		if ( file_meta !== null ) {
 			download_file(file_meta, callback);
 		} else {
@@ -350,7 +353,7 @@ var GoogleSaver = function() {
 	/**
 	 * Check if the current user has authorized the application.
 	 */
-	this.checkAuth = function() {
+	this.checkAuth = function(callback) {
 		consolelog('GoogleSaver.checkAuth');
 		gapi.auth.authorize(
 			{
@@ -368,10 +371,15 @@ var GoogleSaver = function() {
 					// Access token has been successfully retrieved, requests can be sent to the API.
 					localStorage.setItem('google_drive_save', 1);
 
-					gapi.client.load('drive', 'v2', function(data) {
-						consolelog('gapi.client.load CB', data);
-						get_file();
-					});
+					// We have a callback for refreshing the auth
+					if ( callback ) {
+						callback();
+					} else {
+						gapi.client.load('drive', 'v2', function(data) {
+							consolelog('gapi.client.load CB', data);
+							get_file();
+						});
+					}
 				} else {
 					// No access token could be retrieved
 					local_saver.enable();
@@ -385,9 +393,9 @@ var GoogleSaver = function() {
 
 	var update_file = function(data, callback) { 
 		consolelog('GoogleSaver update_file');
-		const boundary = '-------314159265358979323846';
-		const delimiter = "\r\n--" + boundary + "\r\n";
-		const close_delim = "\r\n--" + boundary + "--";
+		var boundary = '-------314159265358979323846';
+		var delimiter = "\r\n--" + boundary + "\r\n";
+		var close_delim = "\r\n--" + boundary + "--";
 
 		var contentType = 'text/plain';
 		var base64Data = btoa(data);
@@ -418,8 +426,16 @@ var GoogleSaver = function() {
 		request.execute(function(data) {
 			consolelog('gapi.client.request CB', data);
 
-			if ( callback ) {
-				callback();
+			if ( !data || data.error ) {
+				self.authChecked = false;
+				// TODO: Use the refresh token instead
+				self.checkAuth(function() {
+					update_file(data, callback);
+				});
+			} else {
+				if ( callback ) {
+					callback();
+				}
 			}
 		});
 	}
@@ -468,6 +484,7 @@ var GoogleSaver = function() {
 						self.load(load_callback);
 					} else if ( enable_callback ) {
 						enable_callback();
+						enable_callback = null;
 					}
 
 					return;
@@ -481,9 +498,9 @@ var GoogleSaver = function() {
 
 	var new_save_file = function() {
 		consolelog('GoogleSaver new_save_file');
-		const boundary = '-------314159265358979323846264';
-		const delimiter = "\r\n--" + boundary + "\r\n";
-		const close_delim = "\r\n--" + boundary + "--";
+		var boundary = '-------314159265358979323846264';
+		var delimiter = "\r\n--" + boundary + "\r\n";
+		var close_delim = "\r\n--" + boundary + "--";
 
 		var contentType = 'text/plain';
 		var metadata = {
@@ -3054,10 +3071,14 @@ var spart;
 var sstring;
 var squeue;
 var supgrades;
+var save_timeout;
+
 var save = function(event) {
 	if ( event ) {
 		event.preventDefault();
 	}
+
+	clearTimeout(save_timeout);
 
 	srows = [];
 
@@ -3121,7 +3142,10 @@ var save = function(event) {
 			protium_particles: protium_particles
 		})),
 		function() {
-			alert('saved');
+			consolelog('saved');
+			if ( debug === false ) {
+				save_timeout = setTimeout(save, save_interval);
+			}
 		}
 	);
 };
@@ -3638,6 +3662,7 @@ var power_add;
 var heat_add;
 var heat_remove;
 var meltdown;
+var melting_down;
 var transfer_heat;
 var ep_chance;
 var lower_heat;
@@ -3661,6 +3686,7 @@ var game_loop = function() {
 	heat_remove = 0;
 	meltdown = false;
 	do_update = false;
+	melting_down = false;
 
 	if ( heat_add_next_loop > 0 ) {
 		heat_add = heat_add_next_loop;
@@ -3746,7 +3772,7 @@ var game_loop = function() {
 						ep_chance = Math.log(lower_heat) / Math.pow(10, 5 - tile.part.part.level) * ep_chance_percent;
 
 						tile.display_chance = ep_chance * 100;
-						tile.display_chance_percent_of_total = ep_chance_percent * 100;
+						tile.display_chance_percent_of_total = lower_heat / tile.part.ep_heat * 100;
 
 						if ( ep_chance > Math.random() ) {
 							exotic_particles++;
@@ -4122,6 +4148,7 @@ var game_loop = function() {
 	}
 
 	if ( meltdown || current_heat > max_heat * 2 ) {
+		melting_down = true;
 		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
 
 		for ( ri = 0; ri < rows; ri++ ) {
@@ -4151,6 +4178,10 @@ var game_loop = function() {
 
 	if ( tooltip_update !== null ) {
 		tooltip_update();
+	}
+
+	if ( melting_down ) {
+		save();
 	}
 };
 
@@ -4335,6 +4366,10 @@ save_game.load(function(rks) {
 	}
 
 	setInterval(check_affordability, 1000);
+
+	if ( debug === false ) {
+		save_timeout = setTimeout(save, save_interval);
+	}
 });
 
 })();
