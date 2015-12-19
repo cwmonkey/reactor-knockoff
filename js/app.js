@@ -2,25 +2,22 @@
 
 TODO:
 
-Before release:
-Check for game being opened in a new window when using google drive
-saving/loading indicator, cancel save/load button
+Ongoing:
 adjust ui
-finish help section
-figure out reflector experiment upgrade
-forceful fusion testing
 mobile ui
-unshift vents - vent6 power issue?
 parts ui adjust
 browser testing
-hide various stats on un-enabled parts' tooltips
-disable heat controller button
-Add "sell all of type" button
-Add "purchase" to tooltip for upgrades?
-when placed, change tooltip/focus to tile
-Clear google account when switching to local save
 
 Maybe before:
+when placed, change tooltip/focus to tile
+Add "purchase" to tooltip for upgrades?
+Add "sell all of type" button
+disable heat controller button?
+saving/loading indicator, cancel save/load button
+unshift vents - vent6 power issue?
+forceful fusion testing
+figure out reflector experiment upgrade
+finish help section
 Statistics
 full reset
 idle countdown timer & upgrades
@@ -37,7 +34,6 @@ modal messages
 Bundling cells to 9+
 towns with different power needs and compensation
 Options page - exponential formatting
-save over multiple devices
 test speed of loops
 try big int library
 ui.js - put purely ui control stuff in there
@@ -287,13 +283,14 @@ var LocalSaver = function() {
 var local_saver = new LocalSaver();
 
 var google_loaded = false;
+var google_auth_called = false;
 
 window.set_google_loaded = function() {
 	consolelog('set_google_loaded');
 	google_loaded = true;
 
-	if ( google_saver.authChecked === false ) {
-		google_saver.checkAuth();
+	if ( google_auth_called ) {
+		google_saver.checkAuth(null, true);
 	}
 };
 
@@ -316,19 +313,17 @@ var GoogleSaver = function() {
 		consolelog('GoogleSaver.enable');
 		enable_callback = callback;
 
-		if ( google_loaded ) {
+		if ( google_loaded && this.authChecked === true && file_id !== null ) {
 			if ( callback ) {
 				callback();
 			}
 
 			return;
+		} else {
+			// Make sure they can see the auth popup
+			//show_page.call($('#options'), null);
+			google_auth_called = true;
 		}
-
-		var el = document.createElement('script');
-		el.setAttribute('type', 'text/javascript');
-		el.setAttribute('src', src);
-
-		document.getElementsByTagName('head')[0].appendChild(el);
 	};
 
 	this.save = function(data, callback) {
@@ -351,16 +346,26 @@ var GoogleSaver = function() {
 		}
 	};
 
+	var load_script = function() {
+		var el = document.createElement('script');
+		el.setAttribute('type', 'text/javascript');
+		el.setAttribute('src', src);
+
+		document.getElementsByTagName('head')[0].appendChild(el);
+	};
+
 	/**
 	 * Check if the current user has authorized the application.
 	 */
-	this.checkAuth = function(callback) {
+	this.checkAuth = function(callback, immediate) {
 		consolelog('GoogleSaver.checkAuth');
+		immediate = immediate || false;
+
 		gapi.auth.authorize(
 			{
 				'client_id': CLIENT_ID,
 				'scope': SCOPES,
-				'immediate': true
+				'immediate': immediate
 			},
 			function(authResult) {
 				consolelog('gapi.auth.authorize CB', authResult);
@@ -381,12 +386,17 @@ var GoogleSaver = function() {
 							get_file();
 						});
 					}
-				} else {
+
+					//show_page.call($('#show_reactor'), null);
+				} else if ( !immediate ) {
 					// No access token could be retrieved
 					local_saver.enable();
 					save_game = local_saver;
 					localStorage.removeItem('google_drive_save');
 					enable_local_save();
+					alert('Could not authorize. Switching to local save.')
+				} else {
+					self.checkAuth(callback, false);
 				}
 			}
 		);
@@ -428,16 +438,36 @@ var GoogleSaver = function() {
 			consolelog('gapi.client.request CB', data);
 
 			if ( !data || data.error ) {
-				self.authChecked = false;
-				// TODO: Use the refresh token instead
-				self.checkAuth(function() {
-					update_file(data, callback);
-				});
+				if ( data.error.code === 404 ) {
+					alert('It looks like the game was taken over in a new window - to take the game back, please refresh');
+				} else {
+					self.authChecked = false;
+					// TODO: Use the refresh token instead
+					self.checkAuth(function() {
+						update_file(data, callback);
+					}, true);
+				}
 			} else {
 				if ( callback ) {
 					callback();
 				}
 			}
+		});
+	}
+
+	/**
+	 * Permanently delete a file, skipping the trash.
+	 *
+	 * @param {String} fileId ID of the file to delete.
+	 */
+	var deleteFile = function(fileId, callback) {
+		consolelog('GoogleSaver deleteFile');
+		var request = gapi.client.drive.files.delete({
+			'fileId': fileId
+		});
+
+		request.execute(function(resp) {
+			if ( callback ) callback();
 		});
 	}
 
@@ -453,6 +483,7 @@ var GoogleSaver = function() {
 				request.execute(function(resp) {
 					result = result.concat(resp.items);
 					var nextPageToken = resp.nextPageToken;
+
 					if (nextPageToken) {
 						request = gapi.client.drive.files.list({
 							'pageToken': nextPageToken
@@ -497,7 +528,7 @@ var GoogleSaver = function() {
 		});
 	};
 
-	var new_save_file = function() {
+	var new_save_file = function(callback) {
 		consolelog('GoogleSaver new_save_file');
 		var boundary = '-------314159265358979323846264';
 		var delimiter = "\r\n--" + boundary + "\r\n";
@@ -536,6 +567,7 @@ var GoogleSaver = function() {
 			consolelog('gapi.client.request CB', arg);
 			file_id = arg.id;
 			file_meta = arg;
+			if ( callback ) callback();
 		});
 	};
 
@@ -553,7 +585,16 @@ var GoogleSaver = function() {
 			xhr.open('GET', file.downloadUrl);
 			xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
 			xhr.onload = function() {
-				callback(xhr.responseText);
+				file_meta = null;
+
+				deleteFile(file_id, function() {
+					file_id = null;
+
+					new_save_file(function() {
+						callback(xhr.responseText);
+						self.save();
+					});
+				});
 			};
 			xhr.onerror = function() {
 				callback(null);
@@ -564,20 +605,12 @@ var GoogleSaver = function() {
 		}
 	}
 
+	load_script();
 };
 
 var google_saver = new GoogleSaver();
 
 var save_game = local_saver;
-
-if ( localStorage.getItem('google_drive_save') ) {
-	save_game = google_saver;
-	$enable_google_drive_save.style.display = 'none';
-} else {
-	$enable_local_save.style.display = 'none';
-}
-
-save_game.enable();
 
 // Local
 var enable_local_save = function(event) {
@@ -1242,7 +1275,9 @@ if ( !is_touch ) {
 var showing_find = /[\b\s]showing\b/;
 
 var show_page = function(event) {
-	event.preventDefault();
+	if ( event ) {
+		event.preventDefault();
+	}
 
 	var id = this.getAttribute('data-page');
 	var section = this.getAttribute('data-section');
@@ -4269,13 +4304,24 @@ var update_nodes = function() {
 	$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
 };
 
+// Do stuff
+
+if ( localStorage.getItem('google_drive_save') ) {
+	save_game = google_saver;
+	$enable_google_drive_save.style.display = 'none';
+} else {
+	$enable_local_save.style.display = 'none';
+}
+
+save_game.enable();
+
 var stile;
 var supgrade;
 var srow;
 var supgrade_object;
 
 save_game.load(function(rks) {
-	if ( rks ) {
+	if ( rks && rks !== undefined && rks !== 'undefined' ) {
 		rks = JSON.parse(window.atob(rks));
 
 		// Current values
