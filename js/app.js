@@ -55,14 +55,6 @@ console.log
 ;(function() {
 'use strict';
 
-// Logging
-
-var consolelog = function() {
-	if ( console && console.log ) {
-		console.log.apply(console, arguments);
-	}
-};
-
   /////////////////////////////
  // Delegate
 /////////////////////////////
@@ -260,7 +252,7 @@ var $enable_local_save = $('#enable_local_save');
 
 var LocalSaver = function() {
 	this.save = function(data, callback) {
-		consolelog('LocalSaver.save');
+		debug && console.log('LocalSaver.save');
 		window.localStorage.setItem('rks', data);
 
 		if ( callback ) {
@@ -269,12 +261,12 @@ var LocalSaver = function() {
 	}
 
 	this.enable = function() {
-		consolelog('LocalSaver.enable');
+		debug && console.log('LocalSaver.enable');
 		localStorage.removeItem('google_drive_save');
 	}
 
 	this.load = function(callback) {
-		consolelog('LocalSaver.load');
+		debug && console.log('LocalSaver.load');
 		var rks = window.localStorage.getItem('rks');
 		callback(rks);
 	}
@@ -286,7 +278,7 @@ var google_loaded = false;
 var google_auth_called = false;
 
 window.set_google_loaded = function() {
-	consolelog('set_google_loaded');
+	debug && console.log('set_google_loaded');
 	google_loaded = true;
 
 	if ( google_auth_called ) {
@@ -310,7 +302,7 @@ var GoogleSaver = function() {
 	this.authChecked = false;
 
 	this.enable = function(callback, event) {
-		consolelog('GoogleSaver.enable');
+		debug && console.log('GoogleSaver.enable');
 		enable_callback = callback;
 
 		if ( google_loaded && this.authChecked === true && file_id !== null ) {
@@ -330,7 +322,7 @@ var GoogleSaver = function() {
 	};
 
 	this.save = function(data, callback) {
-		consolelog('GoogleSaver.save');
+		debug && console.log('GoogleSaver.save');
 		local_saver.save(data);
 
 		if ( google_loaded === true && this.authChecked === true && file_id !== null ) {
@@ -339,7 +331,7 @@ var GoogleSaver = function() {
 	};
 
 	this.load = function(callback) {
-		consolelog('GoogleSaver.load');
+		debug && console.log('GoogleSaver.load');
 
 		if ( file_meta !== null ) {
 			download_file(file_meta, callback);
@@ -361,7 +353,7 @@ var GoogleSaver = function() {
 	 * Check if the current user has authorized the application.
 	 */
 	this.checkAuth = function(callback, immediate) {
-		consolelog('GoogleSaver.checkAuth');
+		debug && console.log('GoogleSaver.checkAuth');
 		immediate = immediate || false;
 
 		gapi.auth.authorize(
@@ -371,7 +363,7 @@ var GoogleSaver = function() {
 				'immediate': immediate
 			},
 			function(authResult) {
-				consolelog('gapi.auth.authorize CB', authResult);
+				debug && console.log('gapi.auth.authorize CB', authResult);
 
 				if ( authResult && !authResult.error ) {
 					google_loaded = true;
@@ -385,7 +377,7 @@ var GoogleSaver = function() {
 						callback();
 					} else {
 						gapi.client.load('drive', 'v2', function(data) {
-							consolelog('gapi.client.load CB', data);
+							debug && console.log('gapi.client.load CB', data);
 							get_file();
 						});
 					}
@@ -406,7 +398,8 @@ var GoogleSaver = function() {
 	};
 
 	var update_file = function(data, callback) { 
-		consolelog('GoogleSaver update_file');
+		debug && console.log('GoogleSaver update_file', data);
+		data = data || '{}';
 		var boundary = '-------314159265358979323846';
 		var delimiter = "\r\n--" + boundary + "\r\n";
 		var close_delim = "\r\n--" + boundary + "--";
@@ -438,7 +431,7 @@ var GoogleSaver = function() {
 		});
 
 		request.execute(function(data) {
-			consolelog('gapi.client.request CB', data);
+			debug && console.log('gapi.client.request CB', data);
 
 			if ( !data || data.error ) {
 				if ( data.error.code === 404 ) {
@@ -464,7 +457,7 @@ var GoogleSaver = function() {
 	 * @param {String} fileId ID of the file to delete.
 	 */
 	var deleteFile = function(fileId, callback) {
-		consolelog('GoogleSaver deleteFile');
+		debug && console.log('GoogleSaver deleteFile');
 		var request = gapi.client.drive.files.delete({
 			'fileId': fileId
 		});
@@ -475,7 +468,7 @@ var GoogleSaver = function() {
 	}
 
 	var get_file = function() {
-		consolelog('GoogleSaver get_file');
+		debug && console.log('GoogleSaver get_file');
 		/**
 		 * List all files contained in the Application Data folder.
 		 *
@@ -493,7 +486,7 @@ var GoogleSaver = function() {
 						});
 						retrievePageOfFiles(request, result);
 					} else {
-						consolelog('GoogleSaver retrievePageOfFiles CB', result);
+						debug && console.log('GoogleSaver retrievePageOfFiles CB', result);
 						callback(result);
 					}
 				});
@@ -505,7 +498,7 @@ var GoogleSaver = function() {
 		}
 
 		listFilesInApplicationDataFolder(function(result) {
-			consolelog('GoogleSaver listFilesInApplicationDataFolder CB', result);
+			debug && console.log('GoogleSaver listFilesInApplicationDataFolder CB', result);
 
 			for ( var i = 0, l = result.length; i < l; i++ ) {
 				var file = result[i];
@@ -532,7 +525,7 @@ var GoogleSaver = function() {
 	};
 
 	var new_save_file = function(callback) {
-		consolelog('GoogleSaver new_save_file');
+		debug && console.log('GoogleSaver new_save_file');
 		var boundary = '-------314159265358979323846264';
 		var delimiter = "\r\n--" + boundary + "\r\n";
 		var close_delim = "\r\n--" + boundary + "--";
@@ -567,7 +560,7 @@ var GoogleSaver = function() {
 		});
 
 		request.execute(function(arg) {
-			consolelog('gapi.client.request CB', arg);
+			debug && console.log('gapi.client.request CB', arg);
 			file_id = arg.id;
 			file_meta = arg;
 			if ( callback ) callback();
@@ -581,7 +574,7 @@ var GoogleSaver = function() {
 	 * @param {Function} callback Function to call when the request is complete.
 	 */
 	var download_file = function(file, callback) {
-		consolelog('GoogleSaver download_file');
+		debug && console.log('GoogleSaver download_file');
 		if ( file.downloadUrl ) {
 			var accessToken = gapi.auth.getToken().access_token;
 			var xhr = new XMLHttpRequest();
@@ -589,13 +582,13 @@ var GoogleSaver = function() {
 			xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
 			xhr.onload = function() {
 				file_meta = null;
-
 				deleteFile(file_id, function() {
 					file_id = null;
 
 					new_save_file(function() {
 						callback(xhr.responseText);
-						self.save();
+						// save game state
+						save();
 					});
 				});
 			};
@@ -2576,7 +2569,7 @@ var upgrades = [
 				part.updateDescription();
 
 				part = part_objects['vent' + i];
-				part.vent = part.part.base_vent * (upgrade_objects['improved_heat_exchangers'].level + 1) * Math.pow(2, upgrade.level);
+				part.vent = part.part.base_vent * (upgrade_objects['improved_heat_vents'].level + 1) * Math.pow(2, upgrade.level);
 				part.updateDescription();
 			}
 		}
@@ -3181,7 +3174,7 @@ var save = function(event) {
 			protium_particles: protium_particles
 		})),
 		function() {
-			consolelog('saved');
+			debug && console.log('saved');
 			if ( debug === false ) {
 				save_timeout = setTimeout(save, save_interval);
 			}
@@ -4324,7 +4317,9 @@ var srow;
 var supgrade_object;
 
 save_game.load(function(rks) {
-	if ( rks && rks !== undefined && rks !== 'undefined' ) {
+	debug && console.log('save_game.load', rks);
+
+	if ( rks ) {
 		rks = JSON.parse(window.atob(rks));
 
 		// Current values
