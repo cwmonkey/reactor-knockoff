@@ -3,6 +3,7 @@
 TODO:
 
 Before release:
+Check for game being opened in a new window when using google drive
 saving/loading indicator, cancel save/load button
 adjust ui
 finish help section

@@ -102,6 +102,7 @@ menu {
 }
 
 #main {
+	display: -webkit-flex;
 	display: flex;
 	position: relative;
 	margin: 4px auto;
@@ -112,16 +113,23 @@ menu {
 	float: left;
 
 	width: 261px;
+	display: -webkit-flex;
 	display: flex;
+	-webkit-flex-direction: column;
 	flex-direction: column;
 }
 
 #primary {
 	display: table;
+	display: -webkit-flex;
 	display: flex;
+	-webkit-flex-direction: column;
 	flex-direction: column;
+	-webkit-flex-grow: 1;
 	flex-grow: 1;
+	-webkit-flex-shrink: 1;
 	flex-shrink: 1;
+	-webkit-flex-basis: auto;
 	flex-basis: auto;
 }
 
@@ -1245,6 +1253,7 @@ body:before {
 #tooltip {
 	display: none;
 	height: 100%;
+	-webkit-flex-grow: 1;
 	flex-grow: 1;
 }
 
@@ -1259,6 +1268,7 @@ body:before {
 #tooltip_text {
 	padding: .2em .3em;
 	text-align: center;
+	-webkit-flex: 1;
 	flex: 1;
 }
 
@@ -1281,6 +1291,10 @@ body:before {
 }
 
 #main.tooltip_showing #tooltip {
+	/* for ie */
+	display: block;
+
+	display: -webkit-flex;
 	display: flex;
 }
 
@@ -1352,7 +1366,9 @@ body:before {
 	background-color: #485667;
 	margin: 4px 3px 0 0;
 	padding: 2px 0 6px 6px;
-	flex: 1;
+	-webkit-flex: 1;
+	/* This breaks ie11 all to hell so...
+	flex: 1; */
 }
 
 #main .panel_holder:last-child .panel:first-child {
@@ -1369,6 +1385,7 @@ body:before {
 	background-color: #485667;
 	padding: 0 6px 6px 2px;
 	margin: 0;
+	-webkit-flex: 1;
 	flex: 1;
 }
 
@@ -1463,6 +1480,11 @@ body:before {
 	}
 
 	/* Parts */
+
+	#parts_section {
+		/* for ie */
+		display: table;
+	}
 
 	#parts {
 		overflow-y: auto;
