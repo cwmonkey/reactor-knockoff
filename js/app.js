@@ -6,16 +6,11 @@ Before release:
 saving/loading indicator, cancel save/load button
 adjust ui
 finish help section
-full reset
 figure out reflector experiment upgrade
-Statistics
 forceful fusion testing
-mobile ui - sliding panels
+mobile ui
 unshift vents - vent6 power issue?
-test speed of loops
-try big int library
-ui.js - put purely ui control stuff in there
-parts ui adjust (up/down go away)
+parts ui adjust
 browser testing
 hide various stats on un-enabled parts' tooltips
 disable heat controller button
@@ -25,6 +20,8 @@ when placed, change tooltip/focus to tile
 Clear google account when switching to local save
 
 Maybe before:
+Statistics
+full reset
 idle countdown timer & upgrades
 Hotkeys for place part, delete/sell all, close tooltip, focus navs, pages, pause, etc
 multiple reactors
@@ -40,6 +37,9 @@ Bundling cells to 9+
 towns with different power needs and compensation
 Options page - exponential formatting
 save over multiple devices
+test speed of loops
+try big int library
+ui.js - put purely ui control stuff in there
 
 After:
 shift + right click on spent cells also gets rid of unspent cells
