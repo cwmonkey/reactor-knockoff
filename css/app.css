@@ -443,6 +443,11 @@ menu {
 	right: 1px;
 }
 
+#reactor .tile.spent .percent_wrapper {
+	border-color: gray;
+	background: gray;
+}
+
 #reactor .category_coolant_cell .percent,
 #reactor .category_reflector .percent,
 #reactor .category_vent .percent,
