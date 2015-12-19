@@ -309,7 +309,7 @@ var GoogleSaver = function() {
 
 	this.authChecked = false;
 
-	this.enable = function(callback) {
+	this.enable = function(callback, event) {
 		consolelog('GoogleSaver.enable');
 		enable_callback = callback;
 
@@ -319,6 +319,9 @@ var GoogleSaver = function() {
 			}
 
 			return;
+		} else if ( google_loaded ) {
+			// If this was from a button click, open the popup
+			self.checkAuth(null, event ? false : true);
 		} else {
 			// Make sure they can see the auth popup
 			//show_page.call($('#options'), null);
@@ -644,7 +647,7 @@ var enable_google_drive_save = function(event) {
 		) {
 			document.location.reload();
 		}
-	});
+	}, event);
 };
 
 $enable_google_drive_save.onclick = enable_google_drive_save;
