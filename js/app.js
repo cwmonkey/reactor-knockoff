@@ -1980,8 +1980,8 @@ var create_part = function(part, level) {
 				part.base_ep_heat = part.base_ep_heat * Math.pow(part.ep_heat_multiplier, level - 1);
 			}
 
-			if ( part.base_power_increase ) {
-				part.base_power_increase = part.base_power_increase;
+			if ( part.base_power_increase && part.power_increase_add ) {
+				part.base_power_increase = part.base_power_increase + part.power_increase_add * level - 1;
 			}
 
 			if ( part.base_heat_increase ) {

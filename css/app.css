@@ -213,6 +213,7 @@ menu {
 
 #power_percentage {
 	background-color: #33a5c6;
+	max-width: 100%;
 }
 
 #parts,
