@@ -5,11 +5,17 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<title>Reactor Knockoff</title>
 
+	<script>
+		if ( window.location.hostname === 'cwmonkey.github.io' && window.location.protocol !== 'https:' ) {
+			window.location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+		}
+	</script>
+
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 	<link href='https://fonts.googleapis.com/css?family=Play:400|Quantico:400' rel='stylesheet' type='text/css'>
-	<link rel="stylesheet" href="css/reset.css"/>
-	<link rel="stylesheet" href="css/app.css"/>
+	<link rel="stylesheet" href="css/reset.css">
+	<link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 	<div id="wrapper">
