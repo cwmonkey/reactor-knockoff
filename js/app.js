@@ -520,7 +520,7 @@ var GoogleSaver = function() {
 			}
 
 			// No save file found, make a new one
-			new_save_file();
+			new_save_file(save);
 		});
 	};
 
@@ -639,6 +639,8 @@ var enable_google_drive_save = function(event) {
 			|| !confirm("Really delete the Google Drive save file? This action cannot be undone.")
 		) {
 			document.location.reload();
+		} else {
+			save();
 		}
 	}, event);
 };
