@@ -164,8 +164,8 @@ var fmt = function(num, places) {
 // settings
 var base_cols = 14;
 var base_rows = 11;
-var max_cols = 22;
-var max_rows = 19;
+var max_cols = 35;
+var max_rows = 32;
 var debug = false;
 var save_debug = false;
 var base_loop_wait = 1000;
@@ -2448,6 +2448,7 @@ var upgrades = [
 		title: 'Expand Reactor Rows',
 		description: 'Add one row to the reactor for each level of the upgrade.',
 		cost: 100,
+		levels: 20,
 		multiplier: 100,
 		onclick: function(upgrade) {
 			rows = base_rows + upgrade.level;
@@ -2459,6 +2460,7 @@ var upgrades = [
 		title: 'Expand Reactor Cols',
 		description: 'Add one column to the reactor for each level of the upgrade.',
 		cost: 100,
+		levels: 20,
 		multiplier: 100,
 		onclick: function(upgrade) {
 			cols = base_cols + upgrade.level;
