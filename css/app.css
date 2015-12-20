@@ -8,7 +8,13 @@ html {
 *,
 *:before,
 *:after {
-  box-sizing: inherit;
+	box-sizing: inherit;
+}
+
+/* Disable select */
+* {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
 }
 
 body {
@@ -1466,6 +1472,7 @@ body:before {
 	#secondary {
 		width: auto;
 		margin-bottom: 4px;
+		float: none;
 	}
 
 	#stats_section {
@@ -1489,7 +1496,7 @@ body:before {
 
 	#parts_section {
 		/* for ie */
-		display: table;
+		/*display: table;*/
 	}
 
 	#parts {
@@ -1556,25 +1563,29 @@ body:before {
 		position: static;
 	}
 
-	#main.touch #tooltip_nav {
+	/* Touch? */
+	#main #tooltip_nav {
 		height: auto;
-		/*padding: 0;*/
+		padding: 0;
 	}
 
-	#main.touch #tooltip_controls {
+	#main #tooltip_controls {
 		display: block;
 	}
 
-
-	/*#main.touch.touch #nav {
-		padding: 8px;
+	#main #nav {
+		/*padding: 8px;*/
 	}
 
-	#main.touch.tooltip_showing #nav {
+	#main #game_nav button {
+		margin-bottom: 4px;
+	}
+
+	#main.tooltip_showing #nav {
 		display: block;
 	}
 
-	#main.touch.tooltip_showing #tooltip {
+	#main.tooltip_showing #tooltip {
 		position: fixed;
 		z-index: 7;
 		left: 0;
@@ -1589,9 +1600,55 @@ body:before {
 		padding: 2px;
 	}
 
-	#main.part_active.touch.tooltip_showing #tooltip {
+	#main.part_active.tooltip_showing #tooltip {
 		left: 46px;
-	}*/
+	}
+
+	#main #controls_nav,
+	#main #pages_nav {
+		position: static;
+	}
+
+	#main #controls_nav button {
+		clear: none;
+		float: none;
+	}
+
+	#main #game_nav {
+		display: none;
+	}
+
+	#main #pages_nav,
+	#main #game_nav,
+	#main #controls_nav {
+		margin-bottom: 2px;
+	}
+
+	#main #tooltip_nav {
+		border: 2px solid #eee;
+		border-image: url("../img/medium_panel.png") 2 2 stretch;
+		padding: 10px 6px 6px 12px;
+		position: relative;
+	}
+
+	#main #more_nav {
+		position: absolute;
+		top: 0;
+		right: 0;
+		display: block;
+	}
+
+	#main.nav_more #nav_more,
+	#main #nav_less {
+		display: none;
+	}
+
+	#main.nav_more #nav_less,
+	#main.nav_more #game_nav {
+		display: block;
+	}
+
+	/* /Touch? */
 
 	#tooltip_info {
 		text-align: left;
@@ -1611,40 +1668,6 @@ body:before {
 		display: inline;
 	}
 
-	#main.touch #controls_nav,
-	#main.touch #pages_nav {
-		position: static;
-	}
-
-	#main.touch #controls_nav button {
-		clear: none;
-		float: none;
-	}
-
-	#main.touch #game_nav {
-		display: none;
-	}
-
-	#main.touch #pages_nav,
-	#main.touch #game_nav,
-	#main.touch #controls_nav {
-		margin-bottom: 2px;
-	}
-
-	#main.touch #tooltip_nav {
-		border: 2px solid #eee;
-		border-image: url("../img/medium_panel.png") 2 2 stretch;
-		padding: 10px 6px 6px 12px;
-		position: relative;
-	}
-
-	#main.touch #more_nav {
-		position: absolute;
-		top: 0;
-		right: 0;
-		display: block;
-	}
-
 	#more_nav button {
 		border-top: 0;
 		border-right: 0;
@@ -1652,16 +1675,6 @@ body:before {
 		padding: 8px 4px 4px 0;
 		font-family: monospace;
 		margin: 0;
-	}
-
-	#main.touch.nav_more #nav_more,
-	#main.touch #nav_less {
-		display: none;
-	}
-
-	#main.touch.nav_more #nav_less,
-	#main.touch.nav_more #game_nav {
-		display: block;
 	}
 
 	#main #parts_section,

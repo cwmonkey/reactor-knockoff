@@ -83,9 +83,10 @@ Element.prototype.delegate = function(className, type, fn) {
 	} else if ( type === 'click' ) {
 		this['on' + type] = onfn;
 
-		if ( is_touch ) {
-			this['ontouchend'] = onfn;
-		}
+		// Since we can't know ahead of time if this is a touch device
+		//if ( is_touch ) {
+		this['ontouchend'] = onfn;
+		//}
 	} else {
 		this['on' + type] = onfn;
 	}
@@ -4417,6 +4418,8 @@ save_game.load(function(rks) {
 	if ( debug === false ) {
 		save_timeout = setTimeout(save, save_interval);
 	}
+
+	$parts.scrollTop = $parts.scrollHeight;
 });
 
 })();
