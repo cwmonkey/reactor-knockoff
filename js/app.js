@@ -3562,19 +3562,12 @@ document.oncontextmenu = function(e) {
 };
 
 var is_scrolling = false;
-var scrolling_timeout;
-window.onscroll = function() {
-	clearTimeout(scrolling_timeout);
+window.ontouchmove = function() {
 	is_scrolling = true;
-
-	scrolling_timeout = setTimeout(function() {
-		is_scrolling = false;
-	}, 100);
 };
 
 $reactor.delegate('tile', 'click', function(e) {
 	if ( is_scrolling === true ) {
-		clearTimeout(scrolling_timeout);
 		is_scrolling = false;
 		return;
 	}
