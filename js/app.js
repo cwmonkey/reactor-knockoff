@@ -287,7 +287,7 @@ window.set_google_loaded = function() {
 };
 
 var GoogleSaver = function() {
-	var CLIENT_ID = '572695445092-e8j1ueahak5bidennfsesndrtrd5hfhi.apps.googleusercontent.com';
+	var CLIENT_ID = '572695445092-svr182bgaass7vt97r5mnnk4phmmjh5u.apps.googleusercontent.com';
 	var SCOPES = ['https://www.googleapis.com/auth/drive.appfolder'];
 	var src = 'https://apis.google.com/js/client.js?onload=set_google_loaded';
 	var filename = 'save.txt'
