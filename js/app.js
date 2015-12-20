@@ -2311,7 +2311,7 @@ var upgrades = [
 			var part;
 			for ( var i = 1; i <= 6; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (1 + (upgrade.level / 100)) * Math.pow(2, upgrade_objects['full_spectrum_reflectors'].level);
+				part.power_increase = part.part.base_power_increase * (1 + (upgrade.level / 100)) + (part.part.base_power_increase * (upgrade_objects['full_spectrum_reflectors'].level - 1));
 				part.updateDescription();
 			}
 		}
@@ -2539,7 +2539,7 @@ var upgrades = [
 		id: 'full_spectrum_reflectors',
 		type: 'experimental_boost',
 		title: 'Full Spectrum Reflectors',
-		description: 'Reflectors are twice as effective per level of upgrade.',
+		description: 'Reflectors gain an additional 100% of their base power reflection per level of upgrade.',
 		erequires: 'laboratory',
 		ecost: 50,
 		multiplier: 2,
@@ -2547,7 +2547,7 @@ var upgrades = [
 			var part;
 			for ( var i = 1; i <= 6; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (1 + (upgrade_objects['improved_neutron_reflection'].level / 100)) * Math.pow(2, upgrade.level);
+				part.power_increase = part.part.base_power_increase * (1 + (upgrade_objects['improved_neutron_reflection'].level / 100)) + (part.part.base_power_increase * (upgrade.level - 1));
 				part.updateDescription();
 			}
 		}
