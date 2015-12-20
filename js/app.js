@@ -2,6 +2,8 @@
 
 TODO:
 
+Display issue with percent on reflectors when loading - only corrects when cell is placed near it
+
 Ongoing:
 adjust ui
 mobile ui
@@ -1297,6 +1299,8 @@ var show_page = function(event) {
 	} else {
 		clearTimeout(check_upgrades_affordability_timeout);
 	}
+
+	ga('send', 'event', 'click', 'show_page', 'id');
 };
 
 $main.delegate('nav', 'click', show_page);
