@@ -4058,7 +4058,7 @@ var game_loop = function() {
 
 	// Forceful Fusion
 	if ( heat_power_multiplier && current_heat > 1000 ) {
-		power_add *= heat_power_multiplier * (Math.log(current_heat) / Math.log(1000) / 100);
+		power_add *= 1 + (heat_power_multiplier * (Math.log(current_heat) / Math.log(1000) / 100));
 	}
 
 	// Add power
