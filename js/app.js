@@ -2056,7 +2056,9 @@ var update_cell_power = function() {
 			}
 
 			if ( part.part.type === 'protium' ) {
-				part.power *= (1 + protium_particles / 10);
+				// TODO: DRY this
+				part.power = part.part.base_power * (upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade_objects['unstable_protium'].level) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
+				part.power *= 1 + protium_particles / 10;
 			}
 		}
 	}
@@ -2678,7 +2680,7 @@ var upgrades = [
 				part = part_objects['protium' + i];
 				part.heat = part.part.base_heat * Math.pow(2, upgrade.level) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
 				part.power = part.part.base_power * (upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade.level) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
-				part.ticks = part.part.base_ticks / Math.pow(2, upgrade.level);
+				part.ticks = Math.ceil(part.part.base_ticks / Math.pow(2, upgrade.level));
 				part.updateDescription();
 			}
 		}
@@ -3064,6 +3066,25 @@ $all_upgrades.delegate('upgrade', 'click', function(event) {
 	update_tiles();
 	check_upgrades_affordability();
 });
+
+if ( debug ) {
+	$all_upgrades.delegate('upgrade', 'mousedown', function(event) {
+		if ( event.which === 3 ) {
+			var upgrade = this.upgrade;
+			event.preventDefault();
+
+			if ( upgrade.level > 0 ) {
+				upgrade.setLevel(upgrade.level - 1);
+				current_exotic_particles += upgrade.ecost;
+				// TODO: DRY
+				$current_exotic_particles.innerHTML = fmt(current_exotic_particles);
+				$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
+				update_tiles();
+				check_upgrades_affordability();
+			}
+		}
+	});
+}
 
 var check_upgrades_affordability_timeout;
 var check_upgrades_affordability = function(do_timeout) {
