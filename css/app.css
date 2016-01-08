@@ -140,13 +140,22 @@ menu {
 }
 
 #main_header,
-#parts_section .heading,
-#stats_section .heading {
+#stats_section .stats_section_heading,
+#parts_section .heading {
 	position: absolute;
 	clip: rect(1px, 1px, 1px, 1px);
 }
 
 #stats_section {
+}
+
+#stats_section .heading {
+	font-size: .9em;
+	margin-bottom: .2em;
+}
+
+#stats_section .heading:after {
+	content: ":";
 }
 
 #power_indicator,
@@ -1701,8 +1710,8 @@ body:before {
 
 	#heat_indicator,
 	#power_indicator {
+		border-top-width: 0;
 		padding: 2px 0;
-		border-top: 0;
 	}
 
 	#heat,
@@ -1742,6 +1751,26 @@ body:before {
 	#heat {
 		margin-right: 1%;
 		margin-left: 1%;
+		padding-left: 1em;
+		position: relative;
+	}
+
+	#stats_section .heading {
+		-ms-transform: rotate(-90deg); /* IE 9 */
+		-ms-transform-origin: 16% 45%; /* IE 9 */
+		-webkit-transform: rotate(-90deg); /* Chrome, Safari, Opera */
+		-webkit-transform-origin: 16% 45%; /* Chrome, Safari, Opera */
+		transform: rotate(-90deg);
+		transform-origin: 16% 45%;
+		position: absolute;
+		line-height: 1em;
+		left: 0;
+		bottom: 0;
+	}
+
+	#stats_section .heading:after,
+	#stats_section .heading .current {
+		display: none;
 	}
 
 	#currency {
@@ -1789,5 +1818,10 @@ body:before {
 
 	#main.show_more_stats #show_more_stats {
 		display: none;
+	}
+
+	#main.show_more_stats #heat_indicator,
+	#main.show_more_stats #power_indicator {
+		border-top-width: 1px;
 	}
 }
