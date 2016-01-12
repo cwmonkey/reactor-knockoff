@@ -162,6 +162,7 @@ var fmt = function(num, places) {
 /////////////////////////////
 
 // settings
+var version = '1.1.1';
 var base_cols = 14;
 var base_rows = 11;
 var max_cols = 35;
@@ -714,7 +715,8 @@ var reboot = function(refund) {
 
 	update_nodes();
 
-	game_loop();
+	clearTimeout(loop_timeout);
+	loop_timeout = setTimeout(game_loop, loop_wait);
 };
 
 var reboot_click = function(event) {
@@ -1276,13 +1278,8 @@ if ( !is_touch ) {
 
 var showing_find = /[\b\s]showing\b/;
 
-var show_page = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	var id = this.getAttribute('data-page');
-	var section = this.getAttribute('data-section');
+var _show_page = function(section, id, notrack) {
+	notrack = notrack || false;
 	var $page = $('#' + id);
 	var $section = $('#' + section);
 	var pages = $section.getElementsByClassName('page');
@@ -1296,12 +1293,24 @@ var show_page = function(event) {
 
 	// Page specific stuff
 	if ( id == 'upgrades_section' || id == 'experimental_upgrades_section' ) {
-		check_upgrades_affordability(true);
+		start_check_upgrades_affordability();
 	} else {
-		clearTimeout(check_upgrades_affordability_timeout);
+		stop_check_upgrades_affordability();
 	}
 
-	ga('send', 'event', 'click', 'show_page', 'id');
+	if ( !notrack ) {
+		ga('send', 'event', 'click', 'show_page', 'id');
+	}
+};
+
+var show_page = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
+	var id = this.getAttribute('data-page');
+	var section = this.getAttribute('data-section');
+	_show_page(section, id);
 };
 
 $main.delegate('nav', 'click', show_page);
@@ -3125,6 +3134,16 @@ var check_upgrades_affordability = function(do_timeout) {
 	$reboot_exotic_particles.innerHTML = fmt(exotic_particles);
 };
 
+var start_check_upgrades_affordability = function() {
+	check_upgrades_affordability(true);
+};
+
+var stop_check_upgrades_affordability = function() {
+	clearTimeout(check_upgrades_affordability_timeout);
+};
+
+
+
   /////////////////////////////
  // Save game
 /////////////////////////////
@@ -3202,7 +3221,8 @@ var save = function(event) {
 			paused: paused,
 			auto_sell_disabled: auto_sell_disabled,
 			auto_buy_disabled: auto_buy_disabled,
-			protium_particles: protium_particles
+			protium_particles: protium_particles,
+			version: version
 		})),
 		function() {
 			save_debug && console.log('saved');
@@ -3515,7 +3535,10 @@ var $unpause = $('#unpause');
 
 var unpause = function(event) {
 	event.preventDefault();
+
+	clearTimeout(loop_timeout);
 	loop_timeout = setTimeout(game_loop, loop_wait);
+
 	$main.className = $main.className.replace(pause_replace, '');
 	paused = false;
 };
@@ -4230,6 +4253,7 @@ var game_loop = function() {
 	update_heat_and_power();
 
 	if ( !paused ) {
+		clearTimeout(loop_timeout);
 		loop_timeout = setTimeout(game_loop, loop_wait);
 	}
 
@@ -4372,6 +4396,8 @@ save_game.load(function(rks) {
 		auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
 		protium_particles = rks.protium_particles || protium_particles;
 
+		var save_version = rks.version || null;
+
 		if ( paused ) {
 			pause();
 		}
@@ -4441,7 +4467,13 @@ save_game.load(function(rks) {
 	update_tiles();
 	update_heat_and_power();
 
+	// Show the patch notes if this is a new version
+	if ( save_version !== version ) {
+		_show_page('reactor_upgrades', 'patch_section', true);
+	}
+
 	if ( !paused ) {
+		clearTimeout(loop_timeout);
 		loop_timeout = setTimeout(game_loop, loop_wait);
 	}
 

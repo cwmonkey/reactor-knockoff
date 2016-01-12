@@ -1,0 +1,768 @@
+/* Normalizing elements within .cms class, styles from http://www.w3.org/TR/html5/rendering.html */
+
+/* 10.3.1 Hidden elements */
+.cms [hidden],
+.cms area,
+.cms base,
+.cms basefont,
+.cms datalist,
+.cms head,
+.cms link,
+.cms meta,
+.cms noembed,
+.cms noframes,
+.cms param,
+.cms rp,
+.cms script,
+.cms source,
+.cms style,
+.cms template,
+.cms track,
+.cms title {
+	display: none;
+}
+
+.cms embed[hidden] {
+	display: inline;
+}
+
+/* 10.3.3 Flow content */
+.cms blockquote,
+.cms figure,
+.cms listing,
+.cms p,
+.cms plaintext,
+.cms pre,
+.cms xmp {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.cms blockquote,
+.cms figure {
+	margin-left: 40px;
+	margin-right: 40px;
+}
+
+.cms address {
+	font-style: italic;
+}
+
+.cms listing,
+.cms plaintext,
+.cms pre,
+.cms xmp {
+	font-family: monospace;
+}
+
+.cms form {
+	margin-bottom: 1em;
+}
+
+/* 10.3.4 Phrasing content */
+.cms cite,
+.cms dfn,
+.cms em,
+.cms i,
+.cms var {
+	font-style: italic;
+}
+
+.cms b,
+.cms strong {
+	font-weight: bolder;
+}
+
+.cms code,
+.cms kbd,
+.cms samp,
+.cms tt {
+	font-family: monospace;
+}
+
+.cms big {
+	font-size: larger;
+}
+
+.cms small {
+	font-size: smaller;
+}
+
+.cms sub {
+	vertical-align: sub;
+}
+
+.cms sup {
+	vertical-align: super;
+}
+
+.cms sub,
+.cms sup {
+	line-height: normal;
+	font-size: smaller;
+}
+
+.cms ruby {
+	display: ruby;
+}
+
+.cms rb {
+	display: ruby-base;
+}
+
+.cms rt {
+	display: ruby-text;
+	font-size: 50%;
+	font-variant-east-asian: ruby;
+}
+
+.cms rbc {
+	display: ruby-base-container;
+}
+
+.cms rtc {
+	display: ruby-text-container;
+}
+
+/* this color is just a suggestion and can be changed based on implementation feedback */
+.cms abbr[title],
+.cms acronym[title] {
+	text-decoration: dotted underline;
+}
+
+.cms ins,
+.cms u {
+	text-decoration: underline;
+}
+
+.cms del,
+.cms s,
+.cms strike {
+	text-decoration: line-through;
+}
+
+.cms blink {
+	text-decoration: blink;
+}
+
+.cms q::before {
+	content: open-quote;
+}
+
+.cms q::after {
+	content: close-quote;
+}
+
+.cms br {
+	content: '\A';
+}
+
+/* 10.3.7 Sections and headings */
+.cms article,
+.cms aside,
+.cms h1,
+.cms h2,
+.cms h3,
+.cms h4,
+.cms h5,
+.cms h6,
+.cms hgroup,
+.cms nav,
+.cms section {
+	display: block;
+}
+
+.cms h1 {
+	margin-top: 0.67em;
+	margin-bottom: 0.67em;
+	font-size: 2.00em;
+	font-weight: bold;
+}
+
+.cms h2 {
+	margin-top: 0.83em;
+	margin-bottom: 0.83em;
+	font-size: 1.50em;
+	font-weight: bold;
+}
+
+.cms h3 {
+	margin-top: 1.00em;
+	margin-bottom: 1.00em;
+	font-size: 1.17em;
+	font-weight: bold;
+}
+
+.cms h4 {
+	margin-top: 1.33em;
+	margin-bottom: 1.33em;
+	font-size: 1.00em;
+	font-weight: bold;
+}
+
+.cms h5 {
+	margin-top: 1.67em;
+	margin-bottom: 1.67em;
+	font-size: 0.83em;
+	font-weight: bold;
+}
+
+.cms h6 {
+	margin-top: 2.33em;
+	margin-bottom: 2.33em;
+	font-size: 0.67em;
+	font-weight: bold;
+}
+
+/* 10.3.8 Lists */
+.cms dir,
+.cms dd,
+.cms dl,
+.cms dt,
+.cms ol,
+.cms ul {
+	display: block;
+}
+
+.cms li {
+	display: list-item;
+}
+
+.cms dir,
+.cms dl,
+.cms ol,
+.cms ul {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.cms dir dir,
+.cms dir dl,
+.cms dir ol,
+.cms dir ul,
+.cms dl dir,
+.cms dl dl,
+.cms dl ol,
+.cms dl ul,
+.cms ol dir,
+.cms ol dl,
+.cms ol ol,
+.cms ol ul,
+.cms ul dir,
+.cms ul dl,
+.cms ul ol,
+.cms ul ul {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+.cms dd {
+	margin-left: 40px;
+}
+/* LTR-specific: use 'margin-right' for rtl elements */
+
+.cms dir,
+.cms ol,
+.cms ul {
+	padding-left: 40px;
+	line-height: 1.3;
+}
+/* LTR-specific: use 'padding-right' for rtl elements */
+
+.cms ol {
+	list-style-type: decimal;
+}
+
+.cms dir,
+.cms ul {
+	list-style-type: disc;
+}
+
+.cms dir dir,
+.cms dir ul,
+.cms ol dir,
+.cms ol ul,
+.cms ul dir,
+.cms ul ul {
+	list-style-type: circle;
+}
+
+.cms dir dir dir,
+.cms dir dir ul,
+.cms dir ol dir,
+.cms dir ol ul,
+.cms dir ul dir,
+.cms dir ul ul,
+.cms ol dir dir,
+.cms ol dir ul,
+.cms ol ol dir,
+.cms ol ol ul,
+.cms ol ul dir,
+.cms ol ul ul,
+.cms ul dir dir,
+.cms ul dir ul,
+.cms ul ol dir,
+.cms ul ol ul,
+.cms ul ul dir,
+.cms ul ul ul {
+	list-style-type: square;
+}
+
+.cms ol[type=1],
+.cms li[type=1] {
+	list-style-type: decimal;
+}
+
+.cms ol[type=a],
+.cms li[type=a] {
+	list-style-type: lower-alpha;
+}
+
+.cms ol[type=A],
+.cms li[type=A] {
+	list-style-type: upper-alpha;
+}
+
+.cms ol[type=i],
+.cms li[type=i] {
+	list-style-type: lower-roman;
+}
+
+.cms ol[type=I],
+.cms li[type=I] {
+	list-style-type: upper-roman;
+}
+
+.cms ul[type=disc i],
+.cms li[type=disc i] {
+	list-style-type: disc;
+}
+
+.cms ul[type=circle i],
+.cms li[type=circle i] {
+	list-style-type: circle;
+}
+
+.cms ul[type=square i],
+.cms li[type=square i] {
+	list-style-type: square;
+}
+
+/* 10.3.9 Tables */
+.cms table {
+	display: table;
+}
+
+.cms caption {
+	display: table-caption;
+}
+
+.cms colgroup,
+.cms colgroup[hidden] {
+	display: table-column-group;
+}
+
+.cms col,
+.cms col[hidden] {
+	display: table-column;
+}
+
+.cms thead,
+.cms thead[hidden] {
+	display: table-header-group;
+}
+
+.cms tbody,
+.cms tbody[hidden] {
+	display: table-row-group;
+}
+
+.cms tfoot,
+.cms tfoot[hidden] {
+	display: table-footer-group;
+}
+
+.cms tr,
+.cms tr[hidden] {
+	display: table-row;
+}
+
+.cms td,
+.cms th,
+.cms td[hidden],
+.cms th[hidden] {
+	display: table-cell;
+}
+
+.cms colgroup[hidden],
+.cms col[hidden],
+.cms thead[hidden],
+.cms tbody[hidden],
+.cms tfoot[hidden],
+.cms tr[hidden],
+.cms td[hidden],
+.cms th[hidden] {
+	visibility: collapse;
+}
+
+.cms table {
+	box-sizing: border-box;
+	border-spacing: 2px;
+	border-collapse: separate;
+}
+
+.cms td,
+.cms th {
+	padding: 1px;
+}
+
+.cms th {
+	font-weight: bold;
+}
+
+.cms thead,
+.cms tbody,
+.cms tfoot,
+.cms table > tr {
+	vertical-align: middle;
+}
+
+.cms tr,
+.cms td,
+.cms th {
+	vertical-align: inherit;
+}
+
+.cms table,
+.cms td,
+.cms th {
+	border-color: gray;
+}
+
+.cms thead,
+.cms tbody,
+.cms tfoot,
+.cms tr {
+	border-color: inherit;
+}
+
+.cms table[rules=none i],
+.cms table[rules=groups i],
+.cms table[rules=rows i],
+.cms table[rules=cols i],
+.cms table[rules=all i],
+.cms table[frame=void i],
+.cms table[frame=above i],
+.cms table[frame=below i],
+.cms table[frame=hsides i],
+.cms table[frame=lhs i],
+.cms table[frame=rhs i],
+.cms table[frame=vsides i],
+.cms table[frame=box i],
+.cms table[frame=border i],
+.cms table[rules=none i] > tr > td,
+.cms table[rules=none i] > tr > th,
+.cms table[rules=groups i] > tr > td,
+.cms table[rules=groups i] > tr > th,
+.cms table[rules=rows i] > tr > td,
+.cms table[rules=rows i] > tr > th,
+.cms table[rules=cols i] > tr > td,
+.cms table[rules=cols i] > tr > th,
+.cms table[rules=all i] > tr > td,
+.cms table[rules=all i] > tr > th,
+.cms table[rules=none i] > thead > tr > td,
+.cms table[rules=none i] > thead > tr > th,
+.cms table[rules=groups i] > thead > tr > td,
+.cms table[rules=groups i] > thead > tr > th,
+.cms table[rules=rows i] > thead > tr > td,
+.cms table[rules=rows i] > thead > tr > th,
+.cms table[rules=cols i] > thead > tr > td,
+.cms table[rules=cols i] > thead > tr > th,
+.cms table[rules=all i] > thead > tr > td,
+.cms table[rules=all i] > thead > tr > th,
+.cms table[rules=none i] > tbody > tr > td,
+.cms table[rules=none i] > tbody > tr > th,
+.cms table[rules=groups i] > tbody > tr > td,
+.cms table[rules=groups i] > tbody > tr > th,
+.cms table[rules=rows i] > tbody > tr > td,
+.cms table[rules=rows i] > tbody > tr > th,
+.cms table[rules=cols i] > tbody > tr > td,
+.cms table[rules=cols i] > tbody > tr > th,
+.cms table[rules=all i] > tbody > tr > td,
+.cms table[rules=all i] > tbody > tr > th,
+.cms table[rules=none i] > tfoot > tr > td,
+.cms table[rules=none i] > tfoot > tr > th,
+.cms table[rules=groups i] > tfoot > tr > td,
+.cms table[rules=groups i] > tfoot > tr > th,
+.cms table[rules=rows i] > tfoot > tr > td,
+.cms table[rules=rows i] > tfoot > tr > th,
+.cms table[rules=cols i] > tfoot > tr > td,
+.cms table[rules=cols i] > tfoot > tr > th,
+.cms table[rules=all i] > tfoot > tr > td,
+.cms table[rules=all i] > tfoot > tr > th {
+	border-color: black;
+}
+
+.cms table[align=center i] {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.cms thead[valign=bottom i],
+.cms tbody[valign=bottom i],
+.cms tfoot[valign=bottom i],
+.cms tr[valign=bottom i],
+.cms td[valign=bottom i],
+.cms th[valign=bottom i] {
+	vertical-align: bottom;
+}
+
+.cms thead[valign=baseline i],
+.cms tbody[valign=baseline i],
+.cms tfoot[valign=baseline i],
+.cms tr[valign=baseline i],
+.cms td[valign=baseline i],
+.cms th[valign=baseline i] {
+	vertical-align: baseline;
+}
+
+.cms table[rules=none i],
+.cms table[rules=groups i],
+.cms table[rules=rows i],
+.cms table[rules=cols i],
+.cms table[rules=all i] {
+	border-style: hidden;
+	border-collapse: collapse;
+}
+
+.cms table[border] {
+	border-style: outset;
+}
+
+/* only if border is not equivalent to zero */
+
+.cms table[frame=void i] {
+	border-style: hidden;
+}
+
+.cms table[frame=above i] {
+	border-style: outset hidden hidden hidden;
+}
+
+.cms table[frame=below i] {
+	border-style: hidden hidden outset hidden;
+}
+
+.cms table[frame=hsides i] {
+	border-style: outset hidden outset hidden;
+}
+
+.cms table[frame=lhs i] {
+	border-style: hidden hidden hidden outset;
+}
+
+.cms table[frame=rhs i] {
+	border-style: hidden outset hidden hidden;
+}
+
+.cms table[frame=vsides i] {
+	border-style: hidden outset;
+}
+
+.cms table[frame=box i],
+.cms table[frame=border i] {
+	border-style: outset;
+}
+
+.cms table[border] > tr > td,
+.cms table[border] > tr > th,
+.cms table[border] > thead > tr > td,
+.cms table[border] > thead > tr > th,
+.cms table[border] > tbody > tr > td,
+.cms table[border] > tbody > tr > th,
+.cms table[border] > tfoot > tr > td,
+.cms table[border] > tfoot > tr > th {
+	/* only if border is not equivalent to zero */
+	border-width: 1px;
+	border-style: inset;
+}
+
+.cms table[rules=none i] > tr > td,
+.cms table[rules=none i] > tr > th,
+.cms table[rules=none i] > thead > tr > td,
+.cms table[rules=none i] > thead > tr > th,
+.cms table[rules=none i] > tbody > tr > td,
+.cms table[rules=none i] > tbody > tr > th,
+.cms table[rules=none i] > tfoot > tr > td,
+.cms table[rules=none i] > tfoot > tr > th,
+.cms table[rules=groups i] > tr > td,
+.cms table[rules=groups i] > tr > th,
+.cms table[rules=groups i] > thead > tr > td,
+.cms table[rules=groups i] > thead > tr > th,
+.cms table[rules=groups i] > tbody > tr > td,
+.cms table[rules=groups i] > tbody > tr > th,
+.cms table[rules=groups i] > tfoot > tr > td,
+.cms table[rules=groups i] > tfoot > tr > th,
+.cms table[rules=rows i] > tr > td,
+.cms table[rules=rows i] > tr > th,
+.cms table[rules=rows i] > thead > tr > td,
+.cms table[rules=rows i] > thead > tr > th,
+.cms table[rules=rows i] > tbody > tr > td,
+.cms table[rules=rows i] > tbody > tr > th,
+.cms table[rules=rows i] > tfoot > tr > td,
+.cms table[rules=rows i] > tfoot > tr > th {
+	border-width: 1px;
+	border-style: none;
+}
+
+.cms table[rules=cols i] > tr > td,
+.cms table[rules=cols i] > tr > th,
+.cms table[rules=cols i] > thead > tr > td,
+.cms table[rules=cols i] > thead > tr > th,
+.cms table[rules=cols i] > tbody > tr > td,
+.cms table[rules=cols i] > tbody > tr > th,
+.cms table[rules=cols i] > tfoot > tr > td,
+.cms table[rules=cols i] > tfoot > tr > th {
+	border-width: 1px;
+	border-style: none solid;
+}
+
+.cms table[rules=all i] > tr > td,
+.cms table[rules=all i] > tr > th,
+.cms table[rules=all i] > thead > tr > td,
+.cms table[rules=all i] > thead > tr > th,
+.cms table[rules=all i] > tbody > tr > td,
+.cms table[rules=all i] > tbody > tr > th,
+.cms table[rules=all i] > tfoot > tr > td,
+.cms table[rules=all i] > tfoot > tr > th {
+	border-width: 1px;
+	border-style: solid;
+}
+
+.cms table[rules=groups i] > colgroup {
+	border-left-width: 1px;
+	border-left-style: solid;
+	border-right-width: 1px;
+	border-right-style: solid;
+}
+
+.cms table[rules=groups i] > thead,
+.cms table[rules=groups i] > tbody,
+.cms table[rules=groups i] > tfoot {
+	border-top-width: 1px;
+	border-top-style: solid;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+.cms table[rules=rows i] > tr,
+.cms table[rules=rows i] > thead > tr,
+.cms table[rules=rows i] > tbody > tr,
+.cms table[rules=rows i] > tfoot > tr {
+	border-top-width: 1px;
+	border-top-style: solid;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+/* 10.3.12 The hr element */
+.cms hr {
+	border-style: inset;
+	border-width: 1px;
+	margin: 0.5em auto;
+}
+
+.cms hr[align=left] {
+	margin-left: 0;
+	margin-right: auto;
+}
+
+.cms hr[align=right] {
+	margin-left: auto;
+	margin-right: 0;
+}
+
+.cms hr[align=center] {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.cms hr[color],
+.cms hr[noshade] {
+	border-style: solid;
+}
+
+/* 10.3.13 The fieldset and legend elements */
+.cms fieldset {
+	margin-left: 2px;
+	margin-right: 2px;
+	border: groove 2px ThreeDFace;
+	padding: 0.35em 0.625em 0.75em;
+}
+
+.cms legend {
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
+/* 10.4.1 Embedded content */
+.cms iframe {
+	border: 2px inset;
+}
+
+/* 10.4.3 Attributes for embedded content and images */
+.cms iframe[frameborder=0],
+.cms iframe[frameborder=no i] {
+	border: none;
+}
+
+.cms applet[align=top i],
+.cms embed[align=top i],
+.cms iframe[align=top i],
+.cms img[align=top i],
+.cms input[type=image i][align=top i],
+.cms object[align=top i] {
+	vertical-align: top;
+}
+
+.cms applet[align=baseline i],
+.cms embed[align=baseline i],
+.cms iframe[align=baseline i],
+.cms img[align=baseline i],
+.cms input[type=image i][align=baseline i],
+.cms object[align=baseline i] {
+	vertical-align: baseline;
+}
+
+.cms applet[align=texttop i],
+.cms embed[align=texttop i],
+.cms iframe[align=texttop i],
+.cms img[align=texttop i],
+.cms input[type=image i][align=texttop i],
+.cms object[align=texttop i] {
+	vertical-align: text-top;
+}
+
+.cms applet[align=absmiddle i],
+.cms embed[align=absmiddle i],
+.cms iframe[align=absmiddle i],
+.cms img[align=absmiddle i],
+.cms input[type=image i][align=absmiddle i],
+.cms object[align=absmiddle i],
+.cms applet[align=abscenter i],
+.cms embed[align=abscenter i],
+.cms iframe[align=abscenter i],
+.cms img[align=abscenter i],
+.cms input[type=image i][align=abscenter i],
+.cms object[align=abscenter i] {
+	vertical-align: middle;
+}
+
+.cms applet[align=bottom i],
+.cms embed[align=bottom i],
+.cms iframe[align=bottom i],
+.cms img[align=bottom i],
+.cms input[type=image i][align=bottom i],
+.cms object[align=bottom i] {
+	vertical-align: bottom;
+}

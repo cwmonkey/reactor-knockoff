@@ -16,6 +16,7 @@
 	<link href='https://fonts.googleapis.com/css?family=Play:400|Quantico:400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="css/reset.css">
 	<link rel="stylesheet" href="css/app.css">
+	<link rel="stylesheet" href="css/cms.css">
 </head>
 <body>
 	<div id="wrapper">
@@ -207,7 +208,7 @@
 					<!-- Help -->
 					<section id="help_section" class="page">
 						<h2 class="heading">Help</h2>
-						<div id="help" class="subpanel explanitory">
+						<div id="help" class="subpanel explanitory cms">
 							<p>Cells = power and heat</p>
 							<p>Power = money</p>
 							<p>Money = Bigger cells and more money</p>
@@ -220,7 +221,7 @@
 					<!-- Options -->
 					<section id="options_section" class="page">
 						<h2 class="heading">Options</h2>
-						<div id="options" class="subpanel explanitory">
+						<div id="options" class="subpanel explanitory cms">
 							<p><button id="enable_google_drive_save">Enable Google Drive Online Save</button></p>
 							<p><button id="enable_local_save">Enable Local Save Only</button></p>
 						</div>
@@ -229,10 +230,35 @@
 					<!-- About -->
 					<section id="about_section" class="page">
 						<h2 class="heading">About</h2>
-						<div id="about" class="subpanel explanitory">
+						<div id="about" class="subpanel explanitory cms">
 							<p>Based on <a href="http://www.kongregate.com/games/Cael/reactor-incremental" target="_blank">Reactor Incremental</a>.</p>
 							<p>UI based on <a href="http://opengameart.org/content/sci-fi-user-interface-elements" target="_blank">Sci-fi User Interface Elements</a> by <a href="http://opengameart.org/users/buch" target="_blank">Buch</a>.</p>
 							<p>Fonts from <a href="https://www.google.com/fonts" target="_blank">Google Fonts</a>.</p>
+
+							<p></p>
+							<p><button class="nav" data-section="reactor_upgrades" data-page="patch_section">See Patch Notes</button></p>
+						</div>
+					</section>
+
+					<!-- Patch Notes -->
+					<section id="patch_section" class="page">
+						<h2 class="heading">Patch Notes</h2>
+						<div id="about" class="subpanel explanitory cms">
+							<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">Back to Reactor</button>
+							<section class="patch">
+								<h3>v1.1.0 - January 11th, 2015</h3>
+								<h4>Features:</h4>
+								<ul>
+									<li>Added patch notes</li>
+									<li>Styling fixes to "pages"</li>
+								</ul>
+
+								<h4>Bug Fixes:</h4>
+								<ul>
+									<li>Fixed an issue with game loop firing too often</li>
+								</ul>
+							</section>
+							<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">Back to Reactor</button>
 						</div>
 					</section>
 
