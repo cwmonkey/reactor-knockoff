@@ -1914,9 +1914,11 @@ Part.prototype.updateTooltip = function(tile) {
 
 		if ( tile.activated && tile.part.category !== 'cell' ) {
 			if ( tile.part.ticks ) {
-				$tooltip_sells.innerHTML = fmt(tile.part.cost - Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost));
+				$tooltip_sells.innerHTML = fmt(Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost));
 			} else if ( tile.part.containment ) {
 				$tooltip_sells.innerHTML = fmt(tile.part.cost - Math.ceil(tile.heat_contained / tile.part.containment * tile.part.cost));
+			} else {
+				$tooltip_sells.innerHTML = fmt(tile.part.cost);
 			}
 		}
 
@@ -3312,7 +3314,7 @@ var remove_part = function(remove_tile, skip_update, sell) {
 	if ( sell ) {
 		if ( remove_tile.activated && remove_tile.part && remove_tile.part.category !== 'cell' ) {
 			if ( remove_tile.part.ticks ) {
-				current_money += remove_tile.part.cost - Math.ceil(remove_tile.ticks / remove_tile.part.ticks * remove_tile.part.cost);
+				current_money += Math.ceil(remove_tile.part.ticks / remove_tile.ticks * remove_tile.part.cost);
 				$money.innerHTML = fmt(current_money);
 			} else if ( remove_tile.part.containment ) {
 				current_money += remove_tile.part.cost - Math.ceil(remove_tile.heat_contained / remove_tile.part.containment * remove_tile.part.cost);
