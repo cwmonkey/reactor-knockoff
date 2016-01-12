@@ -2322,7 +2322,7 @@ var upgrades = [
 			var part;
 			for ( var i = 1; i <= 6; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (1 + (upgrade.level / 100)) + (part.part.base_power_increase * (upgrade_objects['full_spectrum_reflectors'].level - 1));
+				part.power_increase = part.part.base_power_increase * (1 + (upgrade.level / 100)) + (part.part.base_power_increase * (upgrade_objects['full_spectrum_reflectors'].level));
 				part.updateDescription();
 			}
 		}
@@ -2560,7 +2560,7 @@ var upgrades = [
 			var part;
 			for ( var i = 1; i <= 6; i++ ) {
 				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (1 + (upgrade_objects['improved_neutron_reflection'].level / 100)) + (part.part.base_power_increase * (upgrade.level - 1));
+				part.power_increase = part.part.base_power_increase * (1 + (upgrade_objects['improved_neutron_reflection'].level / 100)) + (part.part.base_power_increase * (upgrade.level));
 				part.updateDescription();
 			}
 		}
@@ -3316,6 +3316,9 @@ var remove_part = function(remove_tile, skip_update, sell) {
 				$money.innerHTML = fmt(current_money);
 			} else if ( remove_tile.part.containment ) {
 				current_money += remove_tile.part.cost - Math.ceil(remove_tile.heat_contained / remove_tile.part.containment * remove_tile.part.cost);
+				$money.innerHTML = fmt(current_money);
+			} else {
+				current_money += remove_tile.part.cost;
 				$money.innerHTML = fmt(current_money);
 			}
 		}
@@ -4459,6 +4462,11 @@ save_game.load(function(rks) {
 		update_nodes();
 		update_tiles();
 		update_heat_and_power();
+
+		// Show the patch notes if this is a new version
+		if ( save_version !== version ) {
+			_show_page('reactor_upgrades', 'patch_section', true);
+		}
 	}
 
 	update_cell_power();
@@ -4466,11 +4474,6 @@ save_game.load(function(rks) {
 	update_nodes();
 	update_tiles();
 	update_heat_and_power();
-
-	// Show the patch notes if this is a new version
-	if ( save_version !== version ) {
-		_show_page('reactor_upgrades', 'patch_section', true);
-	}
 
 	if ( !paused ) {
 		clearTimeout(loop_timeout);
