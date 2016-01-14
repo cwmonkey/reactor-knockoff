@@ -3764,6 +3764,7 @@ var total_containment_heat;
 var target_percent;
 
 var ep_chance_percent;
+var ep_gain;
 
 var game_loop = function() {
 	power_add = 0;
@@ -3855,12 +3856,22 @@ var game_loop = function() {
 						lower_heat = tile.heat_contained > tile.part.ep_heat ? tile.part.ep_heat : tile.heat_contained;
 						ep_chance_percent = lower_heat / tile.part.part.base_ep_heat;
 						ep_chance = Math.log(lower_heat) / Math.pow(10, 5 - tile.part.part.level) * ep_chance_percent;
+						ep_gain = 0;
 
 						tile.display_chance = ep_chance * 100;
 						tile.display_chance_percent_of_total = lower_heat / tile.part.ep_heat * 100;
 
+						if ( ep_chance > 1 ) {
+							ep_gain = Math.floor(ep_chance);
+							ep_chance -= ep_gain;
+						}
+
 						if ( ep_chance > Math.random() ) {
-							exotic_particles++;
+							ep_gain++;
+						}
+
+						if ( ep_gain > 0 ) {
+							exotic_particles += ep_gain;
 							$exotic_particles.innerHTML = fmt(exotic_particles);
 						}
 					}
