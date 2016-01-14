@@ -242,11 +242,13 @@ var is_ios = navigator.userAgent.match(/(iPod|iPhone|iPad)/) ? true : false;
 
 // Only mark as a touch device when the first touch happens
 
-document.body.ontouchstart = function() {
+window.addEventListener('touchstart', function setHasTouch () {
 	is_touch = true;
 	$main.className += ' touch';
-	document.body.ontouchstart = null;
-};
+	// Remove event listener once fired, otherwise it'll kill scrolling
+	// performance
+	window.removeEventListener('touchstart', setHasTouch);
+}, false);
 
   /////////////////////////////
  // Online Saves
