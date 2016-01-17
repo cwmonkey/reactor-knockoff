@@ -10,14 +10,12 @@ mobile ui
 parts ui adjust
 browser testing
 
-Maybe before:
 when placed, change tooltip/focus to tile
 Add "purchase" to tooltip for upgrades?
 Add "sell all of type" button
 disable heat controller button?
 saving/loading indicator, cancel save/load button
 unshift vents - vent6 power issue?
-forceful fusion testing
 figure out reflector experiment upgrade
 finish help section
 Statistics
@@ -39,13 +37,13 @@ Options page - exponential formatting
 test speed of loops
 try big int library
 ui.js - put purely ui control stuff in there
+Alert user when there is an update available
 
-After:
+Make an auto-updater that updates without reloading
 shift + right click on spent cells also gets rid of unspent cells
 document part/upgrade keys
 right click to sell upgrades?
-refactor code
-break into multiple files?
+decouple tooltip code
 shift+click on empty tiles to fill them
 achievement system
 save layouts
@@ -58,148 +56,72 @@ console.log
 'use strict';
 
   /////////////////////////////
- // Delegate
-/////////////////////////////
-
-Element.prototype.delegate = function(className, type, fn) {
-	var test = new RegExp('\\b' + className + '\\b');
-	var $self = this;
-
-	var onfn = function(event) {
-		event = event || window.event;
-		event.preventDefault();
-
-		var $target = event.target || event.srcElement;
-
-		while( $target != $self ) {
-			if ( $target.className.match(test) ) {
-				return fn.call($target, event);
-			}
-
-			$target = $target.parentNode;
-		}
-	}
-
-	if ( type === 'focus' || type === 'blur' ) {
-		this.addEventListener(type, onfn, true);
-	} else if ( type === 'click' ) {
-		this['on' + type] = onfn;
-
-		// Since we can't know ahead of time if this is a touch device
-		//if ( is_touch ) {
-		this['ontouchend'] = onfn;
-		//}
-	} else {
-		this['on' + type] = onfn;
-	}
-}
-
-  /////////////////////////////
- // fauxQuery
-/////////////////////////////
-
-var _div = document.createElement('div');
-var $ = function(a1) {
-	if ( typeof a1 === 'string' ) {
-		if ( a1.match(/^<.+>$/) ) {
-			_div.innerHTML = a1;
-			return _div.firstChild;
-		} else if ( a1.match(/^#[^ ]+$/) ) {
-			return document.getElementById(a1.substring(1))
-		}
-	}
-}
-
-  /////////////////////////////
- // Number formatting
-/////////////////////////////
-
-var cm_names = ("K M B T Qa Qi Sx Sp Oc No Dc").split(" ");
-
-var pow;
-var fnum;
-var find_exponent = /(([1-9])(\.([0-9]+))?)e\+([0-9]+)/;
-var fmt_parts;
-var floor_num;
-
-var fmt = function(num, places) {
-	places = places || null;
-
-	// Math.floor returns exponents quicker for some reason
-	floor_num = Math.floor(num).toString();
-
-	if ( places !== null ) {
-		pow = Math.floor((floor_num.length - 1)/3) * 3;
-		num = Math.round(num / Math.pow(10, pow - places)) * Math.pow(10, pow - places);
-	}
-
-	// in case of exponents
-	if ( (fmt_parts = floor_num.match(find_exponent)) ) {
-		places = places || 3;
-
-		// Out of range of the friendly numbers
-		if ( fmt_parts[5] > 35 ) {
-			fnum = fmt_parts[2] + (fmt_parts[3]?fmt_parts[3].substring(0, places + 1):'') + 'e' + fmt_parts[5];
-		// has a decimal
-		} else if ( fmt_parts[3] ) {
-			num = fmt_parts[2] + fmt_parts[4] + '00';
-			fnum = parseFloat(num.substring(0, fmt_parts[5] % 3 + 1) + '.' + num.substring(fmt_parts[5] % 3 + 1, fmt_parts[5] % 3 + places + 1)) + cm_names[Math.floor(fmt_parts[5]/3) - 1];
-		} else {
-			num = fmt_parts[2] + '00';
-			fnum = num.substring(0, fmt_parts[5] % 3 + 1) + cm_names[Math.floor(fmt_parts[5]/3) - 1];
-		}
-	} else {
-		// http://userscripts-mirror.org/scripts/review/293573
-		pow = Math.floor((floor_num.length - 1)/3) * 3;
-		fnum = (Math.floor(num / Math.pow(10, pow - 3)) / Math.pow(10, 3)) + (pow === 0 ? "" : cm_names[(pow / 3) - 1]);
-	}
-
-	return fnum;
-};
-
-  /////////////////////////////
  // General
 /////////////////////////////
 
-// settings
-var version = '1.1.1';
-var base_cols = 14;
-var base_rows = 11;
-var max_cols = 35;
-var max_rows = 32;
-var debug = false;
-var save_debug = false;
-var base_loop_wait = 1000;
-var base_power_multiplier = 1;
-var base_heat_multiplier = 4;
-var base_manual_heat_reduce = 1;
-var upgrade_max_level = 32;
-var base_max_heat = 1000;
-var base_max_power = 100;
-var base_money = 10;
-var save_interval = 60000;
+var ui = window.ui;
+window.ui = null;
+
+var Game = function() {
+	this.ui;
+
+	// settings
+	this.version = '1.2.0';
+	this.base_cols = 14;
+	this.base_rows = 11;
+	this.max_cols = 35;
+	this.max_rows = 32;
+	this.debug = false;
+	this.save_debug = false;
+	this.base_loop_wait = 1000;
+	this.base_power_multiplier = 1;
+	this.base_heat_multiplier = 4;
+	this.base_manual_heat_reduce = 1;
+	this.upgrade_max_level = 32;
+	this.base_max_heat = 1000;
+	this.base_max_power = 100;
+	this.base_money = 10;
+	this.save_interval = 60000;
+
+	// Current
+	this.current_heat;
+	this.rows;
+	this.cols;
+	this.tiles = [];
+	this.loop_wait;
+	this.heat_power_multiplier;
+	this.heat_controlled;
+	this.manual_heat_reduce;
+	this.auto_sell_multiplier;
+	this.transfer_plating_multiplier;
+	this.transfer_capacitor_multiplier;
+	this.vent_plating_multiplier;
+	this.vent_capacitor_multiplier;
+	this.altered_max_power;
+	this.altered_max_heat;
+
+	// Displayed
+
+
+	this.part_objects_array = [];
+	this.part_objects = {};
+	this.upgrade_objects_array = [];
+	this.upgrade_objects = {};
+};
+
+Game.prototype.addProperty = addProperty;
+
+var game = new Game();
+ui.init(game);
+game.ui = ui;
 
 // Current
-var current_heat;
 var current_power;
 var current_money;
 var max_heat;
-var auto_sell_multiplier;
 var max_power;
-var loop_wait;
 var power_multiplier;
 var heat_multiplier;
-var manual_heat_reduce;
-var vent_capacitor_multiplier;
-var vent_plating_multiplier;
-var transfer_capacitor_multiplier;
-var transfer_plating_multiplier;
-var heat_power_multiplier;
-var heat_controlled;
-var altered_max_heat;
-var altered_max_power;
-var cols;
-var rows;
 var protium_particles;
 
 var paused = false;
@@ -210,26 +132,26 @@ var current_exotic_particles = 0;
 var total_exotic_particles = 0;
 
 var set_defaults = function() {
-	current_heat = 0;
+	game.current_heat = 0;
 	current_power = 0;
-	current_money = base_money;
-	cols = base_cols;
-	rows = base_rows;
-	max_heat = base_max_heat;
-	auto_sell_multiplier = 0;
-	max_power = base_max_power;
-	loop_wait = base_loop_wait;
-	power_multiplier = base_power_multiplier;
-	heat_multiplier = base_heat_multiplier;
-	manual_heat_reduce = base_manual_heat_reduce;
-	vent_capacitor_multiplier = 0;
-	vent_plating_multiplier = 0;
-	transfer_capacitor_multiplier = 0;
-	transfer_plating_multiplier = 0;
-	heat_power_multiplier = 0;
-	heat_controlled = 0;
-	altered_max_heat = base_max_heat;
-	altered_max_power = base_max_power;
+	current_money = game.base_money;
+	game.cols = game.base_cols;
+	game.rows = game.base_rows;
+	max_heat = game.base_max_heat;
+	game.auto_sell_multiplier = 0;
+	max_power = game.base_max_power;
+	game.loop_wait = game.base_loop_wait;
+	power_multiplier = game.base_power_multiplier;
+	heat_multiplier = game.base_heat_multiplier;
+	game.manual_heat_reduce = game.base_manual_heat_reduce;
+	game.vent_capacitor_multiplier = 0;
+	game.vent_plating_multiplier = 0;
+	game.transfer_capacitor_multiplier = 0;
+	game.transfer_plating_multiplier = 0;
+	game.heat_power_multiplier = 0;
+	game.heat_controlled = 0;
+	game.altered_max_heat = game.base_max_heat;
+	game.altered_max_power = game.base_max_power;
 	protium_particles = 0;
 };
 
@@ -259,7 +181,7 @@ var $enable_local_save = $('#enable_local_save');
 
 var LocalSaver = function() {
 	this.save = function(data, callback) {
-		save_debug && console.log('LocalSaver.save');
+		game.save_debug && console.log('LocalSaver.save');
 		window.localStorage.setItem('rks', data);
 
 		if ( callback ) {
@@ -268,12 +190,12 @@ var LocalSaver = function() {
 	}
 
 	this.enable = function() {
-		save_debug && console.log('LocalSaver.enable');
+		game.save_debug && console.log('LocalSaver.enable');
 		localStorage.removeItem('google_drive_save');
 	}
 
 	this.load = function(callback) {
-		save_debug && console.log('LocalSaver.load');
+		game.save_debug && console.log('LocalSaver.load');
 		var rks = window.localStorage.getItem('rks');
 		callback(rks);
 	}
@@ -285,7 +207,7 @@ var google_loaded = false;
 var google_auth_called = false;
 
 window.set_google_loaded = function() {
-	save_debug && console.log('set_google_loaded');
+	game.save_debug && console.log('set_google_loaded');
 	google_loaded = true;
 
 	if ( google_auth_called ) {
@@ -309,7 +231,7 @@ var GoogleSaver = function() {
 	this.authChecked = false;
 
 	this.enable = function(callback, event) {
-		save_debug && console.log('GoogleSaver.enable');
+		game.save_debug && console.log('GoogleSaver.enable');
 		enable_callback = callback;
 
 		if ( google_loaded && this.authChecked === true && file_id !== null ) {
@@ -329,7 +251,7 @@ var GoogleSaver = function() {
 	};
 
 	this.save = function(data, callback) {
-		save_debug && console.log('GoogleSaver.save');
+		game.save_debug && console.log('GoogleSaver.save');
 		local_saver.save(data);
 
 		if ( google_loaded === true && this.authChecked === true && file_id !== null ) {
@@ -338,7 +260,7 @@ var GoogleSaver = function() {
 	};
 
 	this.load = function(callback) {
-		save_debug && console.log('GoogleSaver.load');
+		game.save_debug && console.log('GoogleSaver.load');
 
 		if ( file_meta !== null ) {
 			download_file(file_meta, callback);
@@ -360,7 +282,7 @@ var GoogleSaver = function() {
 	 * Check if the current user has authorized the application.
 	 */
 	this.checkAuth = function(callback, immediate) {
-		save_debug && console.log('GoogleSaver.checkAuth');
+		game.save_debug && console.log('GoogleSaver.checkAuth');
 		immediate = immediate || false;
 
 		gapi.auth.authorize(
@@ -370,7 +292,7 @@ var GoogleSaver = function() {
 				'immediate': immediate
 			},
 			function(authResult) {
-				save_debug && console.log('gapi.auth.authorize CB', authResult);
+				game.save_debug && console.log('gapi.auth.authorize CB', authResult);
 
 				if ( authResult && !authResult.error ) {
 					google_loaded = true;
@@ -384,7 +306,7 @@ var GoogleSaver = function() {
 						callback();
 					} else {
 						gapi.client.load('drive', 'v2', function(data) {
-							save_debug && console.log('gapi.client.load CB', data);
+							game.save_debug && console.log('gapi.client.load CB', data);
 							get_file();
 						});
 					}
@@ -405,7 +327,7 @@ var GoogleSaver = function() {
 	};
 
 	var update_file = function(data, callback) { 
-		save_debug && console.log('GoogleSaver update_file', data);
+		game.save_debug && console.log('GoogleSaver update_file', data);
 		data = data || '{}';
 		var boundary = '-------314159265358979323846';
 		var delimiter = "\r\n--" + boundary + "\r\n";
@@ -438,7 +360,7 @@ var GoogleSaver = function() {
 		});
 
 		request.execute(function(data) {
-			save_debug && console.log('gapi.client.request CB', data);
+			game.save_debug && console.log('gapi.client.request CB', data);
 
 			if ( !data || data.error ) {
 				if ( data.error.code === 404 ) {
@@ -464,7 +386,7 @@ var GoogleSaver = function() {
 	 * @param {String} fileId ID of the file to delete.
 	 */
 	var deleteFile = function(fileId, callback) {
-		save_debug && console.log('GoogleSaver deleteFile');
+		game.save_debug && console.log('GoogleSaver deleteFile');
 		var request = gapi.client.drive.files.delete({
 			'fileId': fileId
 		});
@@ -475,7 +397,7 @@ var GoogleSaver = function() {
 	}
 
 	var get_file = function() {
-		save_debug && console.log('GoogleSaver get_file');
+		game.save_debug && console.log('GoogleSaver get_file');
 		/**
 		 * List all files contained in the Application Data folder.
 		 *
@@ -493,7 +415,7 @@ var GoogleSaver = function() {
 						});
 						retrievePageOfFiles(request, result);
 					} else {
-						save_debug && console.log('GoogleSaver retrievePageOfFiles CB', result);
+						game.save_debug && console.log('GoogleSaver retrievePageOfFiles CB', result);
 						callback(result);
 					}
 				});
@@ -505,7 +427,7 @@ var GoogleSaver = function() {
 		}
 
 		listFilesInApplicationDataFolder(function(result) {
-			save_debug && console.log('GoogleSaver listFilesInApplicationDataFolder CB', result);
+			game.save_debug && console.log('GoogleSaver listFilesInApplicationDataFolder CB', result);
 
 			for ( var i = 0, l = result.length; i < l; i++ ) {
 				var file = result[i];
@@ -532,7 +454,7 @@ var GoogleSaver = function() {
 	};
 
 	var new_save_file = function(callback) {
-		save_debug && console.log('GoogleSaver new_save_file');
+		game.save_debug && console.log('GoogleSaver new_save_file');
 		var boundary = '-------314159265358979323846264';
 		var delimiter = "\r\n--" + boundary + "\r\n";
 		var close_delim = "\r\n--" + boundary + "--";
@@ -567,7 +489,7 @@ var GoogleSaver = function() {
 		});
 
 		request.execute(function(arg) {
-			save_debug && console.log('gapi.client.request CB', arg);
+			game.save_debug && console.log('gapi.client.request CB', arg);
 			file_id = arg.id;
 			file_meta = arg;
 			if ( callback ) callback();
@@ -581,7 +503,7 @@ var GoogleSaver = function() {
 	 * @param {Function} callback Function to call when the request is complete.
 	 */
 	var download_file = function(file, callback) {
-		save_debug && console.log('GoogleSaver download_file');
+		game.save_debug && console.log('GoogleSaver download_file');
 		if ( file.downloadUrl ) {
 			var accessToken = gapi.auth.getToken().access_token;
 			var xhr = new XMLHttpRequest();
@@ -656,51 +578,54 @@ $enable_google_drive_save.onclick = enable_google_drive_save;
 $enable_google_drive_save.ontouchend = enable_google_drive_save;
 
   /////////////////////////////
- // Reboot
+ // Reboot (Decoupled)
 /////////////////////////////
 
-var $reboot = $('#reboot');
-var $refund = $('#refund');
-
-var reboot = function(refund) {
-	var response = confirm("Are you sure?");
-
-	if ( !response ) return;
-
+window.reboot = function(refund) {
 	clearTimeout(loop_timeout);
 
 	set_defaults();
 
-	for ( ri = 0; ri < max_rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.max_rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < max_cols; ci++ ) {
+		for ( ci = 0; ci < game.max_cols; ci++ ) {
 			tile = row[ci];
 			remove_part(tile, true);
 
-			if ( ri >= rows || ci >= cols ) {
+			if ( ri >= game.rows || ci >= game.cols ) {
 				tile.disable();
 			}
 		}
 	}
 
 	total_exotic_particles += exotic_particles;
+	ui.say('var', 'total_exotic_particles', total_exotic_particles);
 
 	if ( refund === true ) {
-		for ( i = 0, l = upgrade_objects_array.length; i < l; i++ ) {
-			upgrade = upgrade_objects_array[i];
+		for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
+			upgrade = game.upgrade_objects_array[i];
 			upgrade.setLevel(0);
+			if ( tooltip_showing ) {
+				upgrade.updateTooltip();
+			}
 		}
 
 		current_exotic_particles = total_exotic_particles;
 	} else {
-		for ( i = 0, l = upgrade_objects_array.length; i < l; i++ ) {
-			upgrade = upgrade_objects_array[i];
+		for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
+			upgrade = game.upgrade_objects_array[i];
 
 			if ( !upgrade.ecost ) {
 				upgrade.setLevel(0);
+				if ( tooltip_showing ) {
+					upgrade.updateTooltip();
+				}
 			} else {
 				upgrade.setLevel(upgrade.level);
+				if ( tooltip_showing ) {
+					upgrade.updateTooltip();
+				}
 			}
 		}
 
@@ -711,31 +636,14 @@ var reboot = function(refund) {
 
 	exotic_particles = 0;
 
-	$exotic_particles.innerHTML = '0';
-	$reboot_exotic_particles.innerHTML = '0';
-	$current_exotic_particles.innerHTML = fmt(exotic_particles);
+	ui.say('var', 'exotic_particles', exotic_particles);
+	ui.say('var', 'current_exotic_particles', current_exotic_particles);
 
 	update_nodes();
 
 	clearTimeout(loop_timeout);
-	loop_timeout = setTimeout(game_loop, loop_wait);
+	loop_timeout = setTimeout(game_loop, game.loop_wait);
 };
-
-var reboot_click = function(event) {
-	event.preventDefault();
-	reboot();
-};
-
-$reboot.onclick = reboot_click;
-$reboot.ontouchend = reboot_click;
-
-var refund = function(event) {
-	event.preventDefault();
-	reboot(true);
-};
-
-$refund.onclick = refund;
-$refund.ontouchend = refund;
 
 // For iteration
 var i;
@@ -747,30 +655,22 @@ var ci;
 var row;
 var tile;
 var upgrade;
-var single_cell_description = 'Produces %power power and %heat heat per tick. Lasts for %ticks ticks.';
-var multi_cell_description = 'Acts as %count %type cells. Produces %power power and %heat heat per tick.';
 
 // Other vars
-var tiles = [];
-var unaffordable_replace = /[\s\b]unaffordable\b/;
+var single_cell_description = 'Produces %power power and %heat heat per tick. Lasts for %ticks ticks.';
+var multi_cell_description = 'Acts as %count %type cells. Produces %power power and %heat heat per tick.';
 
   /////////////////////////////
  // Tiles
 /////////////////////////////
 
-var enabled_class = 'enabled';
-var enabled_find = new RegExp('[\\s\\b]' + enabled_class + '\\b');
-
 var Tile = function(row, col) {
-	this.$el = $('<button class="tile">');
-	this.$el.tile = this;
 	this.part = null;
 	this.heat = 0;
 	this.heat_contained = 0;
 	this.display_power = null;
 	this.display_heat = null;
 	this.power = 0;
-	this.ticks = 0;
 	this.containments = [];
 	this.cells = [];
 	this.reflectors = [];
@@ -778,27 +678,24 @@ var Tile = function(row, col) {
 	this.row = row;
 	this.col = col;
 	this.enabled = false;
+	this.updated = false;
 
 	this.display_chance = 0;
 	this.display_chance_percent_of_total = 0;
 
-	var $percent_wrapper_wrapper = $('<div class="percent_wrapper_wrapper">');
-	var $percent_wrapper = $('<div class="percent_wrapper">');
-	this.$percent = $('<p class="percent">');
-
-	$percent_wrapper_wrapper.appendChild($percent_wrapper);
-	$percent_wrapper.appendChild(this.$percent);
-	this.$el.appendChild($percent_wrapper_wrapper);
+	this.addProperty('ticks', 0);
 };
 
+Tile.prototype.addProperty = addProperty;
+
 Tile.prototype.disable = function() {
-	this.$el.className = this.$el.className.replace(enabled_find, '');
 	this.enabled = false;
+	ui.say('evt', 'tile_disabled', this);
 };
 
 Tile.prototype.enable = function() {
-	this.$el.className += ' ' + enabled_class;
 	this.enabled = true;
+	ui.say('evt', 'tile_enabled', this);
 };
 
 // Operations
@@ -833,8 +730,8 @@ var update_tiles = function() {
 	heat_outlet_countainments_count = 0;
 	transfer_multiplier = 0;
 	vent_multiplier = 0;
-	max_power = altered_max_power;
-	max_heat = altered_max_heat;
+	max_power = game.altered_max_power;
+	max_heat = game.altered_max_heat;
 	total_heat = 0;
 	total_power = 0;
 
@@ -844,22 +741,22 @@ var update_tiles = function() {
 
 	part_count = 0;
 
-	for ( ri = 0; ri < max_rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.max_rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < max_cols; ci++ ) {
+		for ( ci = 0; ci < game.max_cols; ci++ ) {
 			tile = row[ci];
 
-			if ( tile.enabled === false && ci < cols && ri < rows ) {
+			if ( tile.enabled === false && ci < game.cols && ri < game.rows ) {
 				tile.enable();
 			}
 		}
 	}
 
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			tile_part = tile.part;
 
@@ -879,10 +776,10 @@ var update_tiles = function() {
 	}
 
 	// Alter counts
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			tile_part = tile.part;
 			tile.containments.length = 0;
@@ -893,14 +790,14 @@ var update_tiles = function() {
 				range = tile.part.range || 1;
 
 				// Find containment parts and cells within range
-				for ( ri2 = 0; ri2 < rows; ri2++ ) {
-					for ( ci2 = 0; ci2 < cols; ci2++ ) {
+				for ( ri2 = 0; ri2 < game.rows; ri2++ ) {
+					for ( ci2 = 0; ci2 < game.cols; ci2++ ) {
 						if ( (Math.abs(ri2 - ri) + Math.abs(ci2 - ci)) <= range ) {
 							if ( ri2 === ri && ci2 === ci ) {
 								continue;
 							}
 
-							tile2 = tiles[ri2][ci2];
+							tile2 = game.tiles[ri2][ci2];
 
 							if ( tile2.part && tile2.activated && tile2.part.containment ) {
 								if ( tile.part.category === 'vent' || tile.part.id === 'coolant_cell6' ) {
@@ -919,7 +816,7 @@ var update_tiles = function() {
 								continue;
 							}
 
-							tile2 = tiles[ri2][ci2];
+							tile2 = game.tiles[ri2][ci2];
 
 							if ( tile2.part && tile2.activated && tile2.part.containment ) {
 								tile.containments.push(tile2);
@@ -933,11 +830,11 @@ var update_tiles = function() {
 				if ( tile_part.category === 'heat_outlet' ) {
 					heat_outlet_countainments_count += tile.containments.length;
 				} else if ( tile_part.category === 'capacitor' ) {
-					transfer_multiplier += tile_part.part.level * transfer_capacitor_multiplier;
-					vent_multiplier += tile_part.part.level * vent_capacitor_multiplier;
+					transfer_multiplier += tile_part.part.level * game.transfer_capacitor_multiplier;
+					vent_multiplier += tile_part.part.level * game.vent_capacitor_multiplier;
 				} else if ( tile_part.category === 'reactor_plating' ) {
-					transfer_multiplier += tile_part.part.level * transfer_plating_multiplier;
-					vent_multiplier += tile_part.part.level * vent_plating_multiplier;
+					transfer_multiplier += tile_part.part.level * game.transfer_plating_multiplier;
+					vent_multiplier += tile_part.part.level * game.vent_plating_multiplier;
 				}
 
 				if ( tile_part.category === 'heat_inlet' ) {
@@ -952,10 +849,10 @@ var update_tiles = function() {
 	}
 
 	// Heat and power generators
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			tile_part = tile.part;
 
@@ -969,8 +866,8 @@ var update_tiles = function() {
 							pulses += tile2.part.cell_count * tile2.part.pulse_multiplier;
 						}
 
-						tile.heat += part_objects[tile_part.part.type + '1'].heat * (Math.pow((pack_multipliers[tile_part.part.level - 1] + pulses), 2)) / tile_part.cell_count;
-						tile.power += part_objects[tile_part.part.type + '1'].power * (pack_multipliers[tile_part.part.level - 1] + pulses);
+						tile.heat += game.part_objects[tile_part.part.type + '1'].heat * (Math.pow((pack_multipliers[tile_part.part.level - 1] + pulses), 2)) / tile_part.cell_count;
+						tile.power += game.part_objects[tile_part.part.type + '1'].power * (pack_multipliers[tile_part.part.level - 1] + pulses);
 					} else {
 						tile.heat += tile_part.heat;
 						tile.power += tile_part.power;
@@ -985,10 +882,10 @@ var update_tiles = function() {
 	}
 
 	// Reflectors
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			tile_part = tile.part;
 
@@ -1020,10 +917,10 @@ var update_tiles = function() {
 	}
 
 	// Containments
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			tile_part = tile.part;
 
@@ -1046,10 +943,10 @@ var update_tiles = function() {
 	}
 
 	// Capacitors/Plating
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			tile_part = tile.part;
 
@@ -1067,61 +964,40 @@ var update_tiles = function() {
 		}
 	}
 
-	$max_power.innerHTML = fmt(max_power);
-	$max_heat.innerHTML = fmt(max_heat);
+	ui.say('var', 'max_power', max_power);
+	ui.say('var', 'max_heat', max_heat);
 
-	$stats_vent.innerHTML = fmt(stat_vent * (1 + vent_multiplier / 100), 2);
-	$stats_inlet.innerHTML = fmt(stat_inlet * (1 + transfer_multiplier / 100), 2);
-	$stats_outlet.innerHTML = fmt(stat_outlet * (1 + transfer_multiplier / 100), 2);
+	ui.say('var', 'stats_vent', stat_vent * (1 + vent_multiplier / 100));
+	ui.say('var', 'stats_inlet', stat_inlet * (1 + transfer_multiplier / 100));
+	ui.say('var', 'stats_outlet', stat_outlet * (1 + transfer_multiplier / 100));
 
 	// heat and power stats
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			total_heat += tile.heat;
 			total_power += tile.power;
 		}
 	}
 
-	if ( part_count === 0 && current_power + current_money < base_money ) {
-		current_money = base_money - current_power;
-		$money.innerHTML = fmt(current_money);
+	if ( part_count === 0 && current_power + current_money < game.base_money ) {
+		current_money = game.base_money - current_power;
+		ui.say('var', 'current_money', current_money);
 	}
 
-	$stats_heat.innerHTML = fmt(total_heat, 2);
-	$stats_power.innerHTML = fmt(total_power, 2);
-	$stats_cash.innerHTML = fmt(Math.ceil(total_power * auto_sell_multiplier), 2);
+	ui.say('var', 'stats_heat', total_heat);
+	ui.say('var', 'total_power', total_power);
+	ui.say('var', 'stats_cash', Math.ceil(total_power * game.auto_sell_multiplier));
 };
 
 // get dom nodes cached
 var $reactor = $('#reactor');
 var $all_parts = $('#all_parts');
 
-var $money = $('#money');
-var $cooling = $('#cooling');
-var $current_heat = $('#current_heat');
-var $current_power = $('#current_power');
-var $max_heat = $('#max_heat');
-var $max_power = $('#max_power');
-var $power_per_tick = $('#power_per_tick');
-var $heat_per_tick = $('#heat_per_tick');
-var $money_per_tick = $('#money_per_tick');
 var $main = $('#main');
-var $upgrades = $('#upgrades');
 var $all_upgrades = $('#all_upgrades');
-var $exotic_particles = $('#exotic_particles');
-var $current_exotic_particles = $('#current_exotic_particles');
-var $reboot_exotic_particles = $('#reboot_exotic_particles');
-var $refund_exotic_particles = $('#refund_exotic_particles');
-
-var $stats_vent = $('#stats_vent');
-var $stats_inlet = $('#stats_inlet');
-var $stats_outlet = $('#stats_outlet');
-var $stats_cash = $('#stats_cash');
-var $stats_power = $('#stats_power');
-var $stats_heat = $('#stats_heat');
 
 // Tooltip
 var $tooltip = $('#tooltip');
@@ -1140,83 +1016,44 @@ var $tooltip_max_heat = $('#tooltip_max_heat');
 var $tooltip_ticks_wrapper = $('#tooltip_ticks_wrapper');
 var $tooltip_ticks = $('#tooltip_ticks');
 var $tooltip_max_ticks = $('#tooltip_max_ticks');
-var $tooltip_delete = $('#tooltip_delete');
-var $tooltip_delete_all = $('#tooltip_delete_all');
-var $tooltip_replace_all = $('#tooltip_replace_all');
-var $tooltip_upgrade_all = $('#tooltip_upgrade_all');
-var $tooltip_close = $('#tooltip_close');
 
 var $tooltip_chance_wrapper = $('#tooltip_chance_wrapper');
 var $tooltip_chance = $('#tooltip_chance');
 var $tooltip_chance_percent_of_total = $('#tooltip_chance_percent_of_total');
 
-if ( debug ) {
+var $tooltip_delete = $('#tooltip_delete');
+var $tooltip_delete_all = $('#tooltip_delete_all');
+var $tooltip_replace_all = $('#tooltip_replace_all');
+var $tooltip_upgrade_all = $('#tooltip_upgrade_all');
+
+if ( game.debug ) {
 	$main.className += ' debug';
 }
 
-$max_heat.innerHTML = fmt(max_heat);
-$max_power.innerHTML = fmt(max_power);
-
-// TODO: Save preference
-// Nav more/less
-var $nav_more = $('#nav_more');
-var $nav_less = $('#nav_less');
-var nav_more_find = /[\s\b]nav_more\b/;
-var nav_more = function(event) {
-	event.preventDefault();
-	$main.className += ' nav_more';
-};
-
-$nav_more.onclick = nav_more;
-$nav_more.ontouchend = nav_more;
-
-var nav_less = function(event) {
-	event.preventDefault();
-	$main.className = $main.className.replace(nav_more_find, '');
-};
-
-$nav_less.onclick = nav_less;
-$nav_less.ontouchend = nav_less;
-
-// TODO: Save preference
-// Stats more/less
-var $show_more_stats = $('#show_more_stats');
-var $hide_more_stats = $('#hide_more_stats');
-var show_more_stats_find = /[\s\b]show_more_stats\b/;
-var show_more_stats = function(event) {
-	event.preventDefault();
-	$main.className += ' show_more_stats';
-};
-
-$show_more_stats.onclick = show_more_stats;
-$show_more_stats.ontouchend = show_more_stats;
-
-var hide_more_stats = function(event) {
-	event.preventDefault();
-	$main.className = $main.className.replace(show_more_stats_find, '');
-};
-
-$hide_more_stats.onclick = hide_more_stats;
-$hide_more_stats.ontouchend = hide_more_stats;
+ui.say('var', 'max_heat', max_heat);
+ui.say('var', 'max_power', max_power);
 
 // create tiles
 var $row;
-for ( ri = 0; ri < max_rows; ri++ ) {
-	$row = $('<div class="row">');
-	$reactor.appendChild($row);
+for ( ri = 0; ri < game.max_rows; ri++ ) {
+	ui.say('evt', 'row_added', ri);
 	row = [];
 
-	for ( ci = 0; ci < max_cols; ci++ ) {
+	for ( ci = 0; ci < game.max_cols; ci++ ) {
 		tile = new Tile(ri, ci);
 		row.push(tile);
-		$row.appendChild(tile.$el);
+		ui.say('evt', 'tile_added', {
+			row: ri,
+			column: ci,
+			tile: tile
+		});
 
-		if ( ci <= cols || ri <= rows ) {
+		if ( ci <= game.cols || ri <= game.rows ) {
 			tile.disable();
 		}
 	}
 
-	tiles.push(row);
+	game.tiles.push(row);
 }
 
 // Tile tooltips
@@ -1275,476 +1112,13 @@ if ( !is_touch ) {
 }
 
   /////////////////////////////
- // Show Pages
-/////////////////////////////
-
-var showing_find = /[\b\s]showing\b/;
-
-var _show_page = function(section, id, notrack) {
-	notrack = notrack || false;
-	var $page = $('#' + id);
-	var $section = $('#' + section);
-	var pages = $section.getElementsByClassName('page');
-
-	for ( var i = 0, length = pages.length, $p; i < length; i++ ) {
-		$p = pages[i];
-		$p.className = $p.className.replace(showing_find, '');
-	}
-
-	$page.className += ' showing';
-
-	// Page specific stuff
-	if ( id == 'upgrades_section' || id == 'experimental_upgrades_section' ) {
-		start_check_upgrades_affordability();
-	} else {
-		stop_check_upgrades_affordability();
-	}
-
-	if ( !notrack ) {
-		ga('send', 'event', 'click', 'show_page', 'id');
-	}
-};
-
-var show_page = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	var id = this.getAttribute('data-page');
-	var section = this.getAttribute('data-section');
-	_show_page(section, id);
-};
-
-$main.delegate('nav', 'click', show_page);
-$main.delegate('nav', 'touchend', show_page);
-
-  /////////////////////////////
  // Parts
 /////////////////////////////
 
-var $cells = $('#cells');
-var $reflectors = $('#reflectors');
-var $capacitors = $('#capacitors');
-var $vents = $('#vents');
-var $heat_exchangers = $('#heat_exchangers');
-var $heat_inlets = $('#heat_inlets');
-var $heat_outlets = $('#heat_outlets');
-var $coolant_cells = $('#coolant_cells');
-var $reactor_platings = $('#reactor_platings');
-var $particle_accelerators = $('#particle_accelerators');
-var $parts = $('#parts');
+var parts = window.parts();
+window.parts = null;
 
-var parts = [
-	// Cells
-	{
-		id: 'uranium1',
-		type: 'uranium',
-		level: 1,
-		title: 'Uranium Cell',
-		base_description: single_cell_description,
-		category: 'cell',
-		cell_count: 1,
-		pulse_multiplier: 1,
-		base_cost: 10,
-		base_ticks: 15,
-		base_power: 1,
-		base_heat: 1,
-		cell_tick_upgrade_cost: 100,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 500,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 1000
-	},
-	{
-		id: 'uranium2',
-		type: 'uranium',
-		level: 2,
-		title: 'Dual Uranium Cell',
-		base_description: multi_cell_description,
-		category: 'cell',
-		cell_count: 2,
-		pulse_multiplier: 1,
-		base_cost: 25,
-		base_ticks: 15,
-		base_power: 4,
-		base_heat: 8
-	},
-	{
-		id: 'uranium3',
-		type: 'uranium',
-		level: 3,
-		title: 'Quad Uranium Cell',
-		base_description: multi_cell_description,
-		category: 'cell',
-		cell_count: 4,
-		pulse_multiplier: 1,
-		base_cost: 60,
-		base_ticks: 15,
-		base_power: 12,
-		base_heat: 36
-	},
-	{
-		id: 'plutonium',
-		type: 'plutonium',
-		levels: 3,
-		title: 'Plutonium Cell',
-		base_description: single_cell_description,
-		category: 'cell',
-		base_cost: 6000,
-		base_ticks: 60,
-		base_power: 150,
-		base_heat: 150,
-		cell_tick_upgrade_cost: 30000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 30000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 60000
-	},
-	{
-		id: 'thorium',
-		type: 'thorium',
-		levels: 3,
-		title: 'Thorium Cell',
-		base_description: single_cell_description,
-		category: 'cell',
-		base_cost: 4700000,
-		base_ticks: 900,
-		base_power: 7400,
-		base_heat: 7400,
-		cell_tick_upgrade_cost: 25000000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 25000000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 50000000
-	},
-	{
-		id: 'seaborgium',
-		type: 'seaborgium',
-		levels: 3,
-		title: 'Seaborgium Cell',
-		base_description: single_cell_description,
-		category: 'cell',
-		base_cost: 4000000000,
-		base_ticks: 3600,
-		base_power: 1600000,
-		base_heat: 1600000,
-		cell_tick_upgrade_cost: 20000000000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 20000000000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 40000000000
-	},
-	{
-		id: 'dolorium',
-		type: 'dolorium',
-		levels: 3,
-		title: 'Dolorium Cell',
-		base_description: single_cell_description,
-		category: 'cell',
-		base_cost: 3900000000000,
-		base_ticks: 22000,
-		base_power: 230000000,
-		base_heat: 230000000,
-		cell_tick_upgrade_cost: 20000000000000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 20000000000000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 40000000000000
-	},
-	{
-		id: 'nefastium',
-		type: 'nefastium',
-		levels: 3,
-		title: 'Nefastium Cell',
-		base_description: single_cell_description,
-		category: 'cell',
-		base_cost: 3600000000000000,
-		base_ticks: 86000,
-		base_power: 52000000000,
-		base_heat: 52000000000,
-		cell_tick_upgrade_cost: 17500000000000000,
-		cell_tick_upgrade_multiplier: 10,
-		cell_power_upgrade_cost: 17500000000000000,
-		cell_power_upgrade_multiplier: 10,
-		cell_perpetual_upgrade_cost: 35000000000000000
-	},
-	{
-		id: 'protium',
-		type: 'protium',
-		levels: 3,
-		title: 'Protium Cell',
-		base_description: single_cell_description + ' After being fully depleted, protium cells permanently generate 10% more power per depleted cell.',
-		category: 'cell',
-		experimental: true,
-		erequires: 'protium_cells',
-		base_cost: 3000000000000000,
-		base_ticks: 3600,
-		base_power: 1250000000000,
-		base_heat: 1250000000000
-	},
-
-	// Energy
-	{
-		id: 'reflector',
-		type: 'reflector',
-		title: 'Neutron Reflector',
-		base_description: 'Increases adjacent cell power output by %power_increase% for %ticks total pulses.',
-		levels: 5,
-		category: 'reflector',
-		level: 1,
-		base_cost: 500,
-		cost_multiplier: 50,
-		base_power_increase: 5,
-		power_increase_add: 1,
-		base_ticks: 100,
-		ticks_multiplier: 2
-	},
-	{
-		id: 'reflector6',
-		type: 'reflector',
-		title: 'Thermal Neutron Reflector',
-		base_description: 'Increases adjacent cell power output by %power_increase% and heat output by %heat_increase% for %ticks total pulses.',
-		category: 'reflector',
-		experimental: true,
-		erequires: 'heat_reflection',
-		level: 6,
-		base_cost: 100000000000000,
-		base_power_increase: 5,
-		base_heat_increase: 50,
-		base_ticks: 3200
-	},
-	{
-		id: 'capacitor',
-		type: 'capacitor',
-		title: 'Capacitor',
-		base_description: 'Increases the maximum power of the reactor by %reactor_power. Holds a maximum of %containment heat.',
-		levels: 5,
-		category: 'capacitor',
-		level: 1,
-		base_cost: 1000,
-		cost_multiplier: 160,
-		base_reactor_power: 100,
-		reactor_power_multiplier: 140,
-		base_containment: 10,
-		containment_multiplier: 5
-	},
-	{
-		id: 'capacitor6',
-		type: 'capacitor',
-		title: 'Extreme Capacitor',
-		base_description: 'Increases the maximum power of the reactor by %reactor_power. Holds a maximum of %containment heat. Heat is added to each unit equal to 50% of the power automatically sold by it.',
-		category: 'capacitor',
-		experimental: true,
-		erequires: 'experimental_capacitance',
-		level: 6,
-		base_cost: 105000000000000,
-		base_reactor_power: 2100000000000000,
-		base_containment: 5400000000000
-	},
-
-	// Heat
-	{
-		id: 'vent',
-		type: 'vent',
-		title: 'Heat Vent',
-		base_description: 'Lowers heat of itself by %vent per tick. Holds a maximum of %containment heat.',
-		levels: 5,
-		category: 'vent',
-		level: 1,
-		base_cost: 50,
-		cost_multiplier: 250,
-		base_containment: 80,
-		containment_multiplier: 75,
-		base_vent: 4,
-		vent_multiplier: 75,
-		location: 'cooling'
-	},
-	{
-		id: 'vent6',
-		type: 'vent',
-		title: 'Extreme Vent',
-		base_description: 'Lowers heat of itself by %vent per tick. Holds a maximum of %containment heat. Must consume power from the reactor at a rate of 100% of the heat removed from itself.',
-		category: 'vent',
-		experimental: true,
-		erequires: 'vortex_cooling',
-		level: 6,
-		base_cost: 50000000000000,
-		base_containment: 100000000000,
-		base_vent: 5000000000,
-	},
-	{
-		id: 'heat_exchanger',
-		type: 'heat_exchanger',
-		title: 'Heat Exchanger',
-		base_description: 'Attempts to balance the heat between itself and adjacent components by percentage. Transfers up to %transfer heat per tick for each adjacent component. Holds up to %containment heat.',
-		levels: 5,
-		category: 'heat_exchanger',
-		level: 1,
-		base_cost: 160,
-		cost_multiplier: 200,
-		base_containment: 320,
-		containment_multiplier: 75,
-		base_transfer: 16,
-		transfer_multiplier: 75,
-		location: 'cooling'
-	},
-	{
-		id: 'heat_exchanger6',
-		type: 'heat_exchanger',
-		title: 'Extreme Heat Exchanger',
-		base_description: 'Attempts to balance the heat between itself, adjacent components and its entire row by percentage. Transfers up to %transfer heat per tick for each adjacent component. Holds up to %containment heat.',
-		category: 'heat_exchanger',
-		experimental: true,
-		erequires: 'underground_heat_extraction',
-		level: 6,
-		base_cost: 50000000000000,
-		base_containment: 1000000000000,
-		base_transfer: 20000000000,
-	},
-	{
-		id: 'heat_inlet',
-		type: 'heat_inlet',
-		title: 'Heat Inlet',
-		base_description: 'Takes %transfer heat out of each adjacent component and puts it into the reactor each tick.',
-		levels: 5,
-		category: 'heat_inlet',
-		level: 1,
-		base_cost: 160,
-		cost_multiplier: 200,
-		base_transfer: 16,
-		transfer_multiplier: 75,
-		location: 'cooling'
-	},
-	{
-		id: 'heat_inlet6',
-		type: 'heat_inlet',
-		title: 'Heat Inlet',
-		base_description: 'Takes %transfer heat out of each adjacent component and puts it into the reactor each tick. Has a range of %range squares.',
-		category: 'heat_inlet',
-		experimental: true,
-		erequires: 'vortex_extraction',
-		base_range: 2,
-		level: 6,
-		base_cost: 50000000000000,
-		base_transfer: 20000000000
-	},
-	{
-		id: 'heat_outlet',
-		type: 'heat_outlet',
-		title: 'Heat Outlet',
-		base_description: '%transfer heat is taken out of the reactor and put into each adjacent component.',
-		levels: 5,
-		category: 'heat_outlet',
-		level: 1,
-		base_cost: 160,
-		cost_multiplier: 200,
-		base_transfer: 16,
-		transfer_multiplier: 75,
-		location: 'cooling'
-	},
-	{
-		id: 'heat_outlet6',
-		type: 'heat_outlet',
-		title: 'Extreme Heat Outlet',
-		base_description: 'For each adjacent component %transfer is taken out of the reactor and put into the adjacent component. Has a range of %range squares.',
-		category: 'heat_outlet',
-		experimental: true,
-		erequires: 'explosive_ejection',
-		base_range: 2,
-		level: 6,
-		base_cost: 50000000000000,
-		base_transfer: 20000000000
-	},
-	{
-		id: 'coolant_cell',
-		type: 'coolant_cell',
-		title: 'Coolant Cell',
-		base_description: 'Holds %containment heat before being destroyed.',
-		levels: 5,
-		category: 'coolant_cell',
-		level: 1,
-		base_cost: 500,
-		cost_multiplier: 200,
-		base_containment: 2000,
-		containment_multiplier: 180,
-		location: 'cooling'
-	},
-	{
-		id: 'coolant_cell6',
-		type: 'coolant_cell',
-		title: 'Thermionic Coolant Cell',
-		base_description: 'Holds %containment heat before being destroyed. 50% of the heat added to this part is instantly converted to power and added to the generator.',
-		category: 'coolant_cell',
-		experimental: true,
-		erequires: 'thermionic_conversion',
-		level: 6,
-		base_cost: 160000000000000,
-		base_containment: 380000000000000
-	},
-	{
-		id: 'reactor_plating',
-		type: 'reactor_plating',
-		title: 'Reactor Plating',
-		base_description: 'Increases maximum heat of the reactor by %reactor_heat.',
-		levels: 5,
-		category: 'reactor_plating',
-		level: 1,
-		base_cost: 1000,
-		cost_multiplier: 160,
-		base_reactor_heat: 100,
-		reactor_heat_multiplier: 140,
-		location: 'cooling'
-	},
-	{
-		id: 'reactor_plating6',
-		type: 'reactor_plating',
-		title: 'Charged Reactor Plating',
-		base_description: 'Increases maximum heat and power of the reactor by %reactor_heat.',
-		category: 'reactor_plating',
-		experimental: true,
-		erequires: 'micro_capacitance',
-		level: 6,
-		base_cost: 100000000000000,
-		base_reactor_heat: 8000000000000
-	},
-	{
-		id: 'particle_accelerator',
-		type: 'particle_accelerator',
-		title: 'Particle Accelerator',
-		base_description: 'Generates Exotic Particles based on heat passing through the accelerator (maximum %ep_heat). If this part explodes it causes instant reactor meltdown. Holds a maximum of %containment heat.',
-		levels: 5,
-		category: 'particle_accelerator',
-		level: 1,
-		base_cost: 1000000000000,
-		cost_multiplier: 10000,
-		base_containment: 100,
-		containment_multiplier: 1000000,
-		base_ep_heat: 500000000,
-		ep_heat_multiplier: 20000,
-		location: 'cooling'
-	},
-	{
-		id: 'particle_accelerator6',
-		type: 'particle_accelerator',
-		title: 'Black Hole Particle Accelerator',
-		base_description: 'Generates Exotic Particles based on heat passing through the accelerator (maximum %ep_heat). If this part explodes it causes instant reactor meltdown. Holds a maximum of %containment heat. Actively draws %transfer heat from the reactor at the cost of 1 power per 1 heat.',
-		category: 'singularity_harnessing',
-		experimental: true,
-		erequires: '',
-		level: 6,
-		base_cost: 100000000000000,
-		base_containment: 100000000000000000000000000000000,
-		base_ep_heat: 1600000000000000000000000000000
-	}
-];
-
-var locked_find = /[\b\s]locked\b/;
 var Part = function(part) {
-	this.className = 'part_' + part.id;
-	this.$el = document.createElement('BUTTON');
-	this.$el.className = 'part locked unaffordable ' + this.className;
-	this.$el.part = this;
-
 	this.part = part;
 	this.id = part.id;
 	this.category = part.category;
@@ -1764,7 +1138,6 @@ var Part = function(part) {
 	this.ep_heat = part.base_ep_heat;
 	this.erequires = part.erequires || null;
 	this.cost = part.base_cost;
-	this.affordable = false;
 	this.perpetual = false;
 	this.description = '';
 	this.sells = 0;
@@ -1772,14 +1145,15 @@ var Part = function(part) {
 	this.cell_count = part.cell_count || 0;
 	this.pulse_multiplier = part.pulse_multiplier || 0;
 
-	var $image = $('<div class="image">');
-	$image.innerHTML = 'Click to Select';
-
-	this.$el.appendChild($image);
+	this.addProperty('affordable', false);
 };
+
+Part.prototype.addProperty = addProperty;
 
 Part.prototype.updateDescription = function(tile) {
 	var description = this.part.base_description
+		.replace(/%single_cell_description/, single_cell_description)
+		.replace(/%multi_cell_description/, multi_cell_description)
 		.replace(/%power_increase/, fmt(this.power_increase))
 		.replace(/%heat_increase/, fmt(this.heat_increase))
 		.replace(/%reactor_power/, fmt(this.reactor_power))
@@ -1806,7 +1180,7 @@ Part.prototype.updateDescription = function(tile) {
 	}
 
 	if ( this.part.level > 1 ) {
-		description = description.replace(/%type/, part_objects[this.part.type + 1].part.title);
+		description = description.replace(/%type/, game.part_objects[this.part.type + 1].part.title);
 	}
 
 	this.description = description;
@@ -1931,7 +1305,7 @@ Part.prototype.updateTooltip = function(tile) {
 	} else {
 		$tooltip_description.innerHTML = this.description;
 
-		if ( this.erequires && !upgrade_objects[this.erequires].level ) {
+		if ( this.erequires && !game.upgrade_objects[this.erequires].level ) {
 			$tooltip_cost.innerHTML = 'LOCKED';
 		} else {
 			$tooltip_cost.innerHTML = fmt(this.cost);
@@ -1942,8 +1316,6 @@ Part.prototype.updateTooltip = function(tile) {
 var part_obj;
 var part_settings;
 var part;
-var part_objects = {};
-var part_objects_array = [];
 var cell_prefixes = ['', 'Dual ', 'Quad '];
 var prefixes = ['Basic ', 'Advanced ', 'Super ', 'Wonderous ', 'Ultimate '];
 var cell_power_multipliers = [1, 4, 12];
@@ -2014,32 +1386,11 @@ var create_part = function(part, level) {
 
 	part_obj = new Part(part);
 
-	part_objects[part.id] = part_obj;
-	part_objects_array.push(part_obj);
+	game.part_objects[part.id] = part_obj;
+	game.part_objects_array.push(part_obj);
 
 	part_obj.updateDescription();
-
-	if ( part.category === 'cell' ) {
-		$cells.appendChild(part_obj.$el);
-	} else if ( part.category === 'reflector' ) {
-		$reflectors.appendChild(part_obj.$el);
-	} else if ( part.category === 'capacitor' ) {
-		$capacitors.appendChild(part_obj.$el);
-	} else if ( part.category === 'vent' ) {
-		$vents.appendChild(part_obj.$el);
-	} else if ( part.category === 'heat_exchanger' ) {
-		$heat_exchangers.appendChild(part_obj.$el);
-	} else if ( part.category === 'heat_inlet' ) {
-		$heat_inlets.appendChild(part_obj.$el);
-	} else if ( part.category === 'heat_outlet' ) {
-		$heat_outlets.appendChild(part_obj.$el);
-	} else if ( part.category === 'coolant_cell' ) {
-		$coolant_cells.appendChild(part_obj.$el);
-	} else if ( part.category === 'reactor_plating' ) {
-		$reactor_platings.appendChild(part_obj.$el);
-	} else if ( part.category === 'particle_accelerator' ) {
-		$particle_accelerators.appendChild(part_obj.$el);
-	}
+	ui.say('evt', 'part_added', part_obj);
 
 	return part_obj;
 }
@@ -2055,22 +1406,22 @@ for ( pi = 0, pl = parts.length; pi < pl; pi++ ) {
 	}
 }
 
-var update_cell_power = function() {
+game.update_cell_power = function() {
 	var part;
 
-	for ( var i = 0, l = part_objects_array.length; i < l; i++ ) {
-		part = part_objects_array[i];
+	for ( var i = 0, l = game.part_objects_array.length; i < l; i++ ) {
+		part = game.part_objects_array[i];
 
 		if ( part.category === 'cell' ) {
-			if ( upgrade_objects['cell_power_' + part.part.type] ) {
-				part.power = part.part.base_power * (upgrade_objects['cell_power_' + part.part.type].level + upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
+			if ( game.upgrade_objects['cell_power_' + part.part.type] ) {
+				part.power = part.part.base_power * (game.upgrade_objects['cell_power_' + part.part.type].level + game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 			} else {
-				part.power = part.part.base_power * (upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
+				part.power = part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 			}
 
 			if ( part.part.type === 'protium' ) {
 				// TODO: DRY this
-				part.power = part.part.base_power * (upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade_objects['unstable_protium'].level) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
+				part.power = part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unstable_protium'].level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 				part.power *= 1 + protium_particles / 10;
 			}
 		}
@@ -2119,756 +1470,47 @@ if ( !is_touch ) {
 }
 
   /////////////////////////////
- // Reduce Heat Manually
+ // Reduce Heat Manually (Decoupled)
 /////////////////////////////
 
-var $reduce_heat = $('#reduce_heat');
-var $manual_heat_reduce = $('#manual_heat_reduce');
-var $auto_heat_reduce = $('#auto_heat_reduce');
+window.reduce_heat = function() {
+	game.current_heat -= game.manual_heat_reduce;
 
-var reduce_heat = function(event) {
-	event.preventDefault();
-
-	current_heat -= manual_heat_reduce;
-
-	if ( current_heat < 0 ) {
-		current_heat = 0;
+	if ( game.current_heat < 0 ) {
+		game.current_heat = 0;
 	}
 
-	$current_heat.innerHTML = fmt(current_heat);
-};
-
-$reduce_heat.onclick = reduce_heat;
-$reduce_heat.ontouchend = reduce_heat;
-
-var set_manual_heat_reduce = function() {
-	$manual_heat_reduce.innerHTML = '-' + fmt(manual_heat_reduce);
-};
-
-var set_auto_heat_reduce = function() {
-	$auto_heat_reduce.innerHTML = '-' + (fmt(max_heat/10000));
+	ui.say('var', 'current_heat', game.current_heat);
 };
 
   /////////////////////////////
  // Upgrades
 /////////////////////////////
 
-var epart_onclick = function(upgrade) {
+game.epart_onclick = function(upgrade) {
 	var eparts_count = 0;
 
-	for ( var i = 0, l = upgrade_objects_array.length; i < l; i++) {
-		if ( upgrade_objects_array[i].upgrade.type === 'experimental_parts' && upgrade_objects_array[i].level ) {
+	for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++) {
+		if ( game.upgrade_objects_array[i].upgrade.type === 'experimental_parts' && game.upgrade_objects_array[i].level ) {
 			eparts_count++;
 		}
 	}
 
-	for ( var i = 0, l = upgrade_objects_array.length; i < l; i++) {
-		if ( upgrade_objects_array[i].upgrade.type === 'experimental_parts' && !upgrade_objects_array[i].level ) {
-			upgrade_objects_array[i].ecost = upgrade_objects_array[i].upgrade.ecost * (eparts_count + 1);
+	for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++) {
+		if ( game.upgrade_objects_array[i].upgrade.type === 'experimental_parts' && !game.upgrade_objects_array[i].level ) {
+			game.upgrade_objects_array[i].ecost = game.upgrade_objects_array[i].upgrade.ecost * (eparts_count + 1);
 			// TODO: Maybe find a better way to do this
-			upgrade_objects_array[i].display_cost = fmt(upgrade_objects_array[i].ecost);
+			game.upgrade_objects_array[i].display_cost = fmt(game.upgrade_objects_array[i].ecost);
 		}
 	}
 };
 
-var upgrades = [
-	{
-		id: 'chronometer',
-		type: 'other',
-		title: 'Improved Chronometers',
-		description: '+1 tick per second per level of upgrade.',
-		cost: 10000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			loop_wait = base_loop_wait / ( upgrade.level + 1 );
-		}
-	},
-	{
-		id: 'forceful_fusion',
-		type: 'other',
-		title: 'Forceful Fusion',
-		description: 'Cells produce 1% more power at 1k heat, 2% power at 2m heat etc. per level of upgrade.',
-		cost: 10000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			heat_power_multiplier = upgrade.level;
-		}
-	},
-	{
-		id: 'heat_control_operator',
-		type: 'other',
-		title: 'Heat Control Operator',
-		description: 'When below maximum heat, reactor stays at a constant temperature.',
-		// TODO: Figure out a good price for this
-		cost: 1000000,
-		levels: 1,
-		onclick: function(upgrade) {
-			heat_controlled = upgrade.level;
-		}
-	},
-	{
-		id: 'improved_piping',
-		type: 'other',
-		title: 'Improved Piping',
-		description: 'Venting manually is 10x as effective per level of upgrade.',
-		cost: 100,
-		multiplier: 20,
-		onclick: function(upgrade) {
-			manual_heat_reduce = base_manual_heat_reduce * Math.pow(10, upgrade.level);
-			set_manual_heat_reduce();
-		}
-	},
-	{
-		id: 'improved_alloys',
-		type: 'other',
-		title: 'Improved Alloys',
-		description: 'Plating holds 100% more heat per level of upgrade.',
-		cost: 5000,
-		multiplier: 5,
-		onclick: function(upgrade) {
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['reactor_plating' + i];
-				part.reactor_heat = part.part.base_reactor_heat * ( upgrade.level + 1 ) * Math.pow(2, upgrade_objects['quantum_buffering'].level);
-				part.updateDescription();
-			}
-		}
-	},
+var upgrades = window.upgrades(game);
+window.upgrades = null;
 
-	// Capacitors
-	{
-		id: 'improved_power_lines',
-		type: 'other',
-		title: 'Improved Power Lines',
-		description: 'Sells 1% of your power each tick per level of upgrade.',
-		cost: 100,
-		multiplier: 10,
-		onclick: function(upgrade) {
-			auto_sell_multiplier = .01 * upgrade.level;
-		}
-	},
-	{
-		id: 'improved_wiring',
-		type: 'other',
-		title: 'Improved Wiring',
-		description: 'Capacitors hold +100% power and heat per level of upgrade.',
-		cost: 5000,
-		multiplier: 5,
-		onclick: function(upgrade) {
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['capacitor' + i];
-				part.reactor_power = part.part.base_reactor_power * ( upgrade.level + 1 ) * Math.pow(2, upgrade_objects['quantum_buffering'].level);
-				part.containment = part.part.base_containment * ( upgrade.level + 1 ) * Math.pow(2, upgrade_objects['quantum_buffering'].level);
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'perpetual_capacitors',
-		type: 'other',
-		title: 'Perpetual Capacitors',
-		description: 'If capacitors are on a cool surface when they go over their maximum heat containment, the heat is vented directly into the reactor and the capacitor is replaced. The capacitor costs 10 times the normal cost.',
-		cost: 1000000000000000000,
-		multiplier: 5,
-		levels: 1,
-		onclick: function(upgrade) {
-			/* TODO: ponder this - it's part-wide so it's basically just a setting
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['capacitor' + i];
-				part.perpetual = upgrade.level > 0 ? true : false;
-				part.updateDescription();
-			}*/
-		}
-	},
-	{
-		id: 'improved_coolant_cells',
-		type: 'other',
-		title: 'Improved Coolant Cells',
-		description: 'Coolant cells hold 100% more heat per level of upgrade.',
-		cost: 5000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['coolant_cell' + i];
-				part.containment = part.part.base_containment * ( upgrade.level + 1 ) * Math.pow(2, upgrade_objects['ultracryonics'].level);
-				part.updateDescription();
-			}
-		}
-	},
+// Upgrade tooltips
 
-	// Reflectors
-	{
-		id: 'improved_reflector_density',
-		type: 'other',
-		title: 'Improved Reflector Density',
-		description: 'Reflectors last 100% longer per level of upgrade.',
-		cost: 5000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['reflector' + i];
-				part.ticks = part.part.base_ticks * ( upgrade.level + 1 );
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'improved_neutron_reflection',
-		type: 'other',
-		title: 'Improved Neutron Reflection',
-		description: 'Reflectors generate an additional 1% power per level of upgrade.',
-		cost: 5000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (1 + (upgrade.level / 100)) + (part.part.base_power_increase * (upgrade_objects['full_spectrum_reflectors'].level));
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'perpetual_reflectors',
-		type: 'other',
-		title: 'Perpetual Reflectors',
-		description: 'Reflectors are automtically replaced after being destroyed if they are on a cool surface. The replacement part will cost 1.5 times the normal cost.',
-		cost: 1000000000,
-		levels: 1,
-		onclick: function(upgrade) {
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['reflector' + i];
-				part.perpetual = upgrade.level ? true : false;
-				part.updateDescription();
-			}
-		}
-	},
-
-	// Exchangers
-	{
-		id: 'improved_heat_exchangers',
-		type: 'exchangers',
-		title: 'Improved Heat Exchangers',
-		description: 'Heat Exchangers, Inlets and Outlets hold and exchange 100% more heat per level of upgrade',
-		cost: 600,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			var part;
-
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['heat_inlet' + i];
-				part.transfer = part.part.base_transfer * (upgrade.level + 1) * Math.pow(2, upgrade_objects['fluid_hyperdynamics'].level);
-				part.updateDescription();
-
-				part = part_objects['heat_outlet' + i];
-				part.transfer = part.part.base_transfer * (upgrade.level + 1) * Math.pow(2, upgrade_objects['fluid_hyperdynamics'].level);
-				part.updateDescription();
-
-				part = part_objects['heat_exchanger' + i];
-				part.transfer = part.part.base_transfer * ( upgrade.level + 1 ) * Math.pow(2, upgrade_objects['fluid_hyperdynamics'].level);
-				part.containment = part.part.base_containment * (upgrade.level + 1) * Math.pow(2, upgrade_objects['fractal_piping'].level);
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'reinforced_heat_exchangers',
-		type: 'exchangers',
-		title: 'Reinforced Heat Exchangers',
-		description: 'Each plating increases the amout of heat that exchangers can exchange by 1% per level of upgrade per level of plating.',
-		cost: 1000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			transfer_plating_multiplier = upgrade.level;
-		}
-	},
-	{
-		id: 'active_exchangers',
-		type: 'exchangers',
-		title: 'Active Exchangers',
-		description: 'Each capacitor increases the amout of heat that exchangers can exchange by 1% per level of upgrade per level of capacitor.',
-		cost: 1000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			transfer_capacitor_multiplier = upgrade.level;
-		}
-	},
-
-	// Vents
-	{
-		id: 'improved_heat_vents',
-		type: 'vents',
-		title: 'Improved Heat Vents',
-		description: 'Vents hold and vent 100% more heat per level of upgrade.',
-		cost: 250,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['vent' + i];
-				part.vent = part.part.base_vent * (upgrade.level + 1) * Math.pow(2, upgrade_objects['fluid_hyperdynamics'].level);
-				part.containment = part.part.base_containment * (upgrade.level + 1) * Math.pow(2, upgrade_objects['fractal_piping'].level);
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'improved_heatsinks',
-		type: 'vents',
-		title: 'Improved Heatsinks',
-		description: 'Each plating increases the amount of heat that vents can vent by 1% per level of upgrade per level of plating.',
-		cost: 1000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			vent_plating_multiplier = upgrade.level;
-		}
-	},
-	{
-		id: 'active_venting',
-		type: 'vents',
-		title: 'Active Venting',
-		description: 'Each capacitor increases the effectiveness of heat that vents can vent by 1% per level of upgrade per level of capacitor.',
-		cost: 1000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			vent_capacitor_multiplier = upgrade.level;
-		}
-	},
-	{
-		id: 'improved_particle_accelerators',
-		type: 'other',
-		title: 'Improved Particle Accelerators',
-		description: 'Increase the maximum heat the Particle Accelerators can use to create Exotic Particles by 100% per level of upgrade.',
-		cost: 1000000000000000,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			var part;
-
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['particle_accelerator' + i];
-				part.ep_heat = part.part.base_ep_heat * (upgrade.level + 1) * Math.pow(2, upgrade_objects['force_particle_research'].level);
-				part.updateDescription();
-			}
-		}
-	},
-
-	// Expanding
-	{
-		id: 'expand_reactor_rows',
-		type: 'other',
-		title: 'Expand Reactor Rows',
-		description: 'Add one row to the reactor for each level of the upgrade.',
-		cost: 100,
-		levels: 20,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			rows = base_rows + upgrade.level;
-		}
-	},
-	{
-		id: 'expand_reactor_cols',
-		type: 'other',
-		title: 'Expand Reactor Cols',
-		description: 'Add one column to the reactor for each level of the upgrade.',
-		cost: 100,
-		levels: 20,
-		multiplier: 100,
-		onclick: function(upgrade) {
-			cols = base_cols + upgrade.level;
-		}
-	},
-
-  /////////////////////////////
- // Experimental Upgrades
-/////////////////////////////
-
-	{
-		id: 'laboratory',
-		type: 'experimental_laboratory',
-		title: 'Laboratory',
-		description: 'Enables experimental upgrades.',
-		ecost: 1,
-		levels: 1,
-		onclick: function(upgrade) {
-			// Nothing, used to unlock other upgrades
-		}
-	},
-	{
-		id: 'infused_cells',
-		type: 'experimental_boost',
-		title: 'Infused Cells',
-		description: 'Each fuel cell produces an additional 100% base power per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 50,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			update_cell_power();
-		}
-	},
-	{
-		id: 'unleashed_cells',
-		type: 'experimental_boost',
-		title: 'Unleashed Cells',
-		description: 'Each fuel cell produces two times their base heat and power per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 100,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			var part;
-
-			for ( var i = 0, l = part_objects_array.length; i < l; i++ ) {
-				part = part_objects_array[i];
-				if ( part.category === 'cell' ) {
-					part.heat = part.part.base_heat * Math.pow(2, upgrade.level);
-				}
-			}
-
-			update_cell_power();
-		}
-	},
-	{
-		id: 'quantum_buffering',
-		type: 'experimental_boost',
-		title: 'Quantum Buffering',
-		description: 'Capacitors and platings provide twice as much reactor power and heat capacity, and capacitors can contain twice as much heat per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 50,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['capacitor' + i];
-				part.reactor_power = part.part.base_reactor_power * (upgrade_objects['improved_wiring'].level + 1) * Math.pow(2, upgrade.level);
-				part.containment = part.part.base_containment * (upgrade_objects['improved_wiring'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-
-				part = part_objects['reactor_plating' + i];
-				part.reactor_heat = part.part.base_reactor_heat * (upgrade_objects['improved_alloys'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'full_spectrum_reflectors',
-		type: 'experimental_boost',
-		title: 'Full Spectrum Reflectors',
-		description: 'Reflectors gain an additional 100% of their base power reflection per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 50,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			var part;
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['reflector' + i];
-				part.power_increase = part.part.base_power_increase * (1 + (upgrade_objects['improved_neutron_reflection'].level / 100)) + (part.part.base_power_increase * (upgrade.level));
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'fluid_hyperdynamics',
-		type: 'experimental_boost',
-		title: 'Fluid Hyperdynamics',
-		description: 'Heat vents, exchangers, inlets and outlets are two times as effective per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 50,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			var part;
-
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['heat_inlet' + i];
-				part.transfer = part.part.base_transfer * (upgrade_objects['improved_heat_exchangers'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-
-				part = part_objects['heat_outlet' + i];
-				part.transfer = part.part.base_transfer * (upgrade_objects['improved_heat_exchangers'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-
-				part = part_objects['heat_exchanger' + i];
-				part.transfer = part.part.base_transfer * (upgrade_objects['improved_heat_exchangers'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-
-				part = part_objects['vent' + i];
-				part.vent = part.part.base_vent * (upgrade_objects['improved_heat_vents'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'fractal_piping',
-		type: 'experimental_boost',
-		title: 'Fractal Piping',
-		description: 'Heat vents and exchangers hold two times their base heat per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 50,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			var part;
-
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['vent' + i];
-				part.containment = part.part.base_containment * (upgrade_objects['improved_heat_vents'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-
-				part = part_objects['heat_exchanger' + i];
-				part.containment = part.part.base_containment * (upgrade_objects['improved_heat_exchangers'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'ultracryonics',
-		type: 'experimental_boost',
-		title: 'Ultracryonics',
-		description: 'Coolant cells hold two times their base heat per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 50,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['coolant_cell' + i];
-				part.containment = part.part.base_containment * ( upgrade_objects['improved_coolant_cells'].level + 1 ) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'phlembotinum_core',
-		type: 'experimental_boost',
-		title: 'Phlembotinum Core',
-		description: 'Increase the base heat and power storage of the reactor by four times per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 50,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			altered_max_power = base_max_power * Math.pow(4, upgrade.level);
-			altered_max_heat = base_max_heat * Math.pow(4, upgrade.level);
-		}
-	},
-	{
-		id: 'force_particle_research',
-		type: 'experimental_boost',
-		title: 'Force Particle Research',
-		description: 'Increase the maximum heat Particle Accelerators can use to create Exotic Particles by two times per level of upgrade.',
-		erequires: 'laboratory',
-		ecost: 500,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			var part;
-
-			for ( var i = 1; i <= 6; i++ ) {
-				part = part_objects['particle_accelerator' + i];
-				part.ep_heat = part.part.base_ep_heat * (upgrade_objects['improved_particle_accelerators'].level + 1) * Math.pow(2, upgrade.level);
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'protium_cells',
-		type: 'experimental_cells',
-		title: 'Protium Cells',
-		description: 'Allows you to use protium cells.',
-		erequires: 'laboratory',
-		ecost: 50,
-		levels: 1,
-		onclick: function(upgrade) {
-			// Nothing, just required for placing parts
-		}
-	},
-	{
-		id: 'unstable_protium',
-		type: 'experimental_cells_boost',
-		title: 'Unstable Protium',
-		description: 'Protium cells last half as long and product twice as much power and heat per level.',
-		erequires: 'protium_cells',
-		ecost: 500,
-		multiplier: 2,
-		onclick: function(upgrade) {
-			for ( var i = 1; i <= 3; i++ ) {
-				part = part_objects['protium' + i];
-				part.heat = part.part.base_heat * Math.pow(2, upgrade.level) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
-				part.power = part.part.base_power * (upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade.level) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
-				part.ticks = Math.ceil(part.part.base_ticks / Math.pow(2, upgrade.level));
-				part.updateDescription();
-			}
-		}
-	},
-	{
-		id: 'heat_reflection',
-		type: 'experimental_parts',
-		title: 'Heat Reflection',
-		description: 'Allows you to use Thermal Neutron Reflectors. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	},
-	{
-		id: 'experimental_capacitance',
-		type: 'experimental_parts',
-		title: 'Experimental Capacitance',
-		description: 'Allows you to use Extreme Capacitors. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	},
-	{
-		id: 'vortex_cooling',
-		type: 'experimental_parts',
-		title: 'Vortex Cooling',
-		description: 'Allows you to use Extreme Vents. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	},
-	{
-		id: 'underground_heat_extraction',
-		type: 'experimental_parts',
-		title: 'Underground Heat Extraction',
-		description: 'Allows you to use Extreme Heat Exchangers. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	},
-	{
-		id: 'vortex_extraction',
-		type: 'experimental_parts',
-		title: 'Vortex Extraction',
-		description: 'Allows you to use Extreme Heat Inlets. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	},
-	{
-		id: 'explosive_ejection',
-		type: 'experimental_parts',
-		title: 'Explosive Ejection',
-		description: 'Allows you to use Extreme Heat Outlets. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	},
-	{
-		id: 'thermionic_conversion',
-		type: 'experimental_parts',
-		title: 'Thermionic Conversion',
-		description: 'Allows you to use Thermionic Coolant Cells. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	},
-	{
-		id: 'micro_capacitance',
-		type: 'experimental_parts',
-		title: 'Micro Capacitance',
-		description: 'Allows you to use Charged Reactor Plating. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	},
-	{
-		id: 'singularity_harnessing',
-		type: 'experimental_parts',
-		title: 'Singularity Harnessing',
-		description: 'Allows you to use Black Hole Particle Accelerators. When purchased, the EP cost of other experimental part upgrades increases.',
-		erequires: 'laboratory',
-		ecost: 10000,
-		levels: 1,
-		onclick: function(upgrade) {
-			epart_onclick(upgrade);
-		}
-	}
-
-];
-
-var Upgrade = function(upgrade) {
-	var me = this;
-	this.max_level = upgrade.levels || upgrade_max_level;
-	this.upgrade = upgrade;
-	this.level = 0;
-	this.cost = 0;
-	this.part = upgrade.part || null;
-	this.erequires = upgrade.erequires || null;
-	this.ecost = upgrade.ecost || 0;
-	this.affordable = true;
-	this.$el = $('<button class="upgrade">');
-	this.$el.id = upgrade.id;
-	this.$el.upgrade = upgrade;
-
-	this.display_cost = '';
-
-	var $image = $('<div class="image">');
-	$image.innerHTML = 'Click to Upgrade';
-
-	this.$levels = $('<span class="levels">');
-
-	$image.appendChild(this.$levels);
-
-	this.$el.appendChild($image);
-};
-
-Upgrade.prototype.setLevel = function(level) {
-	this.level = level;
-	this.$levels.innerHTML = level;
-
-	if ( this.ecost ) {
-		if ( this.upgrade.multiplier ) {
-			this.ecost = this.upgrade.ecost * Math.pow(this.upgrade.multiplier, this.level);
-		} else {
-			this.ecost = this.upgrade.ecost;
-		}
-
-		if ( this.level >= this.max_level ) {
-			this.display_cost = '--';
-		} else {
-			this.display_cost = fmt(this.ecost);
-		}
-	} else {
-		this.cost = this.upgrade.cost * Math.pow(this.upgrade.multiplier, this.level);
-
-		if ( this.level >= this.max_level ) {
-			this.display_cost = '--';
-		} else {
-			this.display_cost = fmt(this.cost);
-		}
-	}
-
-	this.upgrade.onclick(this);
-
-	if ( tooltip_showing ) {
-		this.updateTooltip();
-	}
-}
-
-Upgrade.prototype.showTooltip = function() {
+window.Upgrade.prototype.showTooltip = function() {
 	$tooltip_name.innerHTML = this.upgrade.title;
 
 	$tooltip_cost.style.display = null;
@@ -2896,7 +1538,6 @@ Upgrade.prototype.updateTooltip = function(tile) {
 	}
 };
 
-// Upgrade tooltips
 // TODO: DRY this
 var tooltip_upgrade = null;
 var upgrade_tooltip_show = function(e) {
@@ -2945,11 +1586,9 @@ var upgrade_locations = {
 	experimental_parts: $('#experimental_parts')
 };
 
-var upgrade_objects = {};
-var upgrade_objects_array = [];
 var create_upgrade = function(u) {
-	u.levels = u.levels || upgrade_max_level;
-	var upgrade = new Upgrade(u);
+	u.levels = u.levels || game.upgrade_max_level;
+	var upgrade = new window.Upgrade(u);
 	upgrade.$el.upgrade = upgrade;
 
 	if ( u.className ) {
@@ -2957,8 +1596,8 @@ var create_upgrade = function(u) {
 	}
 
 	upgrade_locations[u.type].appendChild(upgrade.$el);
-	upgrade_objects_array.push(upgrade);
-	upgrade_objects[upgrade.upgrade.id] = upgrade;
+	game.upgrade_objects_array.push(upgrade);
+	game.upgrade_objects[upgrade.upgrade.id] = upgrade;
 };
 
 var types = [
@@ -2969,11 +1608,11 @@ var types = [
 		onclick: function(upgrade) {
 			var part;
 			for ( var i = 1; i <= 3; i++ ) {
-				part = part_objects[upgrade.part.type + i];
+				part = game.part_objects[upgrade.part.type + i];
 				part.power = (
 					part.part.base_power * (upgrade.level + 1)
-					+ part.part.base_power * (upgrade_objects['infused_cells'].level + 1)
-				) * Math.pow(2, upgrade_objects['unleashed_cells'].level);
+					+ part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1)
+				) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 				part.updateDescription();
 			}
 		}
@@ -2985,7 +1624,7 @@ var types = [
 		onclick: function(upgrade) {
 			var part;
 			for ( var i = 1; i <= 3; i++ ) {
-				part = part_objects[upgrade.part.type + i];
+				part = game.part_objects[upgrade.part.type + i];
 				part.ticks = part.part.base_ticks * Math.pow(2, upgrade.level);
 				part.updateDescription();
 			}
@@ -2999,7 +1638,7 @@ var types = [
 		onclick: function(upgrade) {
 			var part;
 			for ( var i = 1; i <= 3; i++ ) {
-				part = part_objects[upgrade.part.type + i];
+				part = game.part_objects[upgrade.part.type + i];
 				if ( upgrade.level ) {
 					part.perpetual = true;
 				} else {
@@ -3043,8 +1682,11 @@ for ( var i = 0, l = upgrades.length; i < l; i++ ) {
 	create_upgrade(upgrades[i]);
 }
 
-for ( var i = 0, l = upgrade_objects_array.length; i < l; i++ ) {
-	upgrade_objects_array[i].setLevel(0);
+for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
+	game.upgrade_objects_array[i].setLevel(0);
+	if ( tooltip_showing ) {
+		game.upgrade_objects_array[i].updateTooltip();
+	}
 }
 
 // Upgrade delegate event
@@ -3061,17 +1703,22 @@ $all_upgrades.delegate('upgrade', 'click', function(event) {
 		return;
 	} else if (
 		upgrade.ecost
-		&& (!upgrade.erequires || upgrade_objects[upgrade.erequires].level)
+		&& (!upgrade.erequires || game.upgrade_objects[upgrade.erequires].level)
 		&& current_exotic_particles >= upgrade.ecost
 	) {
 		current_exotic_particles -= upgrade.ecost;
-		$current_exotic_particles.innerHTML = fmt(current_exotic_particles);
-		$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
+		ui.say('var', 'current_exotic_particles', current_exotic_particles);
 		upgrade.setLevel(upgrade.level + 1);
+		if ( tooltip_showing ) {
+			upgrade.updateTooltip();
+		}
 	} else if ( upgrade.cost && current_money >= upgrade.cost ) {
 		current_money -= upgrade.cost;
-		$money.innerHTML = fmt(current_money);
+		ui.say('var', 'current_money', current_money);
 		upgrade.setLevel(upgrade.level + 1);
+		if ( tooltip_showing ) {
+			upgrade.updateTooltip();
+		}
 	} else {
 		return;
 	}
@@ -3080,7 +1727,7 @@ $all_upgrades.delegate('upgrade', 'click', function(event) {
 	check_upgrades_affordability();
 });
 
-if ( debug ) {
+if ( game.debug ) {
 	$all_upgrades.delegate('upgrade', 'mousedown', function(event) {
 		if ( event.which === 3 ) {
 			var upgrade = this.upgrade;
@@ -3088,10 +1735,11 @@ if ( debug ) {
 
 			if ( upgrade.level > 0 ) {
 				upgrade.setLevel(upgrade.level - 1);
+				if ( tooltip_showing ) {
+					upgrade.updateTooltip();
+				}
 				current_exotic_particles += upgrade.ecost;
-				// TODO: DRY
-				$current_exotic_particles.innerHTML = fmt(current_exotic_particles);
-				$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
+				ui.say('var', 'current_exotic_particles', current_exotic_particles);
 				update_tiles();
 				check_upgrades_affordability();
 			}
@@ -3101,8 +1749,8 @@ if ( debug ) {
 
 var check_upgrades_affordability_timeout;
 var check_upgrades_affordability = function(do_timeout) {
-	for ( var i = 0, l = upgrade_objects_array.length, upgrade; i < l; i++ ) {
-		upgrade = upgrade_objects_array[i];
+	for ( var i = 0, l = game.upgrade_objects_array.length, upgrade; i < l; i++ ) {
+		upgrade = game.upgrade_objects_array[i];
 
 		if (
 			upgrade.level < upgrade.upgrade.levels
@@ -3114,18 +1762,16 @@ var check_upgrades_affordability = function(do_timeout) {
 				||
 				(
 					upgrade.ecost
-					&& (!upgrade.erequires || upgrade_objects[upgrade.erequires].level)
+					&& (!upgrade.erequires || game.upgrade_objects[upgrade.erequires].level)
 					&& (current_exotic_particles > upgrade.ecost)
 				)
 			)
 		) {
 			if ( upgrade.affordable === false ) {
-				upgrade.affordable = true;
-				upgrade.$el.className = upgrade.$el.className.replace(unaffordable_replace, '');
+				upgrade.setAffordable(true);
 			}
 		} else if ( upgrade.affordable === true ) {
-			upgrade.affordable = false;
-			upgrade.$el.className += ' unaffordable';
+			upgrade.setAffordable(false);
 		}
 	}
 
@@ -3134,19 +1780,15 @@ var check_upgrades_affordability = function(do_timeout) {
 			check_upgrades_affordability(true);
 		}, 200);
 	}
-
-	$reboot_exotic_particles.innerHTML = fmt(exotic_particles);
 };
 
-var start_check_upgrades_affordability = function() {
+window.start_check_upgrades_affordability = function() {
 	check_upgrades_affordability(true);
 };
 
-var stop_check_upgrades_affordability = function() {
+window.stop_check_upgrades_affordability = function() {
 	clearTimeout(check_upgrades_affordability_timeout);
 };
-
-
 
   /////////////////////////////
  // Save game
@@ -3169,11 +1811,11 @@ var save = function(event) {
 	srows = [];
 
 	// Tiles
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 		srow = [];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 
 			if ( tile.part ) {
@@ -3203,8 +1845,8 @@ var save = function(event) {
 
 	// Upgrades
 	supgrades = [];
-	for ( i = 0, l = upgrade_objects_array.length; i < l; i++ ) {
-		upgrade = upgrade_objects_array[i];
+	for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
+		upgrade = game.upgrade_objects_array[i];
 		supgrades.push({
 			id: upgrade.upgrade.id,
 			level: upgrade.level
@@ -3218,7 +1860,7 @@ var save = function(event) {
 			upgrades: supgrades,
 			current_power: current_power,
 			current_money: current_money,
-			current_heat: current_heat,
+			current_heat: game.current_heat,
 			exotic_particles: exotic_particles,
 			current_exotic_particles: current_exotic_particles,
 			total_exotic_particles: total_exotic_particles,
@@ -3226,12 +1868,12 @@ var save = function(event) {
 			auto_sell_disabled: auto_sell_disabled,
 			auto_buy_disabled: auto_buy_disabled,
 			protium_particles: protium_particles,
-			version: version
+			version: game.version
 		})),
 		function() {
-			save_debug && console.log('saved');
-			if ( debug === false ) {
-				save_timeout = setTimeout(save, save_interval);
+			game.save_debug && console.log('saved');
+			if ( game.debug === false ) {
+				save_timeout = setTimeout(save, game.save_interval);
 			}
 		}
 	);
@@ -3299,7 +1941,8 @@ var apply_to_tile = function(tile, part, force) {
 			tile.$el.className += ' spent';
 		}
 
-		tile.$percent.style.width = tile.ticks / part.ticks * 100 + '%';
+		//tile.$percent.style.width = tile.ticks / part.ticks * 100 + '%';
+		tile.updated = true;
 	}
 
 	if ( !tile.activated ) {
@@ -3317,10 +1960,10 @@ var remove_part = function(remove_tile, skip_update, sell) {
 		if ( remove_tile.activated && remove_tile.part && remove_tile.part.category !== 'cell' ) {
 			if ( remove_tile.part.ticks ) {
 				current_money += Math.ceil(remove_tile.part.ticks / remove_tile.ticks * remove_tile.part.cost);
-				$money.innerHTML = fmt(current_money);
+				ui.say('var', 'current_money', current_money);
 			} else if ( remove_tile.part.containment ) {
 				current_money += remove_tile.part.cost - Math.ceil(remove_tile.heat_contained / remove_tile.part.containment * remove_tile.part.cost);
-				$money.innerHTML = fmt(current_money);
+				ui.say('var', 'current_money', current_money);
 			} else {
 				current_money += remove_tile.part.cost;
 				$money.innerHTML = fmt(current_money);
@@ -3329,9 +1972,10 @@ var remove_part = function(remove_tile, skip_update, sell) {
 	}
 
 	remove_tile.part = null;
-	remove_tile.ticks = 0;
+	remove_tile.setTicks(0);
 	remove_tile.heat_contained = 0;
-	remove_tile.$percent.style.width = 0;
+	//remove_tile.$percent.style.width = 0;
+	remove_tile.updated = true;
 	remove_tile.$el.className = remove_tile.$el.className
 		.replace(part_replace, '')
 		.replace(category_replace, '')
@@ -3358,26 +2002,16 @@ var remove_part = function(remove_tile, skip_update, sell) {
 	tile_tooltip_hide();
 };
 
+// TODO: Move this
 // tooltip buttons
 // Delete
-var tooltip_delete = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
+window.tooltip_delete = function() {
 	remove_part(tooltip_tile, false, true);
 	tooltip_close();
 };
 
-$tooltip_delete.onclick = tooltip_delete;
-$tooltip_delete.ontouchend = tooltip_delete;
-
 // Delete all
-var tooltip_delete_all = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
+window.tooltip_delete_all = function() {
 	var type;
 	var level;
 
@@ -3389,10 +2023,10 @@ var tooltip_delete_all = function(event) {
 		level = tooltip_part.part.level;
 	}
 
-	for ( var ri = 0; ri < rows; ri++ ) {
-		var row = tiles[ri];
+	for ( var ri = 0; ri < game.rows; ri++ ) {
+		var row = game.tiles[ri];
 
-		for ( var ci = 0; ci < cols; ci++ ) {
+		for ( var ci = 0; ci < game.cols; ci++ ) {
 			var tile = row[ci];
 
 			if ( tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
@@ -3404,15 +2038,8 @@ var tooltip_delete_all = function(event) {
 	tooltip_close();
 };
 
-$tooltip_delete_all.onclick = tooltip_delete_all;
-$tooltip_delete_all.ontouchend = tooltip_delete_all;
-
 // Replace all
-var tooltip_replace_all = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
+window.tooltip_replace_all = function() {
 	var type;
 	var level;
 
@@ -3424,10 +2051,10 @@ var tooltip_replace_all = function(event) {
 		level = tooltip_part.part.level;
 	}
 
-	for ( var ri = 0; ri < rows; ri++ ) {
-		var row = tiles[ri];
+	for ( var ri = 0; ri < game.rows; ri++ ) {
+		var row = game.tiles[ri];
 
-		for ( var ci = 0; ci < cols; ci++ ) {
+		for ( var ci = 0; ci < game.cols; ci++ ) {
 			var tile = row[ci];
 
 			if ( tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
@@ -3439,15 +2066,8 @@ var tooltip_replace_all = function(event) {
 	tooltip_close();
 };
 
-$tooltip_replace_all.onclick = tooltip_replace_all;
-$tooltip_replace_all.ontouchend = tooltip_replace_all;
-
 // Upgrade all
-var tooltip_upgrade_all = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
+window.tooltip_upgrade_all = function() {
 	var type;
 	var level;
 
@@ -3459,10 +2079,10 @@ var tooltip_upgrade_all = function(event) {
 		level = tooltip_part.part.level;
 	}
 
-	for ( var ri = 0; ri < rows; ri++ ) {
-		var row = tiles[ri];
+	for ( var ri = 0; ri < game.rows; ri++ ) {
+		var row = game.tiles[ri];
 
-		for ( var ci = 0; ci < cols; ci++ ) {
+		for ( var ci = 0; ci < game.cols; ci++ ) {
 			var tile = row[ci];
 
 			if ( tile.part && type === tile.part.part.type && level > tile.part.part.level ) {
@@ -3474,11 +2094,8 @@ var tooltip_upgrade_all = function(event) {
 	tooltip_close();
 };
 
-$tooltip_upgrade_all.onclick = tooltip_upgrade_all;
-$tooltip_upgrade_all.ontouchend = tooltip_upgrade_all;
-
-// TODO: Move this
-var tooltip_close = function() {
+// Close
+window.tooltip_close = function() {
 	if ( tooltip_tile ) {
 		tile_tooltip_hide();
 	} else if ( tooltip_part ) {
@@ -3488,9 +2105,7 @@ var tooltip_close = function() {
 	}
 };
 
-$tooltip_close.onclick = tooltip_close;
-$tooltip_close.ontouchend = tooltip_close;
-
+// Tile click
 var mouse_apply_to_tile = function(e) {
 	tile = this.tile;
 
@@ -3509,10 +2124,11 @@ var mouse_apply_to_tile = function(e) {
 			tile_queue.push(tile);
 		} else {
 			tile.activated = true;
-			$money.innerHTML = fmt(current_money -= clicked_part.cost);
+			current_money -= clicked_part.cost;
+			ui.say('var', 'current_money', current_money);
 		}
 
-		tile.ticks = clicked_part.ticks;
+		tile.setTicks(clicked_part.ticks);
 
 		apply_to_tile(tile, clicked_part);
 
@@ -3520,89 +2136,44 @@ var mouse_apply_to_tile = function(e) {
 	}
 };
 
-// Pause
-var pause_replace = /[\b\s]paused\b/;
-var $pause = $('#pause');
-
-var pause = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
+// Pause (Decoupled)
+window.pause = function() {
 	clearTimeout(loop_timeout);
-	$main.className += ' paused';
+
 	paused = true;
+	ui.say('evt', 'paused');
 };
 
-$pause.onclick = pause;
-$pause.ontouchend = pause;
-
-// Unpause
-var $unpause = $('#unpause');
-
-var unpause = function(event) {
-	event.preventDefault();
-
+// Unpause (Decoupled)
+window.unpause = function() {
 	clearTimeout(loop_timeout);
-	loop_timeout = setTimeout(game_loop, loop_wait);
+	loop_timeout = setTimeout(game_loop, game.loop_wait);
 
-	$main.className = $main.className.replace(pause_replace, '');
 	paused = false;
+	ui.say('evt', 'unpaused');
 };
 
-$unpause.onclick = unpause;
-$unpause.ontouchend = unpause;
-
-// Enable/Disable auto sell
-var $disable_auto_sell = $('#disable_auto_sell');
-var $enable_auto_sell = $('#enable_auto_sell');
-var auto_sell_disabled_find = /[\b\s]auto_sell_disabled\b/;
-
-var disable_auto_sell = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	$main.className += ' auto_sell_disabled';
+// Enable/Disable auto sell (Decoupled)
+window.disable_auto_sell = function() {
 	auto_sell_disabled = true;
+	ui.say('evt', 'auto_sell_disabled');
 };
 
-var enable_auto_sell = function(event) {
-	event.preventDefault();
-	$main.className = $main.className.replace(auto_sell_disabled_find, '');
+window.enable_auto_sell = function() {
 	auto_sell_disabled = false;
+	ui.say('evt', 'auto_sell_enabled');
 };
-
-$disable_auto_sell.onclick = disable_auto_sell;
-$disable_auto_sell.ontouchend = disable_auto_sell;
-
-$enable_auto_sell.onclick = enable_auto_sell;
-$enable_auto_sell.ontouchend = enable_auto_sell;
 
 // Enable/Disable auto buy
-var $disable_auto_buy = $('#disable_auto_buy');
-var $enable_auto_buy = $('#enable_auto_buy');
-var auto_buy_disabled_find = /[\b\s]auto_buy_disabled\b/;
-
-var disable_auto_buy = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	$main.className += ' auto_buy_disabled';
+window.disable_auto_buy = function() {
 	auto_buy_disabled = true;
+	ui.say('evt', 'auto_buy_disabled');
 };
 
-var enable_auto_buy = function() {
-	$main.className = $main.className.replace(auto_buy_disabled_find, '');
+window.enable_auto_buy = function() {
 	auto_buy_disabled = false;
+	ui.say('evt', 'auto_buy_enabled');
 };
-
-$disable_auto_buy.onclick = disable_auto_buy;
-$disable_auto_buy.ontouchend = disable_auto_buy;
-
-$enable_auto_buy.onclick = enable_auto_buy;
-$enable_auto_buy.ontouchend = enable_auto_buy;
 
   /////////////////////////////
  // Tile clicks
@@ -3658,10 +2229,10 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 			var ticks = this.tile.ticks;
 
 			// All matching tiles
-			for ( ri = 0; ri < rows; ri++ ) {
-				row = tiles[ri];
+			for ( ri = 0; ri < game.rows; ri++ ) {
+				row = game.tiles[ri];
 
-				for ( ci = 0; ci < cols; ci++ ) {
+				for ( ci = 0; ci < game.cols; ci++ ) {
 					tile = row[ci];
 
 					if ( !tile_mousedown_right && tile.part && type === tile.part.part.type ) {
@@ -3697,28 +2268,18 @@ $reactor.delegate('tile', 'mousemove', function(e) {
 	}
 });
 
-  /////////////////////////////
- // Sell
-/////////////////////////////
-var $sell = $('#sell');
-
-var sell = function(event) {
-	event.preventDefault();
-
+// Sell (Decoupled)
+window.sell = function() {
 	if ( current_power ) {
 		current_money += current_power;
 		current_power = 0;
 
-		$money.innerHTML = fmt(current_money);
-		$current_power.innerHTML = 0;
-		$power_percentage.style.width = 0;
+		ui.say('var', 'current_money', current_money);
+		ui.say('var', 'current_power', current_power);
 
 		check_affordability();
 	}
 };
-
-$sell.onclick = sell;
-$sell.ontouchend = sell;
 
   /////////////////////////////
  // Scrounge
@@ -3730,7 +2291,7 @@ $scrounge.onclick = function() {
 	if ( current_money < 10 && current_power === 0 ) {
 		current_money += 1;
 
-		$money.innerHTML = fmt(current_money);
+		ui.say('var', 'current_money', current_money);
 	}
 }; */
 
@@ -3768,6 +2329,8 @@ var target_percent;
 var ep_chance_percent;
 var ep_gain;
 
+var start_game_loop;
+var start_game_loop;
 var game_loop = function() {
 	power_add = 0;
 	heat_add = 0;
@@ -3781,39 +2344,39 @@ var game_loop = function() {
 		heat_add_next_loop = 0;
 	}
 
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			if ( tile.activated && tile.part ) {
 				if ( tile.part.category === 'cell' ) {
 					if ( tile.ticks !== 0 ) {
 						power_add += tile.power;
 						heat_add += tile.heat;
-						tile.ticks--;
+						tile.setTicks(tile.ticks - 1);
 
 						l = tile.reflectors.length;
 
 						if ( l ) {
 							for ( i = 0; i < l; i++ ) {
 								tile_reflector = tile.reflectors[i];
-								tile_reflector.ticks--;
+								tile_reflector.setTicks(tile_reflector.ticks - 1);
 
 								// TODO: dedupe this and cell ticks
 								if ( tile_reflector.ticks === 0 ) {
 									if ( tile_reflector.part.perpetual && current_money >= tile_reflector.part.cost ) {
 										// auto replenish reflector
 										current_money -= tile_reflector.part.cost;
-										$money.innerHTML = fmt(current_money);
-										tile_reflector.ticks = tile_reflector.part.ticks;
-										tile_reflector.$percent.style.width = '100%';
+										ui.say('var', 'current_money', current_money);
+										tile_reflector.setTicks(tile_reflector.part.ticks);
+										//tile_reflector.$percent.style.width = '100%';
 									} else {
 										tile_reflector.$el.className += ' exploding';
 										remove_part(tile_reflector, true);
 									}
 								} else if ( tile_reflector.part ) {
-									tile_reflector.$percent.style.width = tile_reflector.ticks / tile_reflector.part.ticks * 100 + '%';
+									//tile_reflector.$percent.style.width = tile_reflector.ticks / tile_reflector.part.ticks * 100 + '%';
 								}
 							}
 						}
@@ -3822,21 +2385,24 @@ var game_loop = function() {
 							if ( auto_buy_disabled !== true && tile.part.perpetual && current_money >= tile.part.cost * 1.5 ) {
 								// auto replenish cell
 								current_money -= tile.part.cost * 1.5;
-								$money.innerHTML = fmt(current_money);
-								tile.ticks = tile.part.ticks;
-								tile.$percent.style.width = '100%';
+								ui.say('var', 'current_money', current_money);
+								tile.setTicks(tile.part.ticks);
+								//tile.$percent.style.width = '100%';
+								tile.updated = true;
 							} else {
 								if ( tile.part.part.type === 'protium' ) {
 									protium_particles += tile.part.cell_count;
-									update_cell_power();
+									game.update_cell_power();
 								}
 
-								tile.$percent.style.width = '0';
+								//tile.$percent.style.width = '0';
+								tile.updated = true;
 								tile.$el.className += ' spent';
 								do_update = true;
 							}
 						} else {
-							tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
+							//tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
+							tile.updated = true;
 						}
 					}
 				}
@@ -3874,7 +2440,7 @@ var game_loop = function() {
 
 						if ( ep_gain > 0 ) {
 							exotic_particles += ep_gain;
-							$exotic_particles.innerHTML = fmt(exotic_particles);
+							ui.say('var', 'exotic_particles', exotic_particles);
 						}
 					}
 				}
@@ -3884,10 +2450,10 @@ var game_loop = function() {
 	}
 
 	// Inlets
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			tile_part = tile.part;
 			l = tile.containments.length;
@@ -3915,17 +2481,17 @@ var game_loop = function() {
 		}
 	}
 
-	current_heat += heat_add;
+	game.current_heat += heat_add;
 
-	$heat_per_tick.innerHTML = fmt(heat_add);
+	ui.say('var', 'heat_add', heat_add);
 
 	// Reduce reactor heat parts
-	max_shared_heat = current_heat / heat_outlet_countainments_count;
+	max_shared_heat = game.current_heat / heat_outlet_countainments_count;
 
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			tile_part = tile.part;
 
@@ -4051,8 +2617,8 @@ var game_loop = function() {
 					shared_heat = max_heat_transfer;
 
 					// Distribute evenly
-					if ( current_heat < max_heat_transfer * heat_outlet_countainments_count ) {
-						shared_heat = current_heat / heat_outlet_countainments_count;
+					if ( game.current_heat < max_heat_transfer * heat_outlet_countainments_count ) {
+						shared_heat = game.current_heat / heat_outlet_countainments_count;
 					}
 
 					// If the heat in the reactor is less than transfer
@@ -4077,56 +2643,56 @@ var game_loop = function() {
 		}
 	}
 
-	current_heat -= heat_remove;
+	game.current_heat -= heat_remove;
 
 	// Auto heat reduction
-	if ( current_heat > 0 ) {
+	if ( game.current_heat > 0 ) {
 		// TODO: Set these variables up in update tiles
-		if ( current_heat <= max_heat ) {
+		if ( game.current_heat <= max_heat ) {
 			reduce_heat = max_heat / 10000;
 
-			if ( heat_controlled ) {
+			if ( game.heat_controlled ) {
 				if ( heat_add - heat_remove < reduce_heat ) {
 					reduce_heat = heat_add - heat_remove;
 				}
 			}
 		} else {
-			reduce_heat = (current_heat - max_heat) / 20;
+			reduce_heat = (game.current_heat - max_heat) / 20;
 			if ( reduce_heat < max_heat / 10000 ) {
 				reduce_heat = max_heat / 10000;
 			}
 
-			for ( ri = 0; ri < rows; ri++ ) {
-				row = tiles[ri];
-				for ( ci = 0; ci < cols; ci++ ) {
+			for ( ri = 0; ri < game.rows; ri++ ) {
+				row = game.tiles[ri];
+				for ( ci = 0; ci < game.cols; ci++ ) {
 					tile = row[ci];
 
 					if ( tile.activated && tile.part && tile.part.containment ) {
 
 						if ( tile.part.id === 'coolant_cell6' ) {
-							tile.heat_contained += reduce_heat / tiles.length / 2;
-							power_add += reduce_heat / tiles.length / 2;
+							tile.heat_contained += reduce_heat / game.tiles.length / 2;
+							power_add += reduce_heat / game.tiles.length / 2;
 						} else {
-							tile.heat_contained += reduce_heat / tiles.length;
+							tile.heat_contained += reduce_heat / game.tiles.length;
 						}
 					}
 				}
 			}
 		}
 
-		$auto_heat_reduce.innerHTML = '-' + fmt(reduce_heat);
-		current_heat -= reduce_heat;
+		ui.say('var', 'auto_heat_reduce', reduce_heat);
+		game.current_heat -= reduce_heat;
 	}
 
 	// Forceful Fusion
-	if ( heat_power_multiplier && current_heat > 1000 ) {
-		power_add *= 1 + (heat_power_multiplier * (Math.log(current_heat) / Math.log(1000) / 100));
+	if ( game.heat_power_multiplier && game.current_heat > 1000 ) {
+		power_add *= 1 + (game.heat_power_multiplier * (Math.log(game.current_heat) / Math.log(1000) / 100));
 	}
 
 	// Add power
 	current_power += power_add;
 
-	$power_per_tick.innerHTML = fmt(power_add);
+	ui.say('var', 'power_add', power_add);
 
 	// Try to place parts in the queue
 	if ( tile_queue.length ) {
@@ -4136,7 +2702,7 @@ var game_loop = function() {
 			tile_queue.splice(0, 1);
 		} else if ( tile.part && current_money >= tile.part.cost ) {
 			current_money -= tile.part.cost;
-			$money.innerHTML = fmt(current_money);
+			ui.say('var', 'current_money', current_money);
 			tile.activated = true;
 			tile.$el.className = tile.$el.className.replace(disabled_replace, '');
 			tile_queue.splice(0, 1);
@@ -4145,10 +2711,10 @@ var game_loop = function() {
 	}
 
 	// Apply heat to containment parts
-	for ( ri = 0; ri < rows; ri++ ) {
-		row = tiles[ri];
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
 
-		for ( ci = 0; ci < cols; ci++ ) {
+		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			if ( tile.activated && tile.part && tile.part.containment ) {
 				if ( tile.part.vent ) {
@@ -4179,7 +2745,7 @@ var game_loop = function() {
 				}
 
 				if ( tile.heat_contained > tile.part.containment ) {
-					if ( auto_buy_disabled !== true && tile.heat <= 0 && tile.part.category === 'capacitor' && upgrade_objects['perpetual_capacitors'].level > 0 && current_money >= tile.part.cost * 10 ) {
+					if ( auto_buy_disabled !== true && tile.heat <= 0 && tile.part.category === 'capacitor' && game.upgrade_objects['perpetual_capacitors'].level > 0 && current_money >= tile.part.cost * 10 ) {
 						current_money -= tile.part.cost * 10;
 						heat_add_next_loop += tile.heat_contained;
 						tile.heat_contained = 0;
@@ -4195,7 +2761,8 @@ var game_loop = function() {
 				}
 
 				if ( tile.part ) {
-					tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
+					//tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
+					tile.updated = true;
 				}
 			}
 		}
@@ -4203,7 +2770,7 @@ var game_loop = function() {
 
 	// Auto Sell
 	if ( !auto_sell_disabled ) {
-		sell_amount = Math.ceil(max_power * auto_sell_multiplier);
+		sell_amount = Math.ceil(max_power * game.auto_sell_multiplier);
 		if ( sell_amount ) {
 			if ( sell_amount > current_power ) {
 				power_sell_percent = current_power / sell_amount;
@@ -4214,19 +2781,18 @@ var game_loop = function() {
 
 			current_power -= sell_amount;
 			current_money += sell_amount;
-			$money_per_tick.innerHTML = fmt(sell_amount);
-			$stats_cash.innerHTML = fmt(sell_amount, 2);
-			$money.innerHTML = fmt(current_money);
+			ui.say('var', 'money_add', sell_amount);
+			ui.say('var', 'current_money', current_money);
 
 			// Extreme capacitors frying themselves
-			for ( ri = 0; ri < rows; ri++ ) {
-				row = tiles[ri];
+			for ( ri = 0; ri < game.rows; ri++ ) {
+				row = game.tiles[ri];
 
-				for ( ci = 0; ci < cols; ci++ ) {
+				for ( ci = 0; ci < game.cols; ci++ ) {
 					tile = row[ci];
 
 					if ( tile.activated && tile.part && tile.part.id === 'capacitor6' ) {
-						tile.heat_contained += sell_amount * auto_sell_multiplier * power_sell_percent * .5;
+						tile.heat_contained += sell_amount * game.auto_sell_multiplier * power_sell_percent * .5;
 					}
 				}
 			}
@@ -4237,22 +2803,22 @@ var game_loop = function() {
 		current_power = max_power;
 	}
 
-	if ( current_heat < 0 ) {
-		current_heat = 0;
+	if ( game.current_heat < 0 ) {
+		game.current_heat = 0;
 	}
 
 	if ( meltdown ) {
-		current_heat = max_heat * 2 + 1;
+		game.current_heat = max_heat * 2 + 1;
 	}
 
-	if ( meltdown || current_heat > max_heat * 2 ) {
+	if ( meltdown || game.current_heat > max_heat * 2 ) {
 		melting_down = true;
 		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
 
-		for ( ri = 0; ri < rows; ri++ ) {
-			row = tiles[ri];
+		for ( ri = 0; ri < game.rows; ri++ ) {
+			row = game.tiles[ri];
 
-			for ( ci = 0; ci < cols; ci++ ) {
+			for ( ci = 0; ci < game.cols; ci++ ) {
 				tile = row[ci];
 
 				if ( tile.part ) {
@@ -4270,23 +2836,31 @@ var game_loop = function() {
 
 	update_heat_and_power();
 
-	if ( !paused ) {
-		clearTimeout(loop_timeout);
-		loop_timeout = setTimeout(game_loop, loop_wait);
-	}
-
 	if ( tooltip_update !== null ) {
 		tooltip_update();
 	}
 
 	if ( !was_melting_down && melting_down ) {
 		save();
+		ui.say('var', 'melting_down', true);
+	} else if ( was_melting_down && !melting_down ) {
+		ui.say('var', 'melting_down', false);
 	}
 
 	if ( melting_down ) {
 		was_melting_down = true;
 	} else {
 		was_melting_down = false;
+	}
+
+	if ( start_game_loop ) {
+		ui.say('var', 'game_loop_speed', performance.now() - start_game_loop);
+	}
+	start_game_loop = performance.now();
+
+	if ( !paused ) {
+		clearTimeout(loop_timeout);
+		loop_timeout = setTimeout(game_loop, game.loop_wait);
 	}
 };
 
@@ -4295,26 +2869,24 @@ var prev_part;
 var check_affordability = function() {
 	prev_part = null;
 
-	for ( i = 0, l = part_objects_array.length; i < l; i++ ) {
-		part = part_objects_array[i];
+	for ( i = 0, l = game.part_objects_array.length; i < l; i++ ) {
+		part = game.part_objects_array[i];
 
 		if (
-			part.affordable
+			part.affordable === true
 			&&
 				(
 					part.cost > current_money
-					|| (part.erequires && !upgrade_objects[part.erequires].level)
+					|| (part.erequires && !game.upgrade_objects[part.erequires].level)
 				)
 		) {
-			part.affordable = false;
-			part.$el.className += ' unaffordable';
+			part.setAffordable(false);
 		} else if ( !part.affordable ) {
 			if ( 
 				part.cost <= current_money
-				&& (!part.erequires || upgrade_objects[part.erequires].level)
+				&& (!part.erequires || game.upgrade_objects[part.erequires].level)
 			) {
-				part.affordable = true;
-				part.$el.className = part.$el.className.replace(unaffordable_replace, '').replace(locked_find, '');
+				part.setAffordable(true);
 			} else if ( prev_part && prev_part.affordable ) {
 				part.$el.className = part.$el.className.replace(locked_find, '');
 			}
@@ -4326,7 +2898,7 @@ var check_affordability = function() {
  // Debug
 /////////////////////////////
 
-if ( debug ) {
+if ( game.debug ) {
 	var $game_nav = $('#game_nav');
 	var $save = $('<button id="save">Save</button>');
 	//var $save = $('#save');
@@ -4340,37 +2912,17 @@ if ( debug ) {
  // Load
 /////////////////////////////
 
-var $heat_percentage = $('#heat_percentage');
-var $power_percentage = $('#power_percentage');
-
 var update_heat_and_power = function() {
-	$current_heat.innerHTML = fmt(current_heat);
-
-	if ( current_heat < max_heat ) {
-		$heat_percentage.style.width = current_heat / max_heat * 100 + '%';
-	} else {
-		$heat_percentage.style.width = '100%';
-	}
-
-	$current_power.innerHTML = fmt(current_power);
-	$power_percentage.style.width = current_power / max_power * 100 + '%';
-
-	if ( current_heat <= max_heat ) {
-		$reactor.style.backgroundColor = 'transparent';
-	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
-		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
-	} else {
-		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
-	}
+	ui.say('var', 'current_heat', game.current_heat);
+	ui.say('var', 'current_power', current_power);
 };
 
 var update_nodes = function() {
-	$current_heat.innerHTML = fmt(current_heat);
-	$current_power.innerHTML = fmt(current_power);
-	$money.innerHTML = fmt(current_money);
-	$exotic_particles.innerHTML = fmt(exotic_particles);
-	$current_exotic_particles.innerHTML = fmt(current_exotic_particles);
-	$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
+	ui.say('var', 'current_heat', game.current_heat);
+	ui.say('var', 'current_power', current_power);
+	ui.say('var', 'current_money', current_money);
+	ui.say('var', 'exotic_particles', exotic_particles);
+	ui.say('var', 'current_exotic_particles', current_exotic_particles);
 };
 
 // Do stuff
@@ -4390,7 +2942,7 @@ var srow;
 var supgrade_object;
 
 save_game.load(function(rks) {
-	save_debug && console.log('save_game.load', rks);
+	game.save_debug && console.log('save_game.load', rks);
 
 	if ( rks ) {
 		try {
@@ -4400,16 +2952,18 @@ save_game.load(function(rks) {
 		}
 
 		// Current values
-		current_heat = rks.current_heat || current_heat;
+		game.current_heat = rks.current_heat || game.current_heat;
 		current_power = rks.current_power || current_power;
 		current_money = rks.current_money || 0;
 		exotic_particles = rks.exotic_particles || exotic_particles;
 		current_exotic_particles = rks.current_exotic_particles || current_exotic_particles;
 		total_exotic_particles = rks.total_exotic_particles || total_exotic_particles;
+		ui.say('var', 'total_exotic_particles', total_exotic_particles);
 
 		max_heat = rks.max_heat || max_heat;
-		manual_heat_reduce = rks.manual_heat_reduce || manual_heat_reduce;
+		game.manual_heat_reduce = rks.manual_heat_reduce || game.manual_heat_reduce;
 		paused = rks.paused || paused;
+
 		auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
 		auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
 		protium_particles = rks.protium_particles || protium_particles;
@@ -4418,35 +2972,41 @@ save_game.load(function(rks) {
 
 		if ( paused ) {
 			pause();
+		} else {
+			unpause();
 		}
 
 		if ( auto_sell_disabled ) {
 			disable_auto_sell();
+		} else {
+			enable_auto_sell();
 		}
 
 		if ( auto_buy_disabled ) {
 			disable_auto_buy();
+		} else {
+			enable_auto_buy();
 		}
 
-		set_manual_heat_reduce();
-		set_auto_heat_reduce();
+		ui.say('var', 'manual_heat_reduce', game.manual_heat_reduce);
+		ui.say('var', 'auto_heat_reduce', max_heat/10000);
 
 		// Tiles
 		if ( rks.tiles ) {
-			for ( ri = 0; ri < max_rows; ri++ ) {
-				row = tiles[ri];
+			for ( ri = 0; ri < game.max_rows; ri++ ) {
+				row = game.tiles[ri];
 				srow = rks.tiles[ri];
 
 				if ( srow ) {
-					for ( ci = 0; ci < max_cols; ci++ ) {
+					for ( ci = 0; ci < game.max_cols; ci++ ) {
 						stile = srow[ci];
 
 						if ( stile ) {
 							tile = row[ci];
-							tile.ticks = stile.ticks;
+							tile.setTicks(stile.ticks);
 							tile.activated = stile.activated;
 							tile.heat_contained = stile.heat_contained;
-							part = part_objects[stile.id];
+							part = game.part_objects[stile.id];
 							apply_to_tile(tile, part, true);
 						}
 					}
@@ -4458,7 +3018,7 @@ save_game.load(function(rks) {
 		if ( rks.tile_queue ) {
 			for ( i = 0, l = rks.tile_queue.length; i < l; i++ ) {
 				stile = rks.tile_queue[i];
-				tile_queue.push(tiles[stile.row][stile.col]);
+				tile_queue.push(game.tiles[stile.row][stile.col]);
 			}
 		}
 
@@ -4466,10 +3026,13 @@ save_game.load(function(rks) {
 		if ( rks.upgrades ) {
 			for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
 				supgrade = rks.upgrades[i];
-				supgrade_object = upgrade_objects[supgrade.id];
+				supgrade_object = game.upgrade_objects[supgrade.id];
 
 				if ( supgrade_object ) {
-					upgrade_objects[supgrade.id].setLevel(supgrade.level);
+					game.upgrade_objects[supgrade.id].setLevel(supgrade.level);
+					if ( tooltip_showing ) {
+						game.upgrade_objects[supgrade.id].updateTooltip();
+					}
 				}
 			}
 		}
@@ -4479,12 +3042,12 @@ save_game.load(function(rks) {
 		update_heat_and_power();
 
 		// Show the patch notes if this is a new version
-		if ( save_version !== version ) {
-			_show_page('reactor_upgrades', 'patch_section', true);
+		if ( save_version !== game.version ) {
+			ui.say('evt', 'game_updated');
 		}
 	}
 
-	update_cell_power();
+	game.update_cell_power();
 	check_affordability();
 	update_nodes();
 	update_tiles();
@@ -4492,16 +3055,14 @@ save_game.load(function(rks) {
 
 	if ( !paused ) {
 		clearTimeout(loop_timeout);
-		loop_timeout = setTimeout(game_loop, loop_wait);
+		loop_timeout = setTimeout(game_loop, game.loop_wait);
 	}
 
-	setInterval(check_affordability, 1000);
+	ui.say('evt', 'game_loaded');
 
-	if ( debug === false ) {
-		save_timeout = setTimeout(save, save_interval);
+	if ( game.debug === false ) {
+		save_timeout = setTimeout(save, game.save_interval);
 	}
-
-	$parts.scrollTop = $parts.scrollHeight;
 });
 
 })();

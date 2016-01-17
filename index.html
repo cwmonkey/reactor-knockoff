@@ -144,7 +144,7 @@
 						</menu>
 					</menu>
 
-					<!-- Tooltip -->
+					<!-- -- Tooltip -- -->
 					<section id="tooltip">
 						<div id="tooltip_data" class="subpanel">
 							<p id="tooltip_cost" title="Cost"></p>
@@ -183,6 +183,14 @@
 						</div>
 					</section>
 				</div>
+
+				<!-- -- Middle -- --
+				<section id="objectives_section" class="panel">
+					<h2 class="objectives_header">Objectives</h2>
+					<div id="objectives_wrapper">
+						<p id="objective_text"></p>
+					</div>
+				</section -->
 
 				<!-- -- Bottom -- -->
 				<div id="reactor_upgrades" class="panel">
@@ -245,6 +253,13 @@
 						<h2 class="heading">Patch Notes</h2>
 						<div id="about" class="subpanel explanitory cms">
 							<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">Back to Reactor</button>
+							<section class="patch">
+								<h3>v1.2.0 - January 16th, 2015</h3>
+								<ul>
+									<li>Signific code changes that shouldn't (but may) affect gameplay</li>
+								</ul>
+							</section>
+
 							<section class="patch">
 								<h3>v1.1.0 - January 13th, 2016</h3>
 								<h4>Features:</h4>
@@ -332,7 +347,13 @@
 		</main>
 	</div>
 
+	<script src="js/app.globals.js"></script>
+	<script src="js/app.parts.js"></script>
+	<script src="js/app.upgrades.js"></script>
+	<script src="js/app.ui.js"></script>
+	<script src="js/app.Upgrade.js"></script>
 	<script src="js/app.js"></script>
+
 	<script>
 		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
