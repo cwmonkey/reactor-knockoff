@@ -15,6 +15,7 @@ window.ui = ui;
 // DOM nodes
 var $main = $('#main');
 var $reactor = $('#reactor');
+var $reactor_section = $('#reactor_section');
 var $refund_exotic_particles = $('#refund_exotic_particles');
 var $reboot_exotic_particles = $('#reboot_exotic_particles');
 var $manual_heat_reduce = $('#manual_heat_reduce');
@@ -22,6 +23,7 @@ var $auto_heat_reduce = $('#auto_heat_reduce');
 var $power_percentage = $('#power_percentage');
 var $heat_percentage = $('#heat_percentage');
 var $parts = $('#parts');
+var $primary = $('#primary');
 
 var rows = [];
 var current_vars = {};
@@ -358,16 +360,31 @@ evts.part_added = function(val) {
 	}
 };
 
+// Tile height/width change
+
 var enabled_class = 'enabled';
 var enabled_find = new RegExp('[\\s\\b]' + enabled_class + '\\b');
 
+var adjust_primary_size_timeout;
+var adjust_primary_size = function() {
+	$primary.style.width = $reactor_section.offsetWidth + 32 + 'px';
+};
+
 evts.tile_disabled = function(tile) {
 	tile.$el.className = tile.$el.className.replace(enabled_find, '');
+
+	clearTimeout(adjust_primary_size_timeout);
+	adjust_primary_size_timeout = setTimeout(adjust_primary_size, 10);
 };
 
 evts.tile_enabled = function(tile) {
 	tile.$el.className += ' ' + enabled_class;
+
+	clearTimeout(adjust_primary_size_timeout);
+	adjust_primary_size_timeout = setTimeout(adjust_primary_size, 10);
 };
+
+// Game
 
 evts.game_loaded = function() {
 	$parts.scrollTop = $parts.scrollHeight;
@@ -375,6 +392,38 @@ evts.game_loaded = function() {
 
 evts.game_updated = function() {
 	_show_page('reactor_upgrades', 'patch_section', true);
+};
+
+// Objectives
+
+var $objectives_section = $('#objectives_section');
+var objectives_unloading_class = 'unloading';
+var objectives_unloading_find = new RegExp('[\\s\\b]' + objectives_unloading_class + '\\b');
+var objectives_loading_class = 'loading';
+var objectives_loading_find = new RegExp('[\\s\\b]' + objectives_loading_class + '\\b');
+var objective_timeout;
+
+var $objective_title = $('#objective_title');
+var $objective_reward = $('#objective_reward');
+
+evts.objective_unloaded = function() {
+	$objectives_section.className += ' ' + objectives_unloading_class;
+};
+
+evts.objective_loaded = function(val) {
+	$objectives_section.className += ' ' + objectives_loading_class;
+	$objective_title.innerHTML = val.title;
+	if ( val.reward ) {
+		$objective_reward.innerHTML = '$' + val.reward;
+	} else {
+		$objective_reward.innerHTML = '';
+	}
+	$objectives_section.className = $objectives_section.className.replace(objectives_unloading_find, '');
+
+	clearTimeout(objective_timeout);
+	objective_timeout = setTimeout(function() {
+		$objectives_section.className = $objectives_section.className.replace(objectives_loading_find, '');
+	}, 100);
 };
 
   /////////////////////////////

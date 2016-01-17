@@ -272,6 +272,9 @@ menu {
 	padding: 4px;
 	height: 148px;
 	width: 668px;
+	width: 100%;
+	display: table;
+	max-width: 100%;
 }
 
 #all_parts {
@@ -355,6 +358,76 @@ menu {
 }
 
   /* //////////////////////////
+ // Objectives
+////////////////////////// */
+
+#objectives_section {
+	display: table;
+	width: 100%;
+	max-width: 100%;
+}
+
+#objectives_header {
+	font-size: .9em;
+	display: table-cell;
+	padding-right: 5px;
+	width: 1px;
+	line-height: 1.7em;
+}
+
+#objectives_header:after {
+	content: ":";
+}
+
+#objectives_wrapper {
+	display: table-cell;
+	background: #222C38;
+	padding: 0 4px;
+	position: relative;
+	overflow: hidden;
+	height: 1.7em;
+	transition: all .3s linear;
+}
+
+#objectives_section.unloading #objectives_wrapper {
+	box-shadow: 0 0 4px 2px #0f0;
+	border: 4px solid #0f0;
+}
+
+#objectives_content {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	transition: left .9s ease-out;
+}
+
+#objectives_section.unloading #objectives_content {
+	left: -110%;
+	transition-delay: 2s;
+}
+
+#objectives_section.loading #objectives_content {
+	left: 110%;
+	transition: none;
+}
+
+#objectives_content p {
+	padding: 0 4px;
+	font-size: .9em;
+}
+
+#objective_title {
+	float: left;
+}
+
+#objective_reward {
+	float: right;
+	font-family: monospace;
+	width: 8em;
+}
+
+  /* //////////////////////////
  // Reactor
 ////////////////////////// */
 
@@ -366,6 +439,7 @@ menu {
 #reactor_stats {
 	margin-bottom: .75em;
 	float: left;
+	white-space: nowrap;
 }
 
 #reactor_stats .stat {
@@ -1425,18 +1499,22 @@ body:before {
 	flex: 1; */
 }
 
-#main .panel_holder:last-child .panel:first-child {
+#main .panel_holder:last-child .panel {
 	border: 12px solid #485667;
-	border-image: url("../img/panel_border_last_first.png") 12 12 stretch;
+	border-image: url("../img/panel_border_last_middle.png") 12 12 stretch;
 	background-color: #485667;
+	margin: 0 0 4px 0;
+	padding: 2px 6px 2px 2px;
+}
+
+#main .panel_holder:last-child .panel:first-child {
+	border-image: url("../img/panel_border_last_first.png") 12 12 stretch;
 	margin: 0 0 4px 0;
 	padding: 6px 4px 2px 2px;
 }
 
 #main .panel_holder:last-child .panel:last-child {
-	border: 12px solid #485667;
 	border-image: url("../img/panel_border_last_last.png") 12 12 stretch;
-	background-color: #485667;
 	padding: 0 6px 6px 2px;
 	margin: 0;
 	-webkit-flex: 1;

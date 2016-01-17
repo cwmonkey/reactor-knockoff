@@ -4,6 +4,10 @@ TODO:
 
 Display issue with percent on reflectors when loading - only corrects when cell is placed near it
 
+Bugs:
+stats display issue on mobile
+Replace All doesn't work as expected on depleted cells on mobile
+
 Ongoing:
 adjust ui
 mobile ui
@@ -107,6 +111,10 @@ var Game = function() {
 	this.part_objects = {};
 	this.upgrade_objects_array = [];
 	this.upgrade_objects = {};
+
+	// Objectives
+	this.sold_power = false;
+	this.sold_heat = false;
 };
 
 Game.prototype.addProperty = addProperty;
@@ -1474,13 +1482,19 @@ if ( !is_touch ) {
 /////////////////////////////
 
 window.reduce_heat = function() {
-	game.current_heat -= game.manual_heat_reduce;
+	if ( game.current_heat ) {
+		game.current_heat -= game.manual_heat_reduce;
 
-	if ( game.current_heat < 0 ) {
-		game.current_heat = 0;
+		if ( game.current_heat < 0 ) {
+			game.current_heat = 0;
+		}
+
+		if ( game.current_heat === 0 ) {
+			game.sold_heat = true;
+		}
+
+		ui.say('var', 'current_heat', game.current_heat);
 	}
-
-	ui.say('var', 'current_heat', game.current_heat);
 };
 
   /////////////////////////////
@@ -1868,6 +1882,7 @@ var save = function(event) {
 			auto_sell_disabled: auto_sell_disabled,
 			auto_buy_disabled: auto_buy_disabled,
 			protium_particles: protium_particles,
+			current_objective: current_objective,
 			version: game.version
 		})),
 		function() {
@@ -2278,6 +2293,7 @@ window.sell = function() {
 		ui.say('var', 'current_power', current_power);
 
 		check_affordability();
+		game.sold_power = true;
 	}
 };
 
@@ -2895,6 +2911,46 @@ var check_affordability = function() {
 };
 
   /////////////////////////////
+ // Objectives
+/////////////////////////////
+
+var objectives = window.objectives(game);
+var current_objective = 0;
+var objective_unloading = false;
+var objective;
+var objective_interval = 2000;
+var objective_wait = 3000;
+var objective_timeout;
+
+var check_objectives = function() {
+	if ( objective && objective.check() ) {
+		current_objective++;
+		current_money += objective.reward;
+		ui.say('var', 'current_money', current_money);
+		set_objective(current_objective);
+	} else {
+		clearTimeout(objective_timeout);
+		objective_timeout = setTimeout(check_objectives, objective_interval);
+	}
+};
+
+var set_objective = function(objective_key) {
+	if ( objectives[current_objective] ) {
+		objective_unloading = true;
+		ui.say('evt', 'objective_unloaded');
+
+		clearTimeout(objective_timeout);
+		objective_timeout = setTimeout(function() {
+			objective = objectives[current_objective];
+			ui.say('evt', 'objective_loaded', objective);
+
+			clearTimeout(objective_timeout);
+			objective_timeout = setTimeout(check_objectives, objective_interval);
+		}, objective_wait);
+	}
+};
+
+  /////////////////////////////
  // Debug
 /////////////////////////////
 
@@ -2963,6 +3019,7 @@ save_game.load(function(rks) {
 		max_heat = rks.max_heat || max_heat;
 		game.manual_heat_reduce = rks.manual_heat_reduce || game.manual_heat_reduce;
 		paused = rks.paused || paused;
+		current_objective = rks.current_objective || current_objective;
 
 		auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
 		auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
@@ -3057,6 +3114,8 @@ save_game.load(function(rks) {
 		clearTimeout(loop_timeout);
 		loop_timeout = setTimeout(game_loop, game.loop_wait);
 	}
+
+	set_objective(current_objective);
 
 	ui.say('evt', 'game_loaded');
 
