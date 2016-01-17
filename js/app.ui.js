@@ -136,6 +136,11 @@ var var_objs = {
 		num: true,
 		places: 2
 	},
+	stats_vent: {
+		dom: $('#stats_vent'),
+		num: true,
+		places: 2
+	},
 	stats_heat: {
 		dom: $('#stats_heat'),
 		num: true,
