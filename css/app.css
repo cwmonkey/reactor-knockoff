@@ -26,6 +26,7 @@ body {
 	display: table;
 	margin: auto;
 	-webkit-text-size-adjust: none;
+	overflow: scroll;
 }
 
 a {
@@ -105,7 +106,6 @@ menu {
 	display: table-cell;
 	height: 100%;
 	width: 100%;
-	vertical-align: middle;
 }
 
 #main {
@@ -424,7 +424,7 @@ menu {
 #objective_reward {
 	float: right;
 	font-family: monospace;
-	width: 8em;
+	width: 6em;
 }
 
   /* //////////////////////////
@@ -692,6 +692,14 @@ body:before {
   /* //////////////////////////
  // Pages
 ////////////////////////// */
+
+#main .has_spoiler .spoiler {
+	display: none;
+}
+
+#main .has_spoiler.show .spoiler {
+	display: block;
+}
 
 #main .page {
 	position: absolute;
@@ -1193,32 +1201,37 @@ body:before {
 /* Particle Accelerators */
 #parts .part.part_particle_accelerator1 .image:after,
 #upgrades #improved_particle_accelerators .image:after,
+#experimental_upgrades #improved_particle_accelerators1 .image:after,
 #reactor .tile.part_particle_accelerator1:after {
 	background-image: url("../img/accelerator_1.gif");
 }
 
 #parts .part.part_particle_accelerator2 .image:after,
+#experimental_upgrades #improved_particle_accelerators2 .image:after,
 #reactor .tile.part_particle_accelerator2:after {
 	background-image: url("../img/accelerator_2.gif");
 }
 
 #parts .part.part_particle_accelerator3 .image:after,
+#experimental_upgrades #improved_particle_accelerators3 .image:after,
 #reactor .tile.part_particle_accelerator3:after {
 	background-image: url("../img/accelerator_3.gif");
 }
 
 #parts .part.part_particle_accelerator4 .image:after,
+#experimental_upgrades #improved_particle_accelerators4 .image:after,
 #reactor .tile.part_particle_accelerator4:after {
 	background-image: url("../img/accelerator_4.gif");
 }
 
 #parts .part.part_particle_accelerator5 .image:after,
-#experimental_upgrades #force_particle_research .image:after,
+#experimental_upgrades #improved_particle_accelerators5 .image:after,
 #reactor .tile.part_particle_accelerator5:after {
 	background-image: url("../img/accelerator_5.gif");
 }
 
 #parts .part.part_particle_accelerator6 .image:after,
+#experimental_upgrades #improved_particle_accelerators6 .image:after,
 #experimental_upgrades #singularity_harnessing .image:after,
 #reactor .tile.part_particle_accelerator6:after {
 	background-image: url("../img/accelerator_6.gif");
@@ -1371,7 +1384,7 @@ body:before {
 }
 
 #tooltip_text {
-	padding: .2em .3em;
+	padding: .2em .3em 0;
 	text-align: center;
 	-webkit-flex: 1;
 	flex: 1;
@@ -1402,7 +1415,7 @@ body:before {
 }
 
 #tooltip_description {
-	margin-bottom: .5em;
+	/*margin-bottom: .5em;*/
 }
 
 .touch #tooltip_description {

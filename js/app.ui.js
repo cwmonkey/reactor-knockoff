@@ -198,6 +198,7 @@ var update_vars = function() {
 var update_interface_interval = 100;
 var unaffordable_replace = /[\s\b]unaffordable\b/;
 var locked_find = /[\b\s]locked\b/;
+var do_check_upgrades_affordability = false;
 var update_interface = function() {
 	var start_ui_loop = performance.now();
 	update_vars();
@@ -217,22 +218,37 @@ var update_interface = function() {
 
 				tile.ticksUpdated = false;
 			}
-		}
-	}
 
-	for ( var i = 0, l = ui.game.upgrade_objects_array.length, upgrade; i < l; i++ ) {
-		upgrade = ui.game.upgrade_objects_array[i];
+			if ( tile.heat_containedUpdated ) {
+				if ( tile.part && tile.part.containment ) {
+					tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
+				} else {
+					tile.$percent.style.width = '0';
+				}
 
-		if ( upgrade.affordableUpdated === true ) {
-			if ( upgrade.affordable === true ) {
-				upgrade.$el.className = upgrade.$el.className.replace(unaffordable_replace, '');
-			} else {
-				upgrade.$el.className += ' unaffordable';
+				tile.heat_containedUpdated = false;
 			}
-
-			upgrade.affordableUpdated = false;
 		}
 	}
+
+	if ( do_check_upgrades_affordability === true ) {
+		window.check_upgrades_affordability();
+		for ( var i = 0, l = ui.game.upgrade_objects_array.length, upgrade; i < l; i++ ) {
+			upgrade = ui.game.upgrade_objects_array[i];
+
+			if ( upgrade.affordableUpdated === true ) {
+				if ( upgrade.affordable === true ) {
+					upgrade.$el.className = upgrade.$el.className.replace(unaffordable_replace, '');
+				} else {
+					upgrade.$el.className += ' unaffordable';
+				}
+
+				upgrade.affordableUpdated = false;
+			}
+		}
+	}
+
+	window.check_affordability();
 
 	for ( var i = 0, l = ui.game.part_objects_array.length, part; i < l; i++ ) {
 		part = ui.game.part_objects_array[i];
@@ -334,7 +350,7 @@ evts.part_added = function(val) {
 
 	part_obj.className = 'part_' + part.id;
 	part_obj.$el = document.createElement('BUTTON');
-	part_obj.$el.className = 'part locked unaffordable ' + part_obj.className;
+	part_obj.$el.className = 'part locked ' + part_obj.className;
 	part_obj.$el.part = part_obj;
 
 	var $image = $('<div class="image">');
@@ -419,7 +435,9 @@ evts.objective_loaded = function(val) {
 	$objectives_section.className += ' ' + objectives_loading_class;
 	$objective_title.innerHTML = val.title;
 	if ( val.reward ) {
-		$objective_reward.innerHTML = '$' + val.reward;
+		$objective_reward.innerHTML = '$' + fmt(val.reward);
+	} else if ( val.ep_reward ) {
+		$objective_reward.innerHTML = fmt(val.ep_reward) + 'EP';
 	} else {
 		$objective_reward.innerHTML = '';
 	}
@@ -681,9 +699,9 @@ var _show_page = function(section, id, notrack) {
 
 	// Page specific stuff
 	if ( id == 'upgrades_section' || id == 'experimental_upgrades_section' ) {
-		start_check_upgrades_affordability();
+		do_check_upgrades_affordability = true;
 	} else {
-		stop_check_upgrades_affordability();
+		do_check_upgrades_affordability = false;
 	}
 
 	if ( !notrack ) {
@@ -745,5 +763,32 @@ var hide_more_stats = function(event) {
 
 $hide_more_stats.onclick = hide_more_stats;
 $hide_more_stats.ontouchend = hide_more_stats;
+
+// Show spoilers
+var has_spoiler_find = /\bhas_spoiler\b/;
+var show_find = /[\s\b]show\b/;
+$('#help_section').delegate('show_spoiler', 'click', function() {
+	var has_spoiler = this;
+	var found = false;
+
+	while ( has_spoiler ) {
+		if ( has_spoiler.className.match(has_spoiler_find) ) {
+			found = true;
+			break;
+		} else {
+			has_spoiler = has_spoiler.parentNode;
+		}
+	}
+
+	if ( !found ) {
+		return;
+	}
+
+	if ( has_spoiler.className.match(show_find) ) {
+		has_spoiler.className = has_spoiler.className.replace(' show', '');
+	} else {
+		has_spoiler.className += ' show';
+	}
+});
 
 })();

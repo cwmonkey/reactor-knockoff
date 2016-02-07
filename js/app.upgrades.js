@@ -1,7 +1,7 @@
 ;(function() {
 
 window.upgrades = function(game) {
-	return [
+	var upgrades = [
 		{
 			id: 'chronometer',
 			type: 'other',
@@ -268,6 +268,7 @@ window.upgrades = function(game) {
 				game.vent_capacitor_multiplier = upgrade.level;
 			}
 		},
+		/* Killing these for now
 		{
 			id: 'improved_particle_accelerators',
 			type: 'other',
@@ -284,7 +285,7 @@ window.upgrades = function(game) {
 					part.updateDescription();
 				}
 			}
-		},
+		},*/
 
 		// Expanding
 		{
@@ -312,9 +313,9 @@ window.upgrades = function(game) {
 			}
 		},
 
-	  /////////////////////////////
-	 // Experimental Upgrades
-	/////////////////////////////
+		  /////////////////////////////
+		 // Experimental Upgrades
+		/////////////////////////////
 
 		{
 			id: 'laboratory',
@@ -480,6 +481,7 @@ window.upgrades = function(game) {
 				game.altered_max_heat = game.base_max_heat * Math.pow(4, upgrade.level);
 			}
 		},
+		/* Killing these since they are OP
 		{
 			id: 'force_particle_research',
 			type: 'experimental_boost',
@@ -497,7 +499,7 @@ window.upgrades = function(game) {
 					part.updateDescription();
 				}
 			}
-		},
+		},*/
 		{
 			id: 'protium_cells',
 			type: 'experimental_cells',
@@ -637,5 +639,29 @@ window.upgrades = function(game) {
 			}
 		}
 	];
+
+	for ( var i = 1; i <= 6; i++ ) {
+		upgrades.push({
+			id: 'improved_particle_accelerators' + i,
+			type: 'experimental_particle_accelerators',
+			title: 'Improved ' + game.part_objects['particle_accelerator' + i].part.title,
+			description: 'Increase the maximum heat that ' + game.part_objects['particle_accelerator' + i].part.title + 's can use to create Exotic Particles by 100% per level of upgrade.',
+			erequires: 'laboratory',
+			ecost: 200 * i,
+			multiplier: 2,
+			onclick: (function(i) {
+				return function(upgrade) {
+					var part;
+
+					part = game.part_objects['particle_accelerator' + i];
+					part.ep_heat = part.part.base_ep_heat * (upgrade.level + 1);
+					part.updateDescription();
+				}
+			})(i)
+		});
+	}
+
+	return upgrades;
 };
+
 })();

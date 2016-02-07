@@ -5,6 +5,7 @@ TODO:
 Display issue with percent on reflectors when loading - only corrects when cell is placed near it
 
 Bugs:
+When powerful fans are placed next to less powerful outlets, the reactor takes on heat
 stats display issue on mobile
 Replace All doesn't work as expected on depleted cells on mobile
 
@@ -103,6 +104,13 @@ var Game = function() {
 	this.vent_capacitor_multiplier;
 	this.altered_max_power;
 	this.altered_max_heat;
+	this.stats_power;
+	this.stats_cash = 0;
+	this.paused = false;
+	this.has_melted_down = false;
+	this.current_money = 0;
+	this.exotic_particles = 0;
+	this.current_exotic_particles = 0;
 
 	// Displayed
 
@@ -125,24 +133,20 @@ game.ui = ui;
 
 // Current
 var current_power;
-var current_money;
 var max_heat;
 var max_power;
 var power_multiplier;
 var heat_multiplier;
 var protium_particles;
 
-var paused = false;
 var auto_sell_disabled = false;
 var auto_buy_disabled = false;
-var exotic_particles = 0;
-var current_exotic_particles = 0;
 var total_exotic_particles = 0;
 
 var set_defaults = function() {
 	game.current_heat = 0;
 	current_power = 0;
-	current_money = game.base_money;
+	game.current_money = game.base_money;
 	game.cols = game.base_cols;
 	game.rows = game.base_rows;
 	max_heat = game.base_max_heat;
@@ -607,7 +611,7 @@ window.reboot = function(refund) {
 		}
 	}
 
-	total_exotic_particles += exotic_particles;
+	total_exotic_particles += game.exotic_particles;
 	ui.say('var', 'total_exotic_particles', total_exotic_particles);
 
 	if ( refund === true ) {
@@ -619,7 +623,7 @@ window.reboot = function(refund) {
 			}
 		}
 
-		current_exotic_particles = total_exotic_particles;
+		game.current_exotic_particles = total_exotic_particles;
 	} else {
 		for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
 			upgrade = game.upgrade_objects_array[i];
@@ -637,15 +641,15 @@ window.reboot = function(refund) {
 			}
 		}
 
-		current_exotic_particles += exotic_particles;
+		game.current_exotic_particles += game.exotic_particles;
 	}
 
 	update_tiles();
 
-	exotic_particles = 0;
+	game.exotic_particles = 0;
 
-	ui.say('var', 'exotic_particles', exotic_particles);
-	ui.say('var', 'current_exotic_particles', current_exotic_particles);
+	ui.say('var', 'exotic_particles', game.exotic_particles);
+	ui.say('var', 'current_exotic_particles', game.current_exotic_particles);
 
 	update_nodes();
 
@@ -675,7 +679,6 @@ var multi_cell_description = 'Acts as %count %type cells. Produces %power power 
 var Tile = function(row, col) {
 	this.part = null;
 	this.heat = 0;
-	this.heat_contained = 0;
 	this.display_power = null;
 	this.display_heat = null;
 	this.power = 0;
@@ -691,6 +694,7 @@ var Tile = function(row, col) {
 	this.display_chance = 0;
 	this.display_chance_percent_of_total = 0;
 
+	this.addProperty('heat_contained', 0);
 	this.addProperty('ticks', 0);
 };
 
@@ -726,7 +730,6 @@ var stat_vent;
 var stat_inlet;
 var stat_outlet;
 var total_heat;
-var total_power;
 
 var tile_power_mult;
 var tile_heat_mult;
@@ -741,7 +744,7 @@ var update_tiles = function() {
 	max_power = game.altered_max_power;
 	max_heat = game.altered_max_heat;
 	total_heat = 0;
-	total_power = 0;
+	game.stats_power = 0;
 
 	stat_vent = 0;
 	stat_inlet = 0;
@@ -986,18 +989,19 @@ var update_tiles = function() {
 		for ( ci = 0; ci < game.cols; ci++ ) {
 			tile = row[ci];
 			total_heat += tile.heat;
-			total_power += tile.power;
+			game.stats_power += tile.power;
 		}
 	}
 
-	if ( part_count === 0 && current_power + current_money < game.base_money ) {
-		current_money = game.base_money - current_power;
-		ui.say('var', 'current_money', current_money);
+	if ( part_count === 0 && current_power + game.current_money < game.base_money ) {
+		game.current_money = game.base_money - current_power;
+		ui.say('var', 'current_money', game.current_money);
 	}
 
 	ui.say('var', 'stats_heat', total_heat);
-	ui.say('var', 'total_power', total_power);
-	ui.say('var', 'stats_cash', Math.ceil(total_power * game.auto_sell_multiplier));
+	ui.say('var', 'total_power', game.stats_power);
+	game.stats_cash = Math.ceil(max_power * game.auto_sell_multiplier);
+	ui.say('var', 'stats_cash', game.stats_cash);
 };
 
 // get dom nodes cached
@@ -1597,7 +1601,8 @@ var upgrade_locations = {
 	experimental_boost: $('#experimental_boost'),
 	experimental_cells: $('#experimental_cells'),
 	experimental_cells_boost: $('#experimental_cell_boost'),
-	experimental_parts: $('#experimental_parts')
+	experimental_parts: $('#experimental_parts'),
+	experimental_particle_accelerators: $('#experimental_particle_accelerators')
 };
 
 var create_upgrade = function(u) {
@@ -1718,17 +1723,17 @@ $all_upgrades.delegate('upgrade', 'click', function(event) {
 	} else if (
 		upgrade.ecost
 		&& (!upgrade.erequires || game.upgrade_objects[upgrade.erequires].level)
-		&& current_exotic_particles >= upgrade.ecost
+		&& game.current_exotic_particles >= upgrade.ecost
 	) {
-		current_exotic_particles -= upgrade.ecost;
-		ui.say('var', 'current_exotic_particles', current_exotic_particles);
+		game.current_exotic_particles -= upgrade.ecost;
+		ui.say('var', 'current_exotic_particles', game.current_exotic_particles);
 		upgrade.setLevel(upgrade.level + 1);
 		if ( tooltip_showing ) {
 			upgrade.updateTooltip();
 		}
-	} else if ( upgrade.cost && current_money >= upgrade.cost ) {
-		current_money -= upgrade.cost;
-		ui.say('var', 'current_money', current_money);
+	} else if ( upgrade.cost && game.current_money >= upgrade.cost ) {
+		game.current_money -= upgrade.cost;
+		ui.say('var', 'current_money', game.current_money);
 		upgrade.setLevel(upgrade.level + 1);
 		if ( tooltip_showing ) {
 			upgrade.updateTooltip();
@@ -1738,7 +1743,6 @@ $all_upgrades.delegate('upgrade', 'click', function(event) {
 	}
 
 	update_tiles();
-	check_upgrades_affordability();
 });
 
 if ( game.debug ) {
@@ -1752,17 +1756,16 @@ if ( game.debug ) {
 				if ( tooltip_showing ) {
 					upgrade.updateTooltip();
 				}
-				current_exotic_particles += upgrade.ecost;
-				ui.say('var', 'current_exotic_particles', current_exotic_particles);
+				game.current_exotic_particles += upgrade.ecost;
+				ui.say('var', 'current_exotic_particles', game.current_exotic_particles);
 				update_tiles();
-				check_upgrades_affordability();
 			}
 		}
 	});
 }
 
 var check_upgrades_affordability_timeout;
-var check_upgrades_affordability = function(do_timeout) {
+window.check_upgrades_affordability = function( /* do_timeout */ ) {
 	for ( var i = 0, l = game.upgrade_objects_array.length, upgrade; i < l; i++ ) {
 		upgrade = game.upgrade_objects_array[i];
 
@@ -1771,13 +1774,13 @@ var check_upgrades_affordability = function(do_timeout) {
 			&& (
 				(
 					upgrade.cost
-					&& current_money >= upgrade.cost
+					&& game.current_money >= upgrade.cost
 				)
 				||
 				(
 					upgrade.ecost
 					&& (!upgrade.erequires || game.upgrade_objects[upgrade.erequires].level)
-					&& (current_exotic_particles > upgrade.ecost)
+					&& (game.current_exotic_particles > upgrade.ecost)
 				)
 			)
 		) {
@@ -1789,20 +1792,20 @@ var check_upgrades_affordability = function(do_timeout) {
 		}
 	}
 
-	if ( do_timeout === true ) {
+	/*if ( do_timeout === true ) {
 		check_upgrades_affordability_timeout = setTimeout(function() {
 			check_upgrades_affordability(true);
 		}, 200);
-	}
+	}*/
 };
 
-window.start_check_upgrades_affordability = function() {
+/* window.start_check_upgrades_affordability = function() {
 	check_upgrades_affordability(true);
 };
 
 window.stop_check_upgrades_affordability = function() {
 	clearTimeout(check_upgrades_affordability_timeout);
-};
+}; */
 
   /////////////////////////////
  // Save game
@@ -1873,12 +1876,12 @@ var save = function(event) {
 			tile_queue: squeue,
 			upgrades: supgrades,
 			current_power: current_power,
-			current_money: current_money,
+			current_money: game.current_money,
 			current_heat: game.current_heat,
-			exotic_particles: exotic_particles,
-			current_exotic_particles: current_exotic_particles,
+			exotic_particles: game.exotic_particles,
+			current_exotic_particles: game.current_exotic_particles,
 			total_exotic_particles: total_exotic_particles,
-			paused: paused,
+			paused: game.paused,
 			auto_sell_disabled: auto_sell_disabled,
 			auto_buy_disabled: auto_buy_disabled,
 			protium_particles: protium_particles,
@@ -1974,21 +1977,21 @@ var remove_part = function(remove_tile, skip_update, sell) {
 	if ( sell ) {
 		if ( remove_tile.activated && remove_tile.part && remove_tile.part.category !== 'cell' ) {
 			if ( remove_tile.part.ticks ) {
-				current_money += Math.ceil(remove_tile.part.ticks / remove_tile.ticks * remove_tile.part.cost);
-				ui.say('var', 'current_money', current_money);
+				game.current_money += Math.ceil(remove_tile.part.ticks / remove_tile.ticks * remove_tile.part.cost);
+				ui.say('var', 'current_money', game.current_money);
 			} else if ( remove_tile.part.containment ) {
-				current_money += remove_tile.part.cost - Math.ceil(remove_tile.heat_contained / remove_tile.part.containment * remove_tile.part.cost);
-				ui.say('var', 'current_money', current_money);
+				game.current_money += remove_tile.part.cost - Math.ceil(remove_tile.heat_contained / remove_tile.part.containment * remove_tile.part.cost);
+				ui.say('var', 'current_money', game.current_money);
 			} else {
-				current_money += remove_tile.part.cost;
-				$money.innerHTML = fmt(current_money);
+				game.current_money += remove_tile.part.cost;
+				ui.say('var', 'current_money', game.current_money);
 			}
 		}
 	}
 
 	remove_tile.part = null;
 	remove_tile.setTicks(0);
-	remove_tile.heat_contained = 0;
+	remove_tile.setHeat_contained(0);
 	//remove_tile.$percent.style.width = 0;
 	remove_tile.updated = true;
 	remove_tile.$el.className = remove_tile.$el.className
@@ -2131,16 +2134,16 @@ var mouse_apply_to_tile = function(e) {
 		&& (
 			!tile.part
 			|| (tile.part === clicked_part && tile.ticks === 0)
-			|| (tile.part && tile.part.part.type === clicked_part.part.type && tile.part.part.level < clicked_part.part.level && current_money >= clicked_part.cost )
+			|| (tile.part && tile.part.part.type === clicked_part.part.type && tile.part.part.level < clicked_part.part.level && game.current_money >= clicked_part.cost )
 		)
 	) {
-		if ( current_money < clicked_part.cost ) {
+		if ( game.current_money < clicked_part.cost ) {
 			tile.activated = false;
 			tile_queue.push(tile);
 		} else {
 			tile.activated = true;
-			current_money -= clicked_part.cost;
-			ui.say('var', 'current_money', current_money);
+			game.current_money -= clicked_part.cost;
+			ui.say('var', 'current_money', game.current_money);
 		}
 
 		tile.setTicks(clicked_part.ticks);
@@ -2155,7 +2158,7 @@ var mouse_apply_to_tile = function(e) {
 window.pause = function() {
 	clearTimeout(loop_timeout);
 
-	paused = true;
+	game.paused = true;
 	ui.say('evt', 'paused');
 };
 
@@ -2164,7 +2167,7 @@ window.unpause = function() {
 	clearTimeout(loop_timeout);
 	loop_timeout = setTimeout(game_loop, game.loop_wait);
 
-	paused = false;
+	game.paused = false;
 	ui.say('evt', 'unpaused');
 };
 
@@ -2286,13 +2289,12 @@ $reactor.delegate('tile', 'mousemove', function(e) {
 // Sell (Decoupled)
 window.sell = function() {
 	if ( current_power ) {
-		current_money += current_power;
+		game.current_money += current_power;
 		current_power = 0;
 
-		ui.say('var', 'current_money', current_money);
+		ui.say('var', 'current_money', game.current_money);
 		ui.say('var', 'current_power', current_power);
 
-		check_affordability();
 		game.sold_power = true;
 	}
 };
@@ -2381,10 +2383,10 @@ var game_loop = function() {
 
 								// TODO: dedupe this and cell ticks
 								if ( tile_reflector.ticks === 0 ) {
-									if ( tile_reflector.part.perpetual && current_money >= tile_reflector.part.cost ) {
+									if ( tile_reflector.part.perpetual && game.current_money >= tile_reflector.part.cost ) {
 										// auto replenish reflector
-										current_money -= tile_reflector.part.cost;
-										ui.say('var', 'current_money', current_money);
+										game.current_money -= tile_reflector.part.cost;
+										ui.say('var', 'current_money', game.current_money);
 										tile_reflector.setTicks(tile_reflector.part.ticks);
 										//tile_reflector.$percent.style.width = '100%';
 									} else {
@@ -2398,10 +2400,10 @@ var game_loop = function() {
 						}
 
 						if ( tile.ticks === 0 ) {
-							if ( auto_buy_disabled !== true && tile.part.perpetual && current_money >= tile.part.cost * 1.5 ) {
+							if ( auto_buy_disabled !== true && tile.part.perpetual && game.current_money >= tile.part.cost * 1.5 ) {
 								// auto replenish cell
-								current_money -= tile.part.cost * 1.5;
-								ui.say('var', 'current_money', current_money);
+								game.current_money -= tile.part.cost * 1.5;
+								ui.say('var', 'current_money', game.current_money);
 								tile.setTicks(tile.part.ticks);
 								//tile.$percent.style.width = '100%';
 								tile.updated = true;
@@ -2427,10 +2429,10 @@ var game_loop = function() {
 				// Add heat to containment part
 				if ( tile.activated && tile.part && tile.part.containment ) {
 					if ( tile.part.id === 'coolant_cell6' ) {
-						tile.heat_contained += tile.heat / 2;
+						tile.setHeat_contained(tile.heat_contained + (tile.heat / 2));
 						power_add += tile.heat / 2;
 					} else {
-						tile.heat_contained += tile.heat;
+						tile.setHeat_contained(tile.heat_contained + tile.heat);
 					}
 				}
 
@@ -2441,7 +2443,6 @@ var game_loop = function() {
 						ep_chance_percent = lower_heat / tile.part.part.base_ep_heat;
 						ep_chance = Math.log(lower_heat) / Math.pow(10, 5 - tile.part.part.level) * ep_chance_percent;
 						ep_gain = 0;
-
 						tile.display_chance = ep_chance * 100;
 						tile.display_chance_percent_of_total = lower_heat / tile.part.ep_heat * 100;
 
@@ -2455,8 +2456,8 @@ var game_loop = function() {
 						}
 
 						if ( ep_gain > 0 ) {
-							exotic_particles += ep_gain;
-							ui.say('var', 'exotic_particles', exotic_particles);
+							game.exotic_particles += ep_gain;
+							ui.say('var', 'exotic_particles', game.exotic_particles);
 						}
 					}
 				}
@@ -2490,7 +2491,7 @@ var game_loop = function() {
 						transfer_heat = tile_containment.heat_contained;
 					}
 
-					tile_containment.heat_contained -= transfer_heat;
+					tile_containment.setHeat_contained(tile_containment.heat_contained - transfer_heat);
 					heat_add += transfer_heat;
 				}
 			}
@@ -2574,8 +2575,8 @@ var game_loop = function() {
 
 							// TODO: skip if vents can handle the heat
 							if ( transfer_heat >= 1 ) {
-								tile_containment.heat_contained -= transfer_heat;
-								tile.heat_contained += transfer_heat;
+								tile_containment.setHeat_contained(tile_containment.heat_contained - transfer_heat);
+								tile.setHeat_contained(tile.heat_contained + transfer_heat);
 							}
 						}
 					}
@@ -2620,13 +2621,13 @@ var game_loop = function() {
 
 						if ( transfer_heat >= 1 ) {
 							if ( tile_containment.part.id === 'coolant_cell6' ) {
-								tile_containment.heat_contained += transfer_heat / 2;
+								tile_containment.setHeat_contained(tile_containment.heat_contained + (transfer_heat / 2));
 								power_add += transfer_heat / 2;
 							} else {
-								tile_containment.heat_contained += transfer_heat;
+								tile_containment.setHeat_contained(tile_containment.heat_contained + transfer_heat);
 							}
 
-							tile.heat_contained -= transfer_heat;
+							tile.setHeat_contained(tile.heat_contained - transfer_heat);
 						}
 					}
 				} else if ( tile_part.category === 'heat_outlet' ) {
@@ -2646,10 +2647,10 @@ var game_loop = function() {
 						tile_containment = tile.containments[pi];
 
 						if ( tile_containment.part.id === 'coolant_cell6' ) {
-							tile_containment.heat_contained += shared_heat / 2;
+							tile_containment.setHeat_contained(tile_containment.heat_contained + (shared_heat / 2));
 							power_add += shared_heat / 2;
 						} else {
-							tile_containment.heat_contained += shared_heat;
+							tile_containment.setHeat_contained(tile_containment.heat_contained + shared_heat);
 						}
 
 						heat_remove += shared_heat;
@@ -2686,10 +2687,10 @@ var game_loop = function() {
 					if ( tile.activated && tile.part && tile.part.containment ) {
 
 						if ( tile.part.id === 'coolant_cell6' ) {
-							tile.heat_contained += reduce_heat / game.tiles.length / 2;
+							tile.setHeat_contained(tile.heat_contained + (reduce_heat / game.tiles.length / 2));
 							power_add += reduce_heat / game.tiles.length / 2;
 						} else {
-							tile.heat_contained += reduce_heat / game.tiles.length;
+							tile.setHeat_contained(tile.heat_contained + (reduce_heat / game.tiles.length));
 						}
 					}
 				}
@@ -2716,9 +2717,9 @@ var game_loop = function() {
 
 		if ( !tile.part || tile.activated ) {
 			tile_queue.splice(0, 1);
-		} else if ( tile.part && current_money >= tile.part.cost ) {
-			current_money -= tile.part.cost;
-			ui.say('var', 'current_money', current_money);
+		} else if ( tile.part && game.current_money >= tile.part.cost ) {
+			game.current_money -= tile.part.cost;
+			ui.say('var', 'current_money', game.current_money);
 			tile.activated = true;
 			tile.$el.className = tile.$el.className.replace(disabled_replace, '');
 			tile_queue.splice(0, 1);
@@ -2753,18 +2754,18 @@ var game_loop = function() {
 						current_power -= vent_reduce;
 					}
 
-					tile.heat_contained -= vent_reduce;
+					tile.setHeat_contained(tile.heat_contained - vent_reduce);
 
 					if ( tile.heat_contained < 0 ) {
-						tile.heat_contained = 0;
+						tile.setHeat_contained(0);
 					}
 				}
 
 				if ( tile.heat_contained > tile.part.containment ) {
-					if ( auto_buy_disabled !== true && tile.heat <= 0 && tile.part.category === 'capacitor' && game.upgrade_objects['perpetual_capacitors'].level > 0 && current_money >= tile.part.cost * 10 ) {
-						current_money -= tile.part.cost * 10;
+					if ( auto_buy_disabled !== true && tile.heat <= 0 && tile.part.category === 'capacitor' && game.upgrade_objects['perpetual_capacitors'].level > 0 && game.current_money >= tile.part.cost * 10 ) {
+						game.current_money -= tile.part.cost * 10;
 						heat_add_next_loop += tile.heat_contained;
-						tile.heat_contained = 0;
+						tile.setHeat_contained(0);
 					} else {
 						tile.$el.className += ' exploding';
 						if ( tile.part.category === 'particle_accelerator' ) {
@@ -2796,9 +2797,9 @@ var game_loop = function() {
 			}
 
 			current_power -= sell_amount;
-			current_money += sell_amount;
+			game.current_money += sell_amount;
 			ui.say('var', 'money_add', sell_amount);
-			ui.say('var', 'current_money', current_money);
+			ui.say('var', 'current_money', game.current_money);
 
 			// Extreme capacitors frying themselves
 			for ( ri = 0; ri < game.rows; ri++ ) {
@@ -2808,7 +2809,7 @@ var game_loop = function() {
 					tile = row[ci];
 
 					if ( tile.activated && tile.part && tile.part.id === 'capacitor6' ) {
-						tile.heat_contained += sell_amount * game.auto_sell_multiplier * power_sell_percent * .5;
+						tile.setHeat_contained(tile.heat_contained + (sell_amount * game.auto_sell_multiplier * power_sell_percent * .5));
 					}
 				}
 			}
@@ -2829,6 +2830,7 @@ var game_loop = function() {
 
 	if ( meltdown || game.current_heat > max_heat * 2 ) {
 		melting_down = true;
+		game.has_melted_down = true;
 		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
 
 		for ( ri = 0; ri < game.rows; ri++ ) {
@@ -2874,7 +2876,7 @@ var game_loop = function() {
 	}
 	start_game_loop = performance.now();
 
-	if ( !paused ) {
+	if ( !game.paused ) {
 		clearTimeout(loop_timeout);
 		loop_timeout = setTimeout(game_loop, game.loop_wait);
 	}
@@ -2882,7 +2884,7 @@ var game_loop = function() {
 
 var prev_part;
 // affordability loop
-var check_affordability = function() {
+window.check_affordability = function() {
 	prev_part = null;
 
 	for ( i = 0, l = game.part_objects_array.length; i < l; i++ ) {
@@ -2892,14 +2894,14 @@ var check_affordability = function() {
 			part.affordable === true
 			&&
 				(
-					part.cost > current_money
+					part.cost > game.current_money
 					|| (part.erequires && !game.upgrade_objects[part.erequires].level)
 				)
 		) {
 			part.setAffordable(false);
 		} else if ( !part.affordable ) {
 			if ( 
-				part.cost <= current_money
+				part.cost <= game.current_money
 				&& (!part.erequires || game.upgrade_objects[part.erequires].level)
 			) {
 				part.setAffordable(true);
@@ -2923,10 +2925,16 @@ var objective_wait = 3000;
 var objective_timeout;
 
 var check_objectives = function() {
-	if ( objective && objective.check() ) {
+	if ( !game.paused && objective && objective.check() ) {
 		current_objective++;
-		current_money += objective.reward;
-		ui.say('var', 'current_money', current_money);
+		if ( objective.reward ) {
+			game.current_money += objective.reward;
+			ui.say('var', 'current_money', game.current_money);
+		} else if ( objective.ep_reward ) {
+			game.exotic_particles += objective.ep_reward;
+			ui.say('var', 'exotic_particles', game.exotic_particles);
+		}
+
 		set_objective(current_objective);
 	} else {
 		clearTimeout(objective_timeout);
@@ -2934,7 +2942,10 @@ var check_objectives = function() {
 	}
 };
 
-var set_objective = function(objective_key) {
+var set_objective = function(objective_key, skip_wait) {
+	skip_wait = skip_wait || false;
+	var wait = skip_wait ? 0 : objective_wait;
+
 	if ( objectives[current_objective] ) {
 		objective_unloading = true;
 		ui.say('evt', 'objective_unloaded');
@@ -2943,10 +2954,13 @@ var set_objective = function(objective_key) {
 		objective_timeout = setTimeout(function() {
 			objective = objectives[current_objective];
 			ui.say('evt', 'objective_loaded', objective);
+			if ( objective.start ) {
+				objective.start();
+			}
 
 			clearTimeout(objective_timeout);
 			objective_timeout = setTimeout(check_objectives, objective_interval);
-		}, objective_wait);
+		}, wait);
 	}
 };
 
@@ -2976,9 +2990,9 @@ var update_heat_and_power = function() {
 var update_nodes = function() {
 	ui.say('var', 'current_heat', game.current_heat);
 	ui.say('var', 'current_power', current_power);
-	ui.say('var', 'current_money', current_money);
-	ui.say('var', 'exotic_particles', exotic_particles);
-	ui.say('var', 'current_exotic_particles', current_exotic_particles);
+	ui.say('var', 'current_money', game.current_money);
+	ui.say('var', 'exotic_particles', game.exotic_particles);
+	ui.say('var', 'current_exotic_particles', game.current_exotic_particles);
 };
 
 // Do stuff
@@ -3010,15 +3024,15 @@ save_game.load(function(rks) {
 		// Current values
 		game.current_heat = rks.current_heat || game.current_heat;
 		current_power = rks.current_power || current_power;
-		current_money = rks.current_money || 0;
-		exotic_particles = rks.exotic_particles || exotic_particles;
-		current_exotic_particles = rks.current_exotic_particles || current_exotic_particles;
+		game.current_money = rks.current_money || 0;
+		game.exotic_particles = rks.exotic_particles || game.exotic_particles;
+		game.current_exotic_particles = rks.current_exotic_particles || game.current_exotic_particles;
 		total_exotic_particles = rks.total_exotic_particles || total_exotic_particles;
 		ui.say('var', 'total_exotic_particles', total_exotic_particles);
 
 		max_heat = rks.max_heat || max_heat;
 		game.manual_heat_reduce = rks.manual_heat_reduce || game.manual_heat_reduce;
-		paused = rks.paused || paused;
+		game.paused = rks.paused || game.paused;
 		current_objective = rks.current_objective || current_objective;
 
 		auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
@@ -3027,7 +3041,7 @@ save_game.load(function(rks) {
 
 		var save_version = rks.version || null;
 
-		if ( paused ) {
+		if ( game.paused ) {
 			pause();
 		} else {
 			unpause();
@@ -3062,7 +3076,7 @@ save_game.load(function(rks) {
 							tile = row[ci];
 							tile.setTicks(stile.ticks);
 							tile.activated = stile.activated;
-							tile.heat_contained = stile.heat_contained;
+							tile.setHeat_contained(stile.heat_contained);
 							part = game.part_objects[stile.id];
 							apply_to_tile(tile, part, true);
 						}
@@ -3105,17 +3119,16 @@ save_game.load(function(rks) {
 	}
 
 	game.update_cell_power();
-	check_affordability();
 	update_nodes();
 	update_tiles();
 	update_heat_and_power();
 
-	if ( !paused ) {
+	if ( !game.paused ) {
 		clearTimeout(loop_timeout);
 		loop_timeout = setTimeout(game_loop, game.loop_wait);
 	}
 
-	set_objective(current_objective);
+	set_objective(current_objective, true);
 
 	ui.say('evt', 'game_loaded');
 
