@@ -28,7 +28,7 @@ window.upgrades = function(game) {
 			id: 'heat_control_operator',
 			type: 'other',
 			title: 'Heat Control Operator',
-			description: 'When below maximum heat, reactor stays at a constant temperature.',
+			description: 'Your reactor no longer automatically removes heat from itself when it is below its maximum heat capacity. This makes Forceful Fusion easier to maintain.',
 			// TODO: Figure out a good price for this
 			cost: 1000000,
 			levels: 1,
