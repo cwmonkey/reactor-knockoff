@@ -271,7 +271,7 @@ window.parts = function() {
 		{
 			id: 'heat_inlet',
 			type: 'heat_inlet',
-			title: 'Extreme Heat Inlet',
+			title: 'Heat Inlet',
 			base_description: 'Takes %transfer heat out of each adjacent component and puts it into the reactor each tick.',
 			levels: 5,
 			category: 'heat_inlet',
@@ -285,7 +285,7 @@ window.parts = function() {
 		{
 			id: 'heat_inlet6',
 			type: 'heat_inlet',
-			title: 'Heat Inlet',
+			title: 'Extreme Heat Inlet',
 			base_description: 'Takes %transfer heat out of each adjacent component and puts it into the reactor each tick. Has a range of %range squares.',
 			category: 'heat_inlet',
 			experimental: true,
