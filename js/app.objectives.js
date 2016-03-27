@@ -127,7 +127,7 @@ window.objectives = function(game) {
 			}
 		},
 		{
-			title: 'Perchase a Perpetual power Cell upgrade',
+			title: 'Purchase a Perpetual power Cell upgrade',
 			reward: 1000,
 			check: function() {
 				for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
@@ -200,7 +200,7 @@ window.objectives = function(game) {
 			}
 		},
 		{
-			title: 'Have at least 10 Capacitors your reactor',
+			title: 'Have at least 10 Capacitors in your reactor',
 			reward: 5000,
 			check: function() {
 				var count = 0;
