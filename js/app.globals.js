@@ -10,12 +10,12 @@ Element.prototype.delegate = function(className, type, fn) {
 
 	var onfn = function(event) {
 		event = event || window.event;
-		event.preventDefault();
 
 		var $target = event.target || event.srcElement;
 
 		while( $target != $self ) {
 			if ( $target.className.match(test) ) {
+				event.preventDefault();
 				return fn.call($target, event);
 			}
 
