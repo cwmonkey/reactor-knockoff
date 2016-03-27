@@ -1989,6 +1989,10 @@ var remove_part = function(remove_tile, skip_update, sell) {
 		}
 	}
 
+	if ( tooltip_tile && tooltip_tile.part && tooltip_tile.part == remove_tile.part ) {
+		tile_tooltip_hide();
+	}
+
 	remove_tile.part = null;
 	remove_tile.setTicks(0);
 	remove_tile.setHeat_contained(0);
@@ -2016,8 +2020,6 @@ var remove_part = function(remove_tile, skip_update, sell) {
 			}
 		}
 	}
-
-	tile_tooltip_hide();
 };
 
 // TODO: Move this
@@ -2383,7 +2385,7 @@ var game_loop = function() {
 
 								// TODO: dedupe this and cell ticks
 								if ( tile_reflector.ticks === 0 ) {
-									if ( tile_reflector.part.perpetual && game.current_money >= tile_reflector.part.cost ) {
+									if ( auto_buy_disabled !== true && tile_reflector.part.perpetual && game.current_money >= tile_reflector.part.cost ) {
 										// auto replenish reflector
 										game.current_money -= tile_reflector.part.cost;
 										ui.say('var', 'current_money', game.current_money);
