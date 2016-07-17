@@ -2672,7 +2672,9 @@ var game_loop = function() {
 
 			if ( game.heat_controlled ) {
 				if ( heat_add - heat_remove < reduce_heat ) {
+					if ( heat_add - heat_remove > 0) {
 					reduce_heat = heat_add - heat_remove;
+					}
 				}
 			}
 		} else {
