@@ -9,27 +9,15 @@ var Upgrade = function(upgrade) {
 	this.part = upgrade.part || null;
 	this.erequires = upgrade.erequires || null;
 	this.ecost = upgrade.ecost || 0;
-	this.$el = $('<button class="upgrade">');
-	this.$el.id = upgrade.id;
-	this.$el.upgrade = upgrade;
-
 	this.display_cost = '';
 
 	this.addProperty('affordable', true);
-
-	var $image = $('<div class="image">');
-	$image.innerHTML = 'Click to Upgrade';
-
-	this.$levels = $('<span class="levels">');
-
-	$image.appendChild(this.$levels);
-
-	this.$el.appendChild($image);
 };
 
 Upgrade.prototype.setLevel = function(level) {
 	this.level = level;
-	this.$levels.innerHTML = level;
+	// TODO move to ui
+	this.$levels.html(level);
 
 	if ( this.ecost ) {
 		if ( this.upgrade.multiplier ) {

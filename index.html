@@ -11,12 +11,13 @@
 		}
 	</script>
 
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
 
 	<link href='https://fonts.googleapis.com/css?family=Play:400|Quantico:400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="css/reset.css">
-	<link rel="stylesheet" href="css/app.css">
+	<link rel="stylesheet" href="generated_css/app.css">
 	<link rel="stylesheet" href="css/cms.css">
+	<link rel="shortcut icon" href="img/cell_6_4.gif">
 </head>
 <body>
 	<div id="wrapper">
@@ -78,6 +79,13 @@
 						<button id="show_more_stats">[+]</button>
 						<button id="hide_more_stats">[-]</button>
 					</menu>
+
+					<menu id="stats_nav">
+						<button id="open_parts">Parts</button>
+						<button id="open_upgrades" class="nav" data-section="reactor_upgrades" data-page="upgrades_section">Upgrades</button>
+						<button id="open_controls">Controls</button>
+						<button id="open_navigation">More</button>
+					</menu>
 				</section>
 
 				<!-- -- Parts -- -->
@@ -105,6 +113,7 @@
 								<menu id="reactor_platings"></menu>
 								<menu id="particle_accelerators"></menu>
 							</menu>
+							<button id="show_tooltip">?</button>
 							<!-- div id="bottom"></div -->
 						</menu>
 					</div>
@@ -117,30 +126,31 @@
 				<div id="tooltip_nav" class="panel">
 					<!-- Nav -->
 					<menu id="nav">
-						<menu id="game_nav">
-							<button id="options" class="nav" data-section="reactor_upgrades" data-page="options_section">Options</button>
-							<button id="show_help" class="nav" data-section="reactor_upgrades" data-page="help_section">Help</button>
-							<button id="show_about" class="nav" data-section="reactor_upgrades" data-page="about_section">About</button>
+						<menu id="reactor_upgrades_nav" class="nav_container">
+							<menu id="game_nav">
+								<button id="options" class="nav" data-section="reactor_upgrades" data-page="options_section">Options</button>
+								<button id="show_help" class="nav" data-section="reactor_upgrades" data-page="help_section">Help</button>
+								<button id="show_about" class="nav" data-section="reactor_upgrades" data-page="about_section">About</button>
+							</menu>
+
+							<menu id="pages_nav">
+								<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">Reactor</button>
+								<button id="show_upgrades" class="nav" data-section="reactor_upgrades" data-page="upgrades_section">Upgrades</button>
+								<button id="show_experiments" class="nav" data-section="reactor_upgrades" data-page="experimental_upgrades_section">Experiments</button>
+							</menu>
+
+							<button class="nav_handle">Pages</button>
 						</menu>
 
-						<menu id="controls_nav">
-							<button id="disable_auto_sell">Disable Auto Sell</button>
-							<button id="enable_auto_sell">Enable Auto Sell</button>
-							<button id="disable_auto_buy">Disable Auto Buy</button>
-							<button id="enable_auto_buy">Enable Auto Buy</button>
-							<button id="pause">Pause</button>
-							<button id="unpause">Unpause</button>
-						</menu>
+						<menu id="controls_nav" class="nav_container">
+							<button id="disable_auto_sell" class="setting">Disable Auto Sell</button>
+							<button id="enable_auto_sell" class="setting">Enable Auto Sell</button>
+							<button id="disable_auto_buy" class="setting">Disable Auto Buy</button>
+							<button id="enable_auto_buy" class="setting">Enable Auto Buy</button>
+							<button id="pause" class="setting">Pause</button>
+							<button id="unpause" class="setting">Unpause</button>
 
-						<menu id="pages_nav">
-							<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">Reactor</button>
-							<button id="show_upgrades" class="nav" data-section="reactor_upgrades" data-page="upgrades_section">Upgrades</button>
-							<button id="show_experiments" class="nav" data-section="reactor_upgrades" data-page="experimental_upgrades_section">Experiments</button>
-						</menu>
-
-						<menu id="more_nav">
-							<button id="nav_more">[+]</button>
-							<button id="nav_less">[-]</button>
+							<button class="nav_handle">Settings</button>
 						</menu>
 					</menu>
 
@@ -304,6 +314,10 @@
 						<!-- regular -->
 						<section id="upgrades_section" class="page">
 							<h2 class="heading">Upgrades</h2>
+							<menu class="page_nav mobile">
+								<button id="show_experiments" class="nav" data-section="reactor_upgrades" data-page="experimental_upgrades_section">Experiments</button>
+								<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">×</button>
+							</menu>
 							<div id="upgrades" class="subpanel">
 								<div id="cell_upgrades">
 									<div id="cell_tick_upgrades">
@@ -330,8 +344,11 @@
 
 						<!-- experimental -->
 						<section id="experimental_upgrades_section" class="page">
-							<h2 class="heading">Experimental Upgrades</h2>
-
+							<h2 class="heading">Experiments</h2>
+							<menu class="page_nav mobile">
+								<button id="show_upgrades" class="nav" data-section="reactor_upgrades" data-page="upgrades_section">Upgrades</button>
+								<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">×</button>
+							</menu>
 							<div id="experimental_upgrades" class="subpanel">
 								<div id="experimental_laboratory"></div>
 
@@ -366,6 +383,7 @@
 		</main>
 	</div>
 
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	<script src="js/app.globals.js"></script>
 	<script src="js/app.parts.js"></script>
 	<script src="js/app.upgrades.js"></script>
@@ -382,6 +400,11 @@
 
 		ga('create', 'UA-50594814-2', 'auto');
 		ga('send', 'pageview');
+	</script>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script>
+		//alert($('#stats_section').width());
 	</script>
 </body>
 </html>

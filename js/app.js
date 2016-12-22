@@ -67,8 +67,14 @@ console.log
 var ui = window.ui;
 window.ui = null;
 
+var evt = function() {
+	var args = Array.prototype.slice.call(arguments);
+	args.unshift('evt');
+	ui.say.apply(ui, args);
+};
+
 var Game = function() {
-	this.ui;
+	this.ui = undefined;
 
 	// settings
 	this.version = '1.2.0';
@@ -89,22 +95,22 @@ var Game = function() {
 	this.save_interval = 60000;
 
 	// Current
-	this.current_heat;
-	this.rows;
-	this.cols;
+	this.current_heat = undefined;
+	this.rows = undefined;
+	this.cols = undefined;
 	this.tiles = [];
-	this.loop_wait;
-	this.heat_power_multiplier;
-	this.heat_controlled;
-	this.manual_heat_reduce;
-	this.auto_sell_multiplier;
-	this.transfer_plating_multiplier;
-	this.transfer_capacitor_multiplier;
-	this.vent_plating_multiplier;
-	this.vent_capacitor_multiplier;
-	this.altered_max_power;
-	this.altered_max_heat;
-	this.stats_power;
+	this.loop_wait = undefined;
+	this.heat_power_multiplier = undefined;
+	this.heat_controlled = undefined;
+	this.manual_heat_reduce = undefined;
+	this.auto_sell_multiplier = undefined;
+	this.transfer_plating_multiplier = undefined;
+	this.transfer_capacitor_multiplier = undefined;
+	this.vent_plating_multiplier = undefined;
+	this.vent_capacitor_multiplier = undefined;
+	this.altered_max_power = undefined;
+	this.altered_max_heat = undefined;
+	this.stats_power = undefined;
 	this.stats_cash = 0;
 	this.paused = false;
 	this.has_melted_down = false;
@@ -169,21 +175,6 @@ var set_defaults = function() {
 
 set_defaults();
 
-// Mark ios since it's an idiot with mouseover events
-
-var is_touch = false;
-var is_ios = navigator.userAgent.match(/(iPod|iPhone|iPad)/) ? true : false;
-
-// Only mark as a touch device when the first touch happens
-
-window.addEventListener('touchstart', function setHasTouch () {
-	is_touch = true;
-	$main.className += ' touch';
-	// Remove event listener once fired, otherwise it'll kill scrolling
-	// performance
-	window.removeEventListener('touchstart', setHasTouch);
-}, false);
-
   /////////////////////////////
  // Online Saves
 /////////////////////////////
@@ -231,7 +222,7 @@ var GoogleSaver = function() {
 	var CLIENT_ID = '572695445092-svr182bgaass7vt97r5mnnk4phmmjh5u.apps.googleusercontent.com';
 	var SCOPES = ['https://www.googleapis.com/auth/drive.appfolder'];
 	var src = 'https://apis.google.com/js/client.js?onload=set_google_loaded';
-	var filename = 'save.txt'
+	var filename = 'save.txt';
 	var file_id = null;
 	var file_meta = null;
 	var tried_load = false;
@@ -330,7 +321,7 @@ var GoogleSaver = function() {
 					save_game = local_saver;
 					localStorage.removeItem('google_drive_save');
 					enable_local_save();
-					alert('Could not authorize. Switching to local save.')
+					alert('Could not authorize. Switching to local save.');
 				} else {
 					self.checkAuth(callback, false);
 				}
@@ -390,7 +381,7 @@ var GoogleSaver = function() {
 				}
 			}
 		});
-	}
+	};
 
 	/**
 	 * Permanently delete a file, skipping the trash.
@@ -406,7 +397,7 @@ var GoogleSaver = function() {
 		request.execute(function(resp) {
 			if ( callback ) callback();
 		});
-	}
+	};
 
 	var get_file = function() {
 		game.save_debug && console.log('GoogleSaver get_file');
@@ -431,7 +422,7 @@ var GoogleSaver = function() {
 						callback(result);
 					}
 				});
-			}
+			};
 			var initialRequest = gapi.client.drive.files.list({
 				'q': '\'appfolder\' in parents'
 			});
@@ -540,7 +531,7 @@ var GoogleSaver = function() {
 		} else {
 			callback(null);
 		}
-	}
+	};
 
 	load_script();
 };
@@ -618,6 +609,7 @@ window.reboot = function(refund) {
 		for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
 			upgrade = game.upgrade_objects_array[i];
 			upgrade.setLevel(0);
+
 			if ( tooltip_showing ) {
 				upgrade.updateTooltip();
 			}
@@ -630,11 +622,13 @@ window.reboot = function(refund) {
 
 			if ( !upgrade.ecost ) {
 				upgrade.setLevel(0);
+
 				if ( tooltip_showing ) {
 					upgrade.updateTooltip();
 				}
 			} else {
 				upgrade.setLevel(upgrade.level);
+
 				if ( tooltip_showing ) {
 					upgrade.updateTooltip();
 				}
@@ -702,12 +696,12 @@ Tile.prototype.addProperty = addProperty;
 
 Tile.prototype.disable = function() {
 	this.enabled = false;
-	ui.say('evt', 'tile_disabled', this);
+	evt('tile_disabled', this);
 };
 
 Tile.prototype.enable = function() {
 	this.enabled = true;
-	ui.say('evt', 'tile_enabled', this);
+	evt('tile_enabled', this);
 };
 
 // Operations
@@ -1005,11 +999,6 @@ var update_tiles = function() {
 };
 
 // get dom nodes cached
-var $reactor = $('#reactor');
-var $all_parts = $('#all_parts');
-
-var $main = $('#main');
-var $all_upgrades = $('#all_upgrades');
 
 // Tooltip
 var $tooltip = $('#tooltip');
@@ -1039,22 +1028,21 @@ var $tooltip_replace_all = $('#tooltip_replace_all');
 var $tooltip_upgrade_all = $('#tooltip_upgrade_all');
 
 if ( game.debug ) {
-	$main.className += ' debug';
+	evt('debugging');
 }
 
 ui.say('var', 'max_heat', max_heat);
 ui.say('var', 'max_power', max_power);
 
 // create tiles
-var $row;
 for ( ri = 0; ri < game.max_rows; ri++ ) {
-	ui.say('evt', 'row_added', ri);
+	evt('row_added', ri);
 	row = [];
 
 	for ( ci = 0; ci < game.max_cols; ci++ ) {
 		tile = new Tile(ri, ci);
 		row.push(tile);
-		ui.say('evt', 'tile_added', {
+		evt('tile_added', {
 			row: ri,
 			column: ci,
 			tile: tile
@@ -1066,61 +1054,6 @@ for ( ri = 0; ri < game.max_rows; ri++ ) {
 	}
 
 	game.tiles.push(row);
-}
-
-// Tile tooltips
-
-// TODO: DRY this
-var tooltip_tile = null;
-var tile_active_find = /[\s\b]tile_active\b/g;
-var tile_tooltip_show = function(e) {
-	var tile = this.tile;
-	var part = tile.part;
-
-	if ( !part ) return;
-
-	if ( !tooltip_showing ) {
-		$main.className += ' tooltip_showing';
-	}
-
-	if ( is_touch ) {
-		if ( tooltip_tile ) {
-			tooltip_tile.$el.className = tooltip_tile.$el.className.replace(tile_active_find, '');
-		}
-
-		tile.$el.className += ' tile_active';
-	}
-
-	part.showTooltip(tile);
-	tooltip_showing = true;
-
-	tooltip_tile = tile;
-	tooltip_update = (function(tile) {
-		return function() {
-			part.updateTooltip(tile);
-		};
-	})(tile);
-};
-
-var tile_tooltip_hide = function(e) {
-	if ( is_touch && tooltip_tile ) {
-		tooltip_tile.$el.className = tooltip_tile.$el.className.replace(tile_active_find, '');
-	}
-
-	tooltip_showing = false;
-	tooltip_update = null;
-	tooltip_tile = null;
-	$main.className = $main.className.replace(tooltip_showing_replace, '');
-};
-
-if ( !is_ios ) {
-	$reactor.delegate('tile', 'mouseover', tile_tooltip_show);
-	$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
-}
-
-if ( !is_touch ) {
-	$reactor.delegate('tile', 'focus', tile_tooltip_show);
-	$reactor.delegate('tile', 'blur', tile_tooltip_hide);
 }
 
   /////////////////////////////
@@ -1277,7 +1210,7 @@ Part.prototype.showTooltip = function(tile) {
 };
 
 Part.prototype.updateTooltip = function(tile) {
-	if ( tile ) {
+	if ( tile && tile.part ) {
 		if ( $tooltip_description.innerHTML !== tile.part.description ) {
 			$tooltip_description.innerHTML = tile.part.description;
 		}
@@ -1342,11 +1275,13 @@ var create_part = function(part, level) {
 		if ( part.category === 'cell' ) {
 			part.id = part.type + level;
 			part.title = cell_prefixes[level -1] + part.title;
-			part.base_cost = part.base_cost
+			part.base_cost = part.base_cost;
+
 			if ( level > 1 ) {
 				part.base_cost *= Math.pow(2.2, level - 1);
 				part.base_description = multi_cell_description;
 			}
+
 			part.base_power = part.base_power * cell_power_multipliers[level - 1];
 			part.base_heat = part.base_heat * cell_heat_multipliers[level - 1];
 
@@ -1402,10 +1337,10 @@ var create_part = function(part, level) {
 	game.part_objects_array.push(part_obj);
 
 	part_obj.updateDescription();
-	ui.say('evt', 'part_added', part_obj);
+	evt('part_added', part_obj);
 
 	return part_obj;
-}
+};
 
 for ( pi = 0, pl = parts.length; pi < pl; pi++ ) {
 	part_settings = parts[pi];
@@ -1440,47 +1375,6 @@ game.update_cell_power = function() {
 	}
 };
 
-// Part tooltips
-var tooltip_showing_replace = /[\s\b]tooltip_showing\b/;
-var tooltip_showing = false;
-var tooltip_update = null;
-var tooltip_part;
-
-var part_tooltip_update = function() {
-	tooltip_part.updateTooltip();
-}
-
-var part_tooltip_show = function(e) {
-	var part = this.part;
-
-	if ( !tooltip_showing ) {
-		$main.className += ' tooltip_showing';
-	}
-
-	part.showTooltip();
-	tooltip_showing = true;
-	tooltip_part = part;
-	tooltip_update = part_tooltip_update;
-};
-
-var part_tooltip_hide = function(e) {
-	tooltip_showing = false;
-	tooltip_update = null;
-	tooltip_part = null;
-	$main.className = $main.className.replace(tooltip_showing_replace, '');
-
-};
-
-if ( !is_ios ) {
-	$all_parts.delegate('part', 'mouseover', part_tooltip_show);
-	$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
-}
-
-if ( !is_touch ) {
-	$all_parts.delegate('part', 'focus', part_tooltip_show);
-	$all_parts.delegate('part', 'blur', part_tooltip_hide);
-}
-
   /////////////////////////////
  // Reduce Heat Manually (Decoupled)
 /////////////////////////////
@@ -1507,14 +1401,15 @@ window.reduce_heat = function() {
 
 game.epart_onclick = function(upgrade) {
 	var eparts_count = 0;
+	var i;
 
-	for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++) {
+	for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++) {
 		if ( game.upgrade_objects_array[i].upgrade.type === 'experimental_parts' && game.upgrade_objects_array[i].level ) {
 			eparts_count++;
 		}
 	}
 
-	for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++) {
+	for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++) {
 		if ( game.upgrade_objects_array[i].upgrade.type === 'experimental_parts' && !game.upgrade_objects_array[i].level ) {
 			game.upgrade_objects_array[i].ecost = game.upgrade_objects_array[i].upgrade.ecost * (eparts_count + 1);
 			// TODO: Maybe find a better way to do this
@@ -1556,65 +1451,14 @@ Upgrade.prototype.updateTooltip = function(tile) {
 	}
 };
 
-// TODO: DRY this
-var tooltip_upgrade = null;
-var upgrade_tooltip_show = function(e) {
-	var upgrade = this.upgrade;
-
-	upgrade.showTooltip();
-	if ( !tooltip_showing ) {
-		$main.className += ' tooltip_showing';
-	}
-
-	tooltip_showing = true;
-	tooltip_upgrade = upgrade;
-	//tooltip_update = upgrade.updateTooltip;
-};
-
-var upgrade_tooltip_hide = function(e) {
-	tooltip_showing = false;
-	tooltip_upgrade = null;
-	//tooltip_update = null;
-	$main.className = $main.className.replace(tooltip_showing_replace, '');
-};
-
-if ( !is_ios ) {
-	$all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
-	$all_upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
-}
-
-if ( is_touch ) {
-	$all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
-	$all_upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
-}
-
 // More stuff I guess
-
-var upgrade_locations = {
-	cell_tick_upgrades: $('#cell_tick_upgrades'),
-	cell_power_upgrades: $('#cell_power_upgrades'),
-	cell_perpetual_upgrades: $('#cell_perpetual_upgrades'),
-	other: $('#other_upgrades'),
-	vents: $('#vent_upgrades'),
-	exchangers: $('#exchanger_upgrades'),
-	experimental_laboratory: $('#experimental_laboratory'),
-	experimental_boost: $('#experimental_boost'),
-	experimental_cells: $('#experimental_cells'),
-	experimental_cells_boost: $('#experimental_cell_boost'),
-	experimental_parts: $('#experimental_parts'),
-	experimental_particle_accelerators: $('#experimental_particle_accelerators')
-};
 
 var create_upgrade = function(u) {
 	u.levels = u.levels || game.upgrade_max_level;
 	var upgrade = new window.Upgrade(u);
-	upgrade.$el.upgrade = upgrade;
 
-	if ( u.className ) {
-		upgrade.$el.className += ' ' + u.className;
-	}
+	evt('upgrade_added', upgrade);
 
-	upgrade_locations[u.type].appendChild(upgrade.$el);
 	game.upgrade_objects_array.push(upgrade);
 	game.upgrade_objects[upgrade.upgrade.id] = upgrade;
 };
@@ -1670,12 +1514,11 @@ var types = [
 ];
 
 var type;
-var part;
 
-for ( var i = 0, l = types.length; i < l; i++ ) {
+for ( i = 0, l = types.length; i < l; i++ ) {
 	type = types[i];
 
-	for ( var pi = 0, pl = parts.length; pi < pl; pi++ ) {
+	for ( pi = 0, pl = parts.length; pi < pl; pi++ ) {
 		part = parts[pi];
 
 		if ( part.cell_tick_upgrade_cost ) {
@@ -1697,29 +1540,21 @@ for ( var i = 0, l = types.length; i < l; i++ ) {
 	}
 }
 
-for ( var i = 0, l = upgrades.length; i < l; i++ ) {
+for ( i = 0, l = upgrades.length; i < l; i++ ) {
 	create_upgrade(upgrades[i]);
 }
 
-for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
+for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
 	game.upgrade_objects_array[i].setLevel(0);
-	if ( tooltip_showing ) {
+	// TODO: Move this to ui
+	//if ( tooltip_showing ) {
 		game.upgrade_objects_array[i].updateTooltip();
-	}
+	//}
 }
 
-// Upgrade delegate event
-$all_upgrades.delegate('upgrade', 'click', function(event) {
-	var upgrade = this.upgrade;
-
-	if ( is_touch && !upgrade.clicked ) {
-		upgrade_tooltip_show.apply(this, event);
-		upgrade.clicked = true;
-		return;
-	}
-
+window.do_upgrade = function(upgrade) {
 	if ( upgrade.level >= upgrade.upgrade.levels ) {
-		return;
+		return false;
 	} else if (
 		upgrade.ecost
 		&& (!upgrade.erequires || game.upgrade_objects[upgrade.erequires].level)
@@ -1728,40 +1563,28 @@ $all_upgrades.delegate('upgrade', 'click', function(event) {
 		game.current_exotic_particles -= upgrade.ecost;
 		ui.say('var', 'current_exotic_particles', game.current_exotic_particles);
 		upgrade.setLevel(upgrade.level + 1);
-		if ( tooltip_showing ) {
-			upgrade.updateTooltip();
-		}
 	} else if ( upgrade.cost && game.current_money >= upgrade.cost ) {
 		game.current_money -= upgrade.cost;
 		ui.say('var', 'current_money', game.current_money);
 		upgrade.setLevel(upgrade.level + 1);
-		if ( tooltip_showing ) {
-			upgrade.updateTooltip();
-		}
 	} else {
-		return;
+		return false;
 	}
 
 	update_tiles();
-});
+	return true;
+};
 
 if ( game.debug ) {
-	$all_upgrades.delegate('upgrade', 'mousedown', function(event) {
-		if ( event.which === 3 ) {
-			var upgrade = this.upgrade;
-			event.preventDefault();
-
-			if ( upgrade.level > 0 ) {
-				upgrade.setLevel(upgrade.level - 1);
-				if ( tooltip_showing ) {
-					upgrade.updateTooltip();
-				}
-				game.current_exotic_particles += upgrade.ecost;
-				ui.say('var', 'current_exotic_particles', game.current_exotic_particles);
-				update_tiles();
-			}
+	window.undo_upgrade = function(upgrade) {
+		if ( upgrade.level > 0 ) {
+			upgrade.setLevel(upgrade.level - 1);
+			game.current_exotic_particles += upgrade.ecost;
+			ui.say('var', 'current_exotic_particles', game.current_exotic_particles);
+			update_tiles();
+			return true;
 		}
-	});
+	};
 }
 
 var check_upgrades_affordability_timeout;
@@ -1897,74 +1720,21 @@ var save = function(event) {
 	);
 };
 
-// Select part
-var active_replace = /[\b\s]part_active\b/;
-var clicked_part = null;
-
-$all_parts.delegate('part', 'click', function(e) {
-	if ( clicked_part && clicked_part === this.part ) {
-		clicked_part = null;
-		this.className = this.className.replace(active_replace, '');
-		$main.className = $main.className.replace(active_replace, '');
-		part_tooltip_hide();
-
-		if ( is_touch ) {
-			document.body.scrollTop = 0;
-		}
-	} else {
-		part_tooltip_show.apply(this, e);
-
-		if ( clicked_part ) {
-			clicked_part.$el.className = clicked_part.$el.className.replace(active_replace, '');
-			$main.className = $main.className.replace(active_replace, '');
-		}
-
-		clicked_part = this.part;
-		// TODO: DRY
-		this.className += ' part_active';
-		$main.className += ' part_active';
-	}
-});
-
 // Add part to tile
-var part_replace = /[\b\s]part_[a-z0-9_]+\b/;
-var category_replace = /[\b\s]category_[a-z_]+\b/;
-var spent_replace = /[\b\s]spent\b/;
-var disabled_replace = /[\b\s]disabled\b/;
-var exploding_replace = /[\b\s]exploding\b/;
-var tile_mousedown = false;
-var tile_mousedown_right = false;
 var tile_queue = [];
 var qi;
-var tile2;
 
 var apply_to_tile = function(tile, part, force) {
 	if ( !tile.enabled && !force ) {
 		return;
 	}
 
+	evt('apply_to_tile', {tile: tile, part: part});
+
 	tile.part = part;
-	tile.$el.className = tile.$el.className
-		.replace(part_replace, '')
-		.replace(category_replace, '')
-		.replace(spent_replace, '')
-		.replace(disabled_replace, '')
-		.replace(exploding_replace, '')
-		+ ' ' + part.className
-		+ ' category_' + part.category
-		;
 
 	if ( part.ticks ) {
-		if ( !tile.ticks ) {
-			tile.$el.className += ' spent';
-		}
-
-		//tile.$percent.style.width = tile.ticks / part.ticks * 100 + '%';
 		tile.updated = true;
-	}
-
-	if ( !tile.activated ) {
-		tile.$el.className += ' disabled';
 	}
 };
 
@@ -1989,28 +1759,20 @@ var remove_part = function(remove_tile, skip_update, sell) {
 		}
 	}
 
-	if ( tooltip_tile && tooltip_tile.part && tooltip_tile.part == remove_tile.part ) {
-		tile_tooltip_hide();
-	}
-
 	remove_tile.part = null;
 	remove_tile.setTicks(0);
 	remove_tile.setHeat_contained(0);
 	//remove_tile.$percent.style.width = 0;
 	remove_tile.updated = true;
-	remove_tile.$el.className = remove_tile.$el.className
-		.replace(part_replace, '')
-		.replace(category_replace, '')
-		.replace(spent_replace, '')
-		.replace(disabled_replace, '')
-		;
+
+	evt('remove_part', remove_tile);
 
 	if ( !skip_update ) {
 		update_tiles();
 	}
 
 	rpl = tile_queue.length;
-	if ( rpl ) { 
+	if ( rpl ) {
 		for ( rpqi = 0; rpqi < rpl; rpqi++ ) {
 			tile2 = tile_queue[rpqi];
 			if ( !tile2.part ) {
@@ -2025,15 +1787,16 @@ var remove_part = function(remove_tile, skip_update, sell) {
 // TODO: Move this
 // tooltip buttons
 // Delete
-window.tooltip_delete = function() {
+window.tooltip_delete = function(tooltip_tile) {
 	remove_part(tooltip_tile, false, true);
-	tooltip_close();
 };
 
 // Delete all
-window.tooltip_delete_all = function() {
+window.tooltip_delete_all = function(params) {
 	var type;
 	var level;
+	var tooltip_tile = params.tooltip_tile;
+	var tooltip_part = params.tooltip_part;
 
 	if ( tooltip_tile ) {
 		type = tooltip_tile.part.part.type;
@@ -2054,22 +1817,24 @@ window.tooltip_delete_all = function() {
 			}
 		}
 	}
-
-	tooltip_close();
 };
 
 // Replace all
-window.tooltip_replace_all = function() {
+window.tooltip_replace_all = function(params) {
 	var type;
 	var level;
+	var part;
+	var tooltip_tile = params.tooltip_tile;
+	var tooltip_part = params.tooltip_part;
 
 	if ( tooltip_tile ) {
-		type = tooltip_tile.part.part.type;
-		level = tooltip_tile.part.part.level;
+		part = tooltip_tile.part;
 	} else if ( tooltip_part ) {
-		type = tooltip_part.part.type;
-		level = tooltip_part.part.level;
+		part = tooltip_part;
 	}
+
+	type = part.part.type;
+	level = part.part.level;
 
 	for ( var ri = 0; ri < game.rows; ri++ ) {
 		var row = game.tiles[ri];
@@ -2078,26 +1843,28 @@ window.tooltip_replace_all = function() {
 			var tile = row[ci];
 
 			if ( tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
-				mouse_apply_to_tile.call(tile.$el, event);
+				mouse_apply_to_tile.call(tile.$el, tile, false, part);
 			}
 		}
 	}
-
-	tooltip_close();
 };
 
 // Upgrade all
-window.tooltip_upgrade_all = function() {
+window.tooltip_upgrade_all = function(params) {
 	var type;
 	var level;
+	var part;
+	var tooltip_tile = params.tooltip_tile;
+	var tooltip_part = params.tooltip_part;
 
 	if ( tooltip_tile ) {
-		type = tooltip_tile.part.part.type;
-		level = tooltip_tile.part.part.level;
+		part = tooltip_tile.part;
 	} else if ( tooltip_part ) {
-		type = tooltip_part.part.type;
-		level = tooltip_part.part.level;
+		part = tooltip_part;
 	}
+
+	type = part.part.type;
+	level = part.part.level;
 
 	for ( var ri = 0; ri < game.rows; ri++ ) {
 		var row = game.tiles[ri];
@@ -2106,28 +1873,16 @@ window.tooltip_upgrade_all = function() {
 			var tile = row[ci];
 
 			if ( tile.part && type === tile.part.part.type && level > tile.part.part.level ) {
-				mouse_apply_to_tile.call(tile.$el, event);
+				mouse_apply_to_tile.call(tile.$el, tile, false, part);
 			}
 		}
-	}
-
-	tooltip_close();
-};
-
-// Close
-window.tooltip_close = function() {
-	if ( tooltip_tile ) {
-		tile_tooltip_hide();
-	} else if ( tooltip_part ) {
-		part_tooltip_hide();
-	} else if ( tooltip_upgrade ) {
-		upgrade_tooltip_hide();
 	}
 };
 
 // Tile click
-var mouse_apply_to_tile = function(e) {
-	tile = this.tile;
+window.mouse_apply_to_tile = function(tile, tile_mousedown_right, clicked_part) {
+	var ret = false; // for mobile tooltip
+	//tile = this.tile;
 
 	if ( tile_mousedown_right ) {
 		remove_part(tile, false, true);
@@ -2153,7 +1908,10 @@ var mouse_apply_to_tile = function(e) {
 		apply_to_tile(tile, clicked_part);
 
 		update_tiles();
+		ret = true;
 	}
+
+	return ret;
 };
 
 // Pause (Decoupled)
@@ -2161,7 +1919,7 @@ window.pause = function() {
 	clearTimeout(loop_timeout);
 
 	game.paused = true;
-	ui.say('evt', 'paused');
+	evt('paused');
 };
 
 // Unpause (Decoupled)
@@ -2170,123 +1928,36 @@ window.unpause = function() {
 	loop_timeout = setTimeout(game_loop, game.loop_wait);
 
 	game.paused = false;
-	ui.say('evt', 'unpaused');
+	evt('unpaused');
 };
 
 // Enable/Disable auto sell (Decoupled)
 window.disable_auto_sell = function() {
 	auto_sell_disabled = true;
-	ui.say('evt', 'auto_sell_disabled');
+	evt('auto_sell_disabled');
 };
 
 window.enable_auto_sell = function() {
 	auto_sell_disabled = false;
-	ui.say('evt', 'auto_sell_enabled');
+	evt('auto_sell_enabled');
 };
 
 // Enable/Disable auto buy
 window.disable_auto_buy = function() {
 	auto_buy_disabled = true;
-	ui.say('evt', 'auto_buy_disabled');
+	evt('auto_buy_disabled');
 };
 
 window.enable_auto_buy = function() {
 	auto_buy_disabled = false;
-	ui.say('evt', 'auto_buy_enabled');
+	evt('auto_buy_enabled');
 };
 
   /////////////////////////////
- // Tile clicks
+ // Apply parts to tiles
 /////////////////////////////
 
-var tile_mouseup_fn = function(e) {
-	tile_mousedown = false;
-};
-
-document.oncontextmenu = function(e) {
-	if ( tile_mousedown_right ) {
-		e.preventDefault();
-		tile_mousedown_right = false;
-	}
-};
-
-var is_scrolling = false;
-window.ontouchmove = function() {
-	is_scrolling = true;
-};
-
-$reactor.delegate('tile', 'click', function(e) {
-	if ( is_scrolling === true ) {
-		is_scrolling = false;
-		return;
-	}
-
-
-	if ( !tile_mousedown ) {
-		mouse_apply_to_tile.call(this, e);
-	}
-
-	if ( !tooltip_part || tooltip_showing === true ) {
-		tile_tooltip_show.apply(this, e);
-	}
-});
-
-var double_click_tile = null;
-var clear_double_click = function() {
-	double_click_tile = null;
-};
-
-$reactor.delegate('tile', 'mousedown', function(e) {
-	tile_mousedown = true;
-	tile_mousedown_right = e.which === 3;
-
-	if ( e.shiftKey || double_click_tile === this.tile ) {
-		if ( this.tile.part ) {
-			var ri, ci, row, tile;
-			var level = this.tile.part.part.level;
-			var type = this.tile.part.part.type;
-			var active = this.tile.part.active;
-			var ticks = this.tile.ticks;
-
-			// All matching tiles
-			for ( ri = 0; ri < game.rows; ri++ ) {
-				row = game.tiles[ri];
-
-				for ( ci = 0; ci < game.cols; ci++ ) {
-					tile = row[ci];
-
-					if ( !tile_mousedown_right && tile.part && type === tile.part.part.type ) {
-						mouse_apply_to_tile.call(tile.$el, e);
-					} else if (
-						tile_mousedown_right
-						&& tile.part
-						&& type === tile.part.part.type
-						&& level === tile.part.part.level
-						&& ( !tile.part.part.base_ticks || ticks || (!tile.ticks && !this.tile.ticks) )
-					) {
-						mouse_apply_to_tile.call(tile.$el, e);
-					}
-				}
-			}
-		} else {
-			mouse_apply_to_tile.call(this, e);
-		}
-	} else {
-		mouse_apply_to_tile.call(this, e);
-	}
-
-	double_click_tile = this.tile;
-	setTimeout(clear_double_click, 300);
-});
-
-$reactor.onmouseup = tile_mouseup_fn;
-$reactor.onmouseleave = tile_mouseup_fn;
-
-$reactor.delegate('tile', 'mousemove', function(e) {
-	if ( tile_mousedown ) {
-		mouse_apply_to_tile.call(this, e);
-	}
-});
+window.
 
 // Sell (Decoupled)
 window.sell = function() {
@@ -2302,20 +1973,6 @@ window.sell = function() {
 };
 
   /////////////////////////////
- // Scrounge
-/////////////////////////////
-
-/* var $scrounge = $('#scrounge');
-
-$scrounge.onclick = function() {
-	if ( current_money < 10 && current_power === 0 ) {
-		current_money += 1;
-
-		ui.say('var', 'current_money', current_money);
-	}
-}; */
-
-  /////////////////////////////
  // Game Loop
 /////////////////////////////
 
@@ -2327,7 +1984,6 @@ var max_shared_heat;
 var sell_amount;
 var power_add;
 var heat_add;
-var heat_remove;
 var meltdown;
 var melting_down;
 var was_melting_down = false;
@@ -2350,7 +2006,7 @@ var ep_chance_percent;
 var ep_gain;
 
 var start_game_loop;
-var start_game_loop;
+
 var game_loop = function() {
 	power_add = 0;
 	heat_add = 0;
@@ -2392,7 +2048,7 @@ var game_loop = function() {
 										tile_reflector.setTicks(tile_reflector.part.ticks);
 										//tile_reflector.$percent.style.width = '100%';
 									} else {
-										tile_reflector.$el.className += ' exploding';
+										evt('tile_exploded', tile_reflector);
 										remove_part(tile_reflector, true);
 									}
 								} else if ( tile_reflector.part ) {
@@ -2417,7 +2073,7 @@ var game_loop = function() {
 
 								//tile.$percent.style.width = '0';
 								tile.updated = true;
-								tile.$el.className += ' spent';
+								evt('tile_spent', tile);
 								do_update = true;
 							}
 						} else {
@@ -2723,7 +2379,7 @@ var game_loop = function() {
 			game.current_money -= tile.part.cost;
 			ui.say('var', 'current_money', game.current_money);
 			tile.activated = true;
-			tile.$el.className = tile.$el.className.replace(disabled_replace, '');
+			evt('enable_tile', tile);
 			tile_queue.splice(0, 1);
 			do_update = true;
 		}
@@ -2769,7 +2425,8 @@ var game_loop = function() {
 						heat_add_next_loop += tile.heat_contained;
 						tile.setHeat_contained(0);
 					} else {
-						tile.$el.className += ' exploding';
+						evt('tile_exploded', tile);
+
 						if ( tile.part.category === 'particle_accelerator' ) {
 							meltdown = true;
 						}
@@ -2811,7 +2468,7 @@ var game_loop = function() {
 					tile = row[ci];
 
 					if ( tile.activated && tile.part && tile.part.id === 'capacitor6' ) {
-						tile.setHeat_contained(tile.heat_contained + (sell_amount * game.auto_sell_multiplier * power_sell_percent * .5));
+						tile.setHeat_contained(tile.heat_contained + (sell_amount * game.auto_sell_multiplier * power_sell_percent * 0.5));
 					}
 				}
 			}
@@ -2833,7 +2490,7 @@ var game_loop = function() {
 	if ( meltdown || game.current_heat > max_heat * 2 ) {
 		melting_down = true;
 		game.has_melted_down = true;
-		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
+		evt('meltdown');
 
 		for ( ri = 0; ri < game.rows; ri++ ) {
 			row = game.tiles[ri];
@@ -2843,7 +2500,7 @@ var game_loop = function() {
 
 				if ( tile.part ) {
 					do_update = true;
-					tile.$el.className += ' exploding';
+					evt('tile_exploded', tile);
 					remove_part(tile, true);
 				}
 			}
@@ -2856,9 +2513,7 @@ var game_loop = function() {
 
 	update_heat_and_power();
 
-	if ( tooltip_update !== null ) {
-		tooltip_update();
-	}
+	evt('update_tooltip');
 
 	if ( !was_melting_down && melting_down ) {
 		save();
@@ -2907,8 +2562,13 @@ window.check_affordability = function() {
 				&& (!part.erequires || game.upgrade_objects[part.erequires].level)
 			) {
 				part.setAffordable(true);
+
+				if ( !prev_part && !part.unlocked ) {
+					evt('part_unlocked', part);
+					part.unlocked = true;
+				}
 			} else if ( prev_part && prev_part.affordable ) {
-				part.$el.className = part.$el.className.replace(locked_find, '');
+				evt('part_unlocked', part);
 			}
 		}
 	}
@@ -2950,12 +2610,12 @@ var set_objective = function(objective_key, skip_wait) {
 
 	if ( objectives[current_objective] ) {
 		objective_unloading = true;
-		ui.say('evt', 'objective_unloaded');
+		evt('objective_unloaded');
 
 		clearTimeout(objective_timeout);
 		objective_timeout = setTimeout(function() {
 			objective = objectives[current_objective];
-			ui.say('evt', 'objective_loaded', objective);
+			evt('objective_loaded', objective);
 			if ( objective.start ) {
 				objective.start();
 			}
@@ -2978,7 +2638,7 @@ if ( game.debug ) {
 	$save.ontouchend = save;
 
 	$game_nav.appendChild($save);
-};
+}
 
   /////////////////////////////
  // Load
@@ -3103,9 +2763,11 @@ save_game.load(function(rks) {
 
 				if ( supgrade_object ) {
 					game.upgrade_objects[supgrade.id].setLevel(supgrade.level);
-					if ( tooltip_showing ) {
+
+					// TODO: Move to ui
+					//if ( tooltip_showing ) {
 						game.upgrade_objects[supgrade.id].updateTooltip();
-					}
+					//}
 				}
 			}
 		}
@@ -3116,7 +2778,7 @@ save_game.load(function(rks) {
 
 		// Show the patch notes if this is a new version
 		if ( save_version !== game.version ) {
-			ui.say('evt', 'game_updated');
+			evt('game_updated');
 		}
 	}
 
@@ -3132,7 +2794,7 @@ save_game.load(function(rks) {
 
 	set_objective(current_objective, true);
 
-	ui.say('evt', 'game_loaded');
+	evt('game_loaded');
 
 	if ( game.debug === false ) {
 		save_timeout = setTimeout(save, game.save_interval);
