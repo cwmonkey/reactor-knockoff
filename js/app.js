@@ -2201,12 +2201,12 @@ window.enable_auto_buy = function() {
 
 var tile_mouseup_fn = function(e) {
 	tile_mousedown = false;
+	tile_mousedown_right = false;
 };
 
 document.oncontextmenu = function(e) {
 	if ( tile_mousedown_right ) {
 		e.preventDefault();
-		tile_mousedown_right = false;
 	}
 };
 
