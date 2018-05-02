@@ -52,6 +52,7 @@ decouple tooltip code
 shift+click on empty tiles to fill them
 achievement system
 save layouts
+Scrounge
 
 console.log
 */
@@ -993,6 +994,7 @@ var update_tiles = function() {
 		}
 	}
 
+	// Scrounge
 	if ( part_count === 0 && current_power + game.current_money < game.base_money ) {
 		game.current_money = game.base_money - current_power;
 		ui.say('var', 'current_money', game.current_money);
