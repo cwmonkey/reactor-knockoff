@@ -2138,7 +2138,12 @@ var mouse_apply_to_tile = function(e) {
 		&& (
 			!tile.part
 			|| (tile.part === clicked_part && tile.ticks === 0)
-			|| (tile.part && tile.part.part.type === clicked_part.part.type && tile.part.part.level < clicked_part.part.level && game.current_money >= clicked_part.cost )
+			|| (
+				tile.part && tile.part.part.category === clicked_part.part.category && game.current_money >= clicked_part.cost
+				// Check if part type are the same, if it's the same, check to make sure level isn't
+				// To prevent allowing replacing same tile
+				&& ( tile.part.part.type != clicked_part.part.type || tile.part.part.level != clicked_part.part.level )
+			)
 		)
 	) {
 		if ( game.current_money < clicked_part.cost ) {
@@ -2234,8 +2239,11 @@ $reactor.delegate('tile', 'click', function(e) {
 });
 
 var double_click_tile = null;
+var double_click_tile_part = null;
+var clear_double_click_task = null;
 var clear_double_click = function() {
 	double_click_tile = null;
+	double_click_tile_part = null;
 };
 
 $reactor.delegate('tile', 'mousedown', function(e) {
@@ -2245,10 +2253,18 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	if ( e.shiftKey || double_click_tile === this.tile ) {
 		if ( this.tile.part ) {
 			var ri, ci, row, tile;
-			var level = this.tile.part.part.level;
-			var type = this.tile.part.part.type;
-			var active = this.tile.part.active;
-			var ticks = this.tile.ticks;
+			if ( e.shiftKey ){
+				var level = this.tile.part.part.level;
+				var type = this.tile.part.part.type;
+				var category = this.tile.part.part.category;
+				var ticks = this.tile.ticks;
+			} else {
+				// Use the stored (last) tile for comparing
+				var level = double_click_tile_part.part.level;
+				var type = double_click_tile_part.part.type;
+				var category = double_click_tile_part.part.category;
+				var ticks = this.tile.ticks;
+			}
 
 			// All matching tiles
 			for ( ri = 0; ri < game.rows; ri++ ) {
@@ -2256,8 +2272,8 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 
 				for ( ci = 0; ci < game.cols; ci++ ) {
 					tile = row[ci];
-
-					if ( !tile_mousedown_right && tile.part && type === tile.part.part.type ) {
+					// Check level to limit upgrading to specific tile only
+					if ( !tile_mousedown_right && tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
 						mouse_apply_to_tile.call(tile.$el, e);
 					} else if (
 						tile_mousedown_right
@@ -2274,11 +2290,17 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 			mouse_apply_to_tile.call(this, e);
 		}
 	} else {
+		// Store tile part for finding matching tiles in double click
+		double_click_tile_part = this.tile.part;
 		mouse_apply_to_tile.call(this, e);
 	}
 
 	double_click_tile = this.tile;
-	setTimeout(clear_double_click, 300);
+
+	if (clear_double_click_task){
+		clearTimeout(clear_double_click_task)
+	}
+	clear_double_click_task = setTimeout(clear_double_click, 300);
 });
 
 $reactor.onmouseup = tile_mouseup_fn;
