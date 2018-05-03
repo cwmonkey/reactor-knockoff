@@ -2250,7 +2250,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown = true;
 	tile_mousedown_right = e.which === 3;
 
-	if ( e.shiftKey || double_click_tile === this.tile ) {
+	if ( e.shiftKey || ( double_click_tile && double_click_tile === this.tile ) ) {
 		if ( this.tile.part ) {
 			var ri, ci, row, tile;
 			if ( e.shiftKey ){
