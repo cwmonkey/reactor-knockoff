@@ -2146,6 +2146,8 @@ var mouse_apply_to_tile = function(e) {
 			)
 		)
 	) {
+		// Reclaim money when replacing tile
+		remove_part(tile, true, true)
 		if ( game.current_money < clicked_part.cost ) {
 			tile.activated = false;
 			tile_queue.push(tile);
