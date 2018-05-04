@@ -2128,11 +2128,12 @@ window.tooltip_close = function() {
 };
 
 // Tile click
-var mouse_apply_to_tile = function(e) {
+var mouse_apply_to_tile = function(e, skip_update) {
+	skip_update = skip_update || false;
 	tile = this.tile;
 
 	if ( tile_mousedown_right ) {
-		remove_part(tile, false, true);
+		remove_part(tile, skip_update, true);
 	} else if (
 		clicked_part
 		&& (
@@ -2161,7 +2162,9 @@ var mouse_apply_to_tile = function(e) {
 
 		apply_to_tile(tile, clicked_part);
 
-		update_tiles();
+		if ( !skip_update ) {
+			update_tiles();
+		}
 	}
 };
 
@@ -2277,7 +2280,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 					tile = row[ci];
 					// Check level to limit upgrading to specific tile only
 					if ( !tile_mousedown_right && tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
-						mouse_apply_to_tile.call(tile.$el, e);
+						mouse_apply_to_tile.call(tile.$el, e, true);
 					} else if (
 						tile_mousedown_right
 						&& tile.part
@@ -2285,10 +2288,11 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 						&& level === tile.part.part.level
 						&& ( !tile.part.part.base_ticks || ticks || (!tile.ticks && !this.tile.ticks) )
 					) {
-						mouse_apply_to_tile.call(tile.$el, e);
+						mouse_apply_to_tile.call(tile.$el, e, true);
 					}
 				}
 			}
+			update_tiles();
 		} else {
 			mouse_apply_to_tile.call(this, e);
 		}
