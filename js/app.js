@@ -2240,6 +2240,7 @@ $reactor.delegate('tile', 'click', function(e) {
 	}
 });
 
+var last_click = null;
 var double_click_tile = null;
 var double_click_tile_part = null;
 var clear_double_click_task = null;
@@ -2252,7 +2253,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown = true;
 	tile_mousedown_right = e.which === 3;
 
-	if ( e.shiftKey || ( double_click_tile && double_click_tile === this.tile ) ) {
+	if ( e.shiftKey || ( double_click_tile && last_click === e.which && double_click_tile === this.tile ) ) {
 		if ( this.tile.part ) {
 			var ri, ci, row, tile;
 			if ( e.shiftKey ){
@@ -2298,6 +2299,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	}
 
 	double_click_tile = this.tile;
+	last_click = e.which;
 
 	if (clear_double_click_task){
 		clearTimeout(clear_double_click_task)
