@@ -702,6 +702,7 @@ body:before {
 }
 
 #main .page {
+	display: none;
 	position: absolute;
 	clip: rect(1px, 1px, 1px, 1px);
 	left: 0;
@@ -717,6 +718,7 @@ body:before {
 }
 
 #main .showing {
+	display: inherit;
 	position: static;
 }
 

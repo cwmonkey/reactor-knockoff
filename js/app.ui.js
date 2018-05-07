@@ -195,6 +195,8 @@ var update_vars = function() {
 };
 
 // Update Interface
+var cached_reactor_section_el = $("#reactor_section");
+// TODO: configurable interval
 var update_interface_interval = 100;
 var unaffordable_replace = /[\s\b]unaffordable\b/;
 var locked_find = /[\b\s]locked\b/;
@@ -204,29 +206,31 @@ var update_interface = function() {
 	update_vars();
 	setTimeout(update_interface, update_interface_interval);
 
-	for ( var ri = 0, row, ci, tile; ri < ui.game.max_rows; ri++ ) {
-		row = ui.game.tiles[ri];
+	if ( cached_reactor_section_el.classList.contains('showing') ) {
+		for ( var ri = 0, row, ci, tile; ri < ui.game.max_rows; ri++ ) {
+			row = ui.game.tiles[ri];
 
-		for ( ci = 0; ci < ui.game.max_cols; ci++ ) {
-			tile = row[ci];
-			if ( tile.ticksUpdated ) {
-				if ( tile.part ) {
-					tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
-				} else {
-					tile.$percent.style.width = '0';
+			for ( ci = 0; ci < ui.game.max_cols; ci++ ) {
+				tile = row[ci];
+				if ( tile.ticksUpdated ) {
+					if ( tile.part ) {
+						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
+					} else {
+						tile.$percent.style.width = '0';
+					}
+
+					tile.ticksUpdated = false;
 				}
 
-				tile.ticksUpdated = false;
-			}
+				if ( tile.heat_containedUpdated ) {
+					if ( tile.part && tile.part.containment ) {
+						tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
+					} else {
+						tile.$percent.style.width = '0';
+					}
 
-			if ( tile.heat_containedUpdated ) {
-				if ( tile.part && tile.part.containment ) {
-					tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
-				} else {
-					tile.$percent.style.width = '0';
+					tile.heat_containedUpdated = false;
 				}
-
-				tile.heat_containedUpdated = false;
 			}
 		}
 	}
