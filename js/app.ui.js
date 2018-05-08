@@ -195,7 +195,6 @@ var update_vars = function() {
 };
 
 // Update Interface
-var cached_reactor_section_el = $("#reactor_section");
 // TODO: configurable interval
 var update_interface_interval = 100;
 var unaffordable_replace = /[\s\b]unaffordable\b/;
@@ -206,7 +205,7 @@ var update_interface = function() {
 	update_vars();
 	setTimeout(update_interface, update_interface_interval);
 
-	if ( cached_reactor_section_el.classList.contains('showing') ) {
+	if ( $reactor_section.classList.contains('showing') ) {
 		for ( var ri = 0, row, ci, tile; ri < ui.game.max_rows; ri++ ) {
 			row = ui.game.tiles[ri];
 
@@ -392,7 +391,12 @@ var enabled_find = new RegExp('[\\s\\b]' + enabled_class + '\\b');
 
 var adjust_primary_size_timeout;
 var adjust_primary_size = function() {
+	// If an element has display:none, it's offsetWidth would be 0
+	// so we have to temporary restore the display to get it's real offsetWidth
+	var original_display = $reactor_section.style.display;
+	$reactor_section.style.display = 'hidden';
 	$primary.style.width = $reactor_section.offsetWidth + 32 + 'px';
+	$reactor_section.style.display = original_display;
 };
 
 evts.tile_disabled = function(tile) {
