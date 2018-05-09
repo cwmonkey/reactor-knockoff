@@ -324,6 +324,10 @@ evts.tile_added = function(val) {
 	tile.$el = $('<button class="tile">');
 	tile.$el.tile = tile;
 
+	// remove exploding class after the exploding animation is completed
+	// so it doesn't play again when toggling css display object when switching between pages/panels
+	tile.$el.addEventListener("animationend", function(){this.classList.remove('exploding')})
+
 	var $percent_wrapper_wrapper = $('<div class="percent_wrapper_wrapper">');
 	var $percent_wrapper = $('<div class="percent_wrapper">');
 	tile.$percent = $('<p class="percent">');
