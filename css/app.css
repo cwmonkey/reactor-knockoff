@@ -223,6 +223,7 @@ menu {
 	display: block;
 	position: relative;
 	z-index: 2;
+	white-space: nowrap;
 }
 
 #heat_percentage {
