@@ -394,7 +394,7 @@ var adjust_primary_size = function() {
 	// If an element has display:none, it's offsetWidth would be 0
 	// so we have to temporary restore the display to get it's real offsetWidth
 	var original_display = $reactor_section.style.display;
-	$reactor_section.style.display = 'hidden';
+	$reactor_section.style.display = 'inherit';
 	$primary.style.width = $reactor_section.offsetWidth + 32 + 'px';
 	$reactor_section.style.display = original_display;
 };
