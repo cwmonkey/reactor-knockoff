@@ -2156,7 +2156,7 @@ var mouse_apply_to_tile = function(e, skip_update, part_replacement_result) {
 	} else if (
 	     clicked_part
 	     && (skip_replaceable_check || (part_replacement_result=tile_replaceable(tile)))
-	     && (part_replacement_result !== 2 || tile.ticks === 0)
+	     && (part_replacement_result !== 2 || tile.activated === false || tile.ticks === 0)
 	     && (part_replacement_result !== 3 || game.current_money >= clicked_part.cost)
 	     ) {
 		// Reclaim money when replacing tile
