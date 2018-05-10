@@ -49,7 +49,6 @@ shift + right click on spent cells also gets rid of unspent cells
 document part/upgrade keys
 right click to sell upgrades?
 decouple tooltip code
-shift+click on empty tiles to fill them
 achievement system
 save layouts
 Scrounge
@@ -2127,26 +2126,32 @@ window.tooltip_close = function() {
 	}
 };
 
+var part_replaceable = function(part, tile) {
+	if ( clicked_part ){
+		if ( !part ) return true;
+		else if ( part === clicked_part && (!tile || tile.ticks === 0) ) return true;
+		// Check if part type are the same, assume `tick > 0` if it is and skip it
+		// to prevent allowing replacing the same tile
+		else if ( part !== clicked_part ) {
+			return part.part.category === clicked_part.part.category && game.current_money >= clicked_part.cost
+		}
+	}
+	return false;
+}
+
+var tile_replaceable = function(tile) {
+	return part_replaceable(tile.part, tile);
+}
+
 // Tile click
-var mouse_apply_to_tile = function(e, skip_update) {
+var mouse_apply_to_tile = function(e, skip_update, skip_replaceable_check) {
 	skip_update = skip_update || false;
+	skip_replaceable_check = skip_replaceable_check || false;
 	tile = this.tile;
 
 	if ( tile_mousedown_right ) {
 		remove_part(tile, skip_update, true);
-	} else if (
-		clicked_part
-		&& (
-			!tile.part
-			|| (tile.part === clicked_part && tile.ticks === 0)
-			|| (
-				tile.part && tile.part.part.category === clicked_part.part.category && game.current_money >= clicked_part.cost
-				// Check if part type are the same, if it's the same, check to make sure level isn't
-				// To prevent allowing replacing same tile
-				&& ( tile.part.part.type != clicked_part.part.type || tile.part.part.level != clicked_part.part.level )
-			)
-		)
-	) {
+	} else if ( clicked_part && (skip_replaceable_check || tile_replaceable(tile)) ) {
 		// Reclaim money when replacing tile
 		remove_part(tile, true, true)
 		if ( game.current_money < clicked_part.cost ) {
@@ -2257,52 +2262,56 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown_right = e.which === 3;
 
 	if ( e.shiftKey || ( double_click_tile && last_click === e.which && double_click_tile === this.tile ) ) {
-		if ( this.tile.part ) {
-			var ri, ci, row, tile;
-			if ( e.shiftKey ){
-				var level = this.tile.part.part.level;
-				var type = this.tile.part.part.type;
-				var category = this.tile.part.part.category;
-				var ticks = this.tile.ticks;
-			} else {
-				// Use the stored (last) tile for comparing
-				var level = double_click_tile_part.part.level;
-				var type = double_click_tile_part.part.type;
-				var category = double_click_tile_part.part.category;
-				var ticks = this.tile.ticks;
-			}
+		var ri, ci, row, tile;
+		if ( e.shiftKey ){
+			var part = this.tile.part;
+		} else {
+			// Use the stored (last) tile for comparing
+			var part = double_click_tile_part;
+		}
 
+		if ( part ){
+			var level = part.part.level;
+			var type = part.part.type;
+			var category = part.part.category;
+			var ticks = this.tile.ticks;
+		}
+
+		if ( (tile_mousedown_right && part)
+		     || (!tile_mousedown_right && part_replaceable(part)) ){
 			// All matching tiles
 			for ( ri = 0; ri < game.rows; ri++ ) {
 				row = game.tiles[ri];
 
 				for ( ci = 0; ci < game.cols; ci++ ) {
 					tile = row[ci];
-					// Check level to limit upgrading to specific tile only
-					if ( !tile_mousedown_right && tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
-						mouse_apply_to_tile.call(tile.$el, e, true);
+					if ( !tile_mousedown_right && part === tile.part ) {
+						mouse_apply_to_tile.call(tile.$el, e, true, true);
 					} else if (
 						tile_mousedown_right
-						&& tile.part
-						&& type === tile.part.part.type
-						&& level === tile.part.part.level
-						&& ( !tile.part.part.base_ticks || ticks || (!tile.ticks && !this.tile.ticks) )
+						&& part == tile.part
+						&& ( !tile.part.part.base_ticks || ticks || !tile.ticks )
 					) {
 						mouse_apply_to_tile.call(tile.$el, e, true);
 					}
 				}
 			}
 			update_tiles();
-		} else {
-			mouse_apply_to_tile.call(this, e);
 		}
+	} else if ( e.ctrlKey ) {
+		row = game.tiles[this.tile.row];
+		for ( ci = 0; ci < game.cols; ci++ ) {
+			tile = row[ci];
+			mouse_apply_to_tile.call(tile.$el, e, true);
+		}
+		update_tiles();
 	} else {
 		// Store tile part for finding matching tiles in double click
 		double_click_tile_part = this.tile.part;
 		mouse_apply_to_tile.call(this, e);
+		double_click_tile = this.tile;
 	}
 
-	double_click_tile = this.tile;
 	last_click = e.which;
 
 	if (clear_double_click_task){
