@@ -2126,17 +2126,19 @@ window.tooltip_close = function() {
 	}
 };
 
+// Check if tile part is replaceable with clicked/selected part
+// return values:
+//    0 = tile can't be replace with the selected part
+//    1 = empty tile, can be safely removed or queued
+//    2 = same parts, should check ticks before replacing if needed, ie: check cell empty before replacing
+//    3 = different parts but same category, should check amount of money for replacement if needed
 var part_replaceable = function(part, tile) {
 	if ( clicked_part ){
-		if ( !part ) return true;
-		else if ( part === clicked_part && (!tile || tile.ticks === 0) ) return true;
-		// Check if part type are the same, assume `tick > 0` if it is and skip it
-		// to prevent allowing replacing the same tile
-		else if ( part !== clicked_part ) {
-			return part.part.category === clicked_part.part.category && game.current_money >= clicked_part.cost
-		}
+		if ( !part ) return 1;
+		else if ( part === clicked_part ) return 2;
+		else if ( part.part.category === clicked_part.part.category) return 3;
 	}
-	return false;
+	return 0;
 }
 
 var tile_replaceable = function(tile) {
@@ -2144,16 +2146,21 @@ var tile_replaceable = function(tile) {
 }
 
 // Tile click
-var mouse_apply_to_tile = function(e, skip_update, skip_replaceable_check) {
+var mouse_apply_to_tile = function(e, skip_update, part_replacement_result) {
 	skip_update = skip_update || false;
-	skip_replaceable_check = skip_replaceable_check || false;
+	var skip_replaceable_check = part_replacement_result !== undefined;
 	tile = this.tile;
 
 	if ( tile_mousedown_right ) {
 		remove_part(tile, skip_update, true);
-	} else if ( clicked_part && (skip_replaceable_check || tile_replaceable(tile)) ) {
+	} else if (
+	     clicked_part
+	     && (skip_replaceable_check || (part_replacement_result=tile_replaceable(tile)))
+	     && (part_replacement_result !== 2 || tile.ticks === 0)
+	     && (part_replacement_result !== 3 || game.current_money >= clicked_part.cost)
+	     ) {
 		// Reclaim money when replacing tile
-		remove_part(tile, true, true)
+		remove_part(tile, true, true);
 		if ( game.current_money < clicked_part.cost ) {
 			tile.activated = false;
 			tile_queue.push(tile);
@@ -2263,6 +2270,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 
 	if ( e.shiftKey || ( double_click_tile && last_click === e.which && double_click_tile === this.tile ) ) {
 		var ri, ci, row, tile;
+		var part_replacement_result
 		if ( e.shiftKey ){
 			var part = this.tile.part;
 		} else {
@@ -2278,7 +2286,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 		}
 
 		if ( (tile_mousedown_right && part)
-		     || (!tile_mousedown_right && part_replaceable(part)) ){
+		     || (!tile_mousedown_right && (part_replacement_result=part_replaceable(part))) ){
 			// All matching tiles
 			for ( ri = 0; ri < game.rows; ri++ ) {
 				row = game.tiles[ri];
@@ -2286,7 +2294,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 				for ( ci = 0; ci < game.cols; ci++ ) {
 					tile = row[ci];
 					if ( !tile_mousedown_right && part === tile.part ) {
-						mouse_apply_to_tile.call(tile.$el, e, true, true);
+						mouse_apply_to_tile.call(tile.$el, e, true, part_replacement_result);
 					} else if (
 						tile_mousedown_right
 						&& part == tile.part
