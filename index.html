@@ -246,6 +246,23 @@
 						<div id="options" class="subpanel explanitory cms">
 							<p><button id="enable_google_drive_save">Enable Google Drive Online Save</button></p>
 							<p><button id="enable_local_save">Enable Local Save Only</button></p>
+							<p><button id="export_save">Export save</button>
+							<button id="download_save">Download save</button>
+							<button id="import_save">Import save</button>
+							<button id="reset_game">Reset game</button></p>
+							<dialog id="Import_Export_dialog" style="padding: 0; border: none;">
+								<div class="panel">
+									<form method="dialog" class="subpanel">
+										<menu style="float: right">
+											<button id="Import_Export_close_button" type="reset">Cancel</button>
+											<button id="import_button" type="submit">Import</button>
+										</menu>
+										<section>
+											<textarea id="txtImportExport" rows="10" cols="75"></textarea>
+										</section>
+									</form>
+								</div>
+							</dialog>
 						</div>
 					</section>
 
@@ -372,6 +389,7 @@
 	<script src="js/app.objectives.js"></script>
 	<script src="js/app.ui.js"></script>
 	<script src="js/app.Upgrade.js"></script>
+	<script src="js/app.save.js"></script>
 	<script src="js/app.js"></script>
 
 	<script>

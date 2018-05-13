@@ -185,367 +185,19 @@ window.addEventListener('touchstart', function setHasTouch () {
 }, false);
 
   /////////////////////////////
- // Online Saves
+ // Online Saves and related functions
 /////////////////////////////
+var save_manager = window.save_manager;
+window.save_manager = null;
+
+save_manager.init(game);
+game.save_manager = save_manager;
 
 var $enable_google_drive_save = $('#enable_google_drive_save');
 var $enable_local_save = $('#enable_local_save');
 
-var LocalSaver = function() {
-	this.save = function(data, callback) {
-		game.save_debug && console.log('LocalSaver.save');
-		window.localStorage.setItem('rks', data);
-
-		if ( callback ) {
-			callback();
-		}
-	}
-
-	this.enable = function() {
-		game.save_debug && console.log('LocalSaver.enable');
-		localStorage.removeItem('google_drive_save');
-	}
-
-	this.load = function(callback) {
-		game.save_debug && console.log('LocalSaver.load');
-		var rks = window.localStorage.getItem('rks');
-		callback(rks);
-	}
-};
-
-var local_saver = new LocalSaver();
-
-var google_loaded = false;
-var google_auth_called = false;
-
-window.set_google_loaded = function() {
-	game.save_debug && console.log('set_google_loaded');
-	google_loaded = true;
-
-	if ( google_auth_called ) {
-		google_saver.checkAuth(null, true);
-	}
-};
-
-var GoogleSaver = function() {
-	var CLIENT_ID = '572695445092-svr182bgaass7vt97r5mnnk4phmmjh5u.apps.googleusercontent.com';
-	var SCOPES = ['https://www.googleapis.com/auth/drive.appfolder'];
-	var src = 'https://apis.google.com/js/client.js?onload=set_google_loaded';
-	var filename = 'save.txt'
-	var file_id = null;
-	var file_meta = null;
-	var tried_load = false;
-	var load_callback = null;
-	var self = this;
-	var enable_callback;
-	var access_token;
-
-	this.authChecked = false;
-
-	this.enable = function(callback, event) {
-		game.save_debug && console.log('GoogleSaver.enable');
-		enable_callback = callback;
-
-		if ( google_loaded && this.authChecked === true && file_id !== null ) {
-			if ( callback ) {
-				callback();
-			}
-
-			return;
-		} else if ( google_loaded ) {
-			// If this was from a button click, open the popup
-			self.checkAuth(null, event ? false : true);
-		} else {
-			// Make sure they can see the auth popup
-			//show_page.call($('#options'), null);
-			google_auth_called = true;
-		}
-	};
-
-	this.save = function(data, callback) {
-		game.save_debug && console.log('GoogleSaver.save');
-		local_saver.save(data);
-
-		if ( google_loaded === true && this.authChecked === true && file_id !== null ) {
-			update_file(data, callback);
-		}
-	};
-
-	this.load = function(callback) {
-		game.save_debug && console.log('GoogleSaver.load');
-
-		if ( file_meta !== null ) {
-			download_file(file_meta, callback);
-		} else {
-			tried_load = true;
-			load_callback = callback;
-		}
-	};
-
-	var load_script = function() {
-		var el = document.createElement('script');
-		el.setAttribute('type', 'text/javascript');
-		el.setAttribute('src', src);
-
-		document.getElementsByTagName('head')[0].appendChild(el);
-	};
-
-	/**
-	 * Check if the current user has authorized the application.
-	 */
-	this.checkAuth = function(callback, immediate) {
-		game.save_debug && console.log('GoogleSaver.checkAuth');
-		immediate = immediate || false;
-
-		gapi.auth.authorize(
-			{
-				'client_id': CLIENT_ID,
-				'scope': SCOPES,
-				'immediate': immediate
-			},
-			function(authResult) {
-				game.save_debug && console.log('gapi.auth.authorize CB', authResult);
-
-				if ( authResult && !authResult.error ) {
-					google_loaded = true;
-					self.authChecked = true;
-					access_token = authResult['access_token'];
-					// Access token has been successfully retrieved, requests can be sent to the API.
-					localStorage.setItem('google_drive_save', 1);
-
-					// We have a callback for refreshing the auth
-					if ( callback ) {
-						callback();
-					} else {
-						gapi.client.load('drive', 'v2', function(data) {
-							game.save_debug && console.log('gapi.client.load CB', data);
-							get_file();
-						});
-					}
-
-					//show_page.call($('#show_reactor'), null);
-				} else if ( !immediate ) {
-					// No access token could be retrieved
-					local_saver.enable();
-					save_game = local_saver;
-					localStorage.removeItem('google_drive_save');
-					enable_local_save();
-					alert('Could not authorize. Switching to local save.')
-				} else {
-					self.checkAuth(callback, false);
-				}
-			}
-		);
-	};
-
-	var update_file = function(data, callback) { 
-		game.save_debug && console.log('GoogleSaver update_file', data);
-		data = data || '{}';
-		var boundary = '-------314159265358979323846';
-		var delimiter = "\r\n--" + boundary + "\r\n";
-		var close_delim = "\r\n--" + boundary + "--";
-
-		var contentType = 'text/plain';
-		var base64Data = btoa(data);
-		var multipartRequestBody =
-			delimiter +
-			'Content-Type: application/json\r\n\r\n' +
-			JSON.stringify(file_meta) +
-			delimiter +
-			'Content-Type: ' + contentType + '\r\n' +
-			'Content-Transfer-Encoding: base64\r\n' +
-			'\r\n' +
-			base64Data +
-			close_delim;
-
-		var request = gapi.client.request({
-			'path': '/upload/drive/v2/files/' + file_id,
-			'method': 'PUT',
-			'params': {
-				uploadType: 'multipart',
-				alt: 'json'
-			},
-			'headers': {
-				'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
-			},
-			'body': multipartRequestBody
-		});
-
-		request.execute(function(data) {
-			game.save_debug && console.log('gapi.client.request CB', data);
-
-			if ( !data || data.error ) {
-				if ( data.error.code === 404 ) {
-					alert('It looks like the game was taken over in a new window - to take the game back, please refresh');
-				} else {
-					self.authChecked = false;
-					// TODO: Use the refresh token instead
-					self.checkAuth(function() {
-						update_file(data, callback);
-					}, true);
-				}
-			} else {
-				if ( callback ) {
-					callback();
-				}
-			}
-		});
-	}
-
-	/**
-	 * Permanently delete a file, skipping the trash.
-	 *
-	 * @param {String} fileId ID of the file to delete.
-	 */
-	var deleteFile = function(fileId, callback) {
-		game.save_debug && console.log('GoogleSaver deleteFile');
-		var request = gapi.client.drive.files.delete({
-			'fileId': fileId
-		});
-
-		request.execute(function(resp) {
-			if ( callback ) callback();
-		});
-	}
-
-	var get_file = function() {
-		game.save_debug && console.log('GoogleSaver get_file');
-		/**
-		 * List all files contained in the Application Data folder.
-		 *
-		 * @param {Function} callback Function to call when the request is complete.
-		 */
-		function listFilesInApplicationDataFolder(callback) {
-			var retrievePageOfFiles = function(request, result) {
-				request.execute(function(resp) {
-					result = result.concat(resp.items);
-					var nextPageToken = resp.nextPageToken;
-
-					if (nextPageToken) {
-						request = gapi.client.drive.files.list({
-							'pageToken': nextPageToken
-						});
-						retrievePageOfFiles(request, result);
-					} else {
-						game.save_debug && console.log('GoogleSaver retrievePageOfFiles CB', result);
-						callback(result);
-					}
-				});
-			}
-			var initialRequest = gapi.client.drive.files.list({
-				'q': '\'appfolder\' in parents'
-			});
-			retrievePageOfFiles(initialRequest, []);
-		}
-
-		listFilesInApplicationDataFolder(function(result) {
-			game.save_debug && console.log('GoogleSaver listFilesInApplicationDataFolder CB', result);
-
-			for ( var i = 0, l = result.length; i < l; i++ ) {
-				var file = result[i];
-
-				// Found save file
-				if ( file.title === filename ) {
-					file_id = file.id;
-					file_meta = file;
-
-					if ( tried_load ) {
-						self.load(load_callback);
-					} else if ( enable_callback ) {
-						enable_callback();
-						enable_callback = null;
-					}
-
-					return;
-				}
-			}
-
-			// No save file found, make a new one
-			new_save_file(save);
-		});
-	};
-
-	var new_save_file = function(callback) {
-		game.save_debug && console.log('GoogleSaver new_save_file');
-		var boundary = '-------314159265358979323846264';
-		var delimiter = "\r\n--" + boundary + "\r\n";
-		var close_delim = "\r\n--" + boundary + "--";
-
-		var contentType = 'text/plain';
-		var metadata = {
-			'title': filename,
-			'mimeType': contentType,
-			'parents': [{'id': 'appfolder'}]
-		};
-		var base64Data = btoa(btoa(JSON.stringify({})));
-		var multipartRequestBody =
-			delimiter +
-			'Content-Type: application/json\r\n\r\n' +
-			JSON.stringify(metadata) +
-			delimiter +
-			'Content-Type: ' + contentType + '\r\n' +
-			'Content-Transfer-Encoding: base64\r\n' +
-			'\r\n' +
-			base64Data +
-			close_delim;
-		var request = gapi.client.request({
-			'path': '/upload/drive/v2/files',
-			'method': 'POST',
-			'params': {
-				uploadType: 'multipart'
-			},
-			'headers': {
-				'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
-			},
-			'body': multipartRequestBody
-		});
-
-		request.execute(function(arg) {
-			game.save_debug && console.log('gapi.client.request CB', arg);
-			file_id = arg.id;
-			file_meta = arg;
-			if ( callback ) callback();
-		});
-	};
-
-	/**
-	 * Download a file's content.
-	 *
-	 * @param {File} file Drive File instance.
-	 * @param {Function} callback Function to call when the request is complete.
-	 */
-	var download_file = function(file, callback) {
-		game.save_debug && console.log('GoogleSaver download_file');
-		if ( file.downloadUrl ) {
-			var accessToken = gapi.auth.getToken().access_token;
-			var xhr = new XMLHttpRequest();
-			xhr.open('GET', file.downloadUrl);
-			xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-			xhr.onload = function() {
-				file_meta = null;
-				deleteFile(file_id, function() {
-					file_id = null;
-
-					new_save_file(function() {
-						callback(xhr.responseText);
-						// save game state
-						save();
-					});
-				});
-			};
-			xhr.onerror = function() {
-				callback(null);
-			};
-			xhr.send();
-		} else {
-			callback(null);
-		}
-	}
-
-	load_script();
-};
-
-var google_saver = new GoogleSaver();
+var local_saver = new save_manager.LocalSaver();
+var google_saver = new save_manager.GoogleSaver();
 
 var save_game = local_saver;
 
@@ -570,6 +222,11 @@ var enable_google_drive_save = function(event) {
 		event.preventDefault();
 	}
 
+	if ( google_saver.loadfailed ) {
+		alert("google drive script failed to load, unable to enable feature, try reloading the page")
+		return
+	}
+
 	save_game = google_saver;
 	$enable_google_drive_save.style.display = 'none';
 	$enable_local_save.style.display = null;
@@ -588,6 +245,233 @@ var enable_google_drive_save = function(event) {
 
 $enable_google_drive_save.onclick = enable_google_drive_save;
 $enable_google_drive_save.ontouchend = enable_google_drive_save;
+
+// Save handler
+var save_timeout;
+var save = function(event) {
+	if ( event ) {
+		event.preventDefault();
+	}
+
+	clearTimeout(save_timeout);
+
+	save_game.save(
+		game.saves(),
+		function() {
+			game.save_debug && console.log('saved');
+			if ( game.debug === false ) {
+				save_timeout = setTimeout(save, game.save_interval);
+			}
+		}
+	);
+};
+
+var srows;
+var spart;
+var sstring;
+var squeue;
+var supgrades;
+var save_timeout;
+
+var saves = function() {
+	srows = [];
+
+	// Tiles
+	for ( ri = 0; ri < game.rows; ri++ ) {
+		row = game.tiles[ri];
+		srow = [];
+
+		for ( ci = 0; ci < game.cols; ci++ ) {
+			tile = row[ci];
+
+			if ( tile.part ) {
+				srow.push({
+					id: tile.part.id,
+					ticks: tile.ticks,
+					activated: tile.activated,
+					heat_contained: tile.heat_contained
+				});
+			} else {
+				srow.push(null);
+			}
+		}
+
+		srows.push(srow);
+	}
+
+	// Tile queue
+	squeue = [];
+	for ( i = 0, l = tile_queue.length; i < l; i++ ) {
+		tile = tile_queue[i];
+		squeue.push({
+			row: tile.row,
+			col: tile.col
+		});
+	}
+
+	// Upgrades
+	supgrades = [];
+	for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
+		upgrade = game.upgrade_objects_array[i];
+		supgrades.push({
+			id: upgrade.upgrade.id,
+			level: upgrade.level
+		});
+	}
+
+	return window.btoa(JSON.stringify({
+			tiles: srows,
+			tile_queue: squeue,
+			upgrades: supgrades,
+			current_power: current_power,
+			current_money: game.current_money,
+			current_heat: game.current_heat,
+			exotic_particles: game.exotic_particles,
+			current_exotic_particles: game.current_exotic_particles,
+			total_exotic_particles: total_exotic_particles,
+			paused: game.paused,
+			auto_sell_disabled: auto_sell_disabled,
+			auto_buy_disabled: auto_buy_disabled,
+			protium_particles: protium_particles,
+			current_objective: current_objective,
+			version: game.version
+		}))
+};
+
+game.saves = saves;
+
+var stile;
+var supgrade;
+var srow;
+var supgrade_object;
+
+var loads = function(rks) {
+	game.save_debug && console.log('save_game.load', rks);
+
+	if ( rks ) {
+		try {
+			rks = JSON.parse(window.atob(rks));
+		} catch (err) {
+			rks = {};
+		}
+
+		// Current values
+		game.current_heat = rks.current_heat || game.current_heat;
+		current_power = rks.current_power || current_power;
+		game.current_money = rks.current_money || 0;
+		game.exotic_particles = rks.exotic_particles || game.exotic_particles;
+		game.current_exotic_particles = rks.current_exotic_particles || game.current_exotic_particles;
+		total_exotic_particles = rks.total_exotic_particles || total_exotic_particles;
+		ui.say('var', 'total_exotic_particles', total_exotic_particles);
+
+		max_heat = rks.max_heat || max_heat;
+		game.manual_heat_reduce = rks.manual_heat_reduce || game.manual_heat_reduce;
+		game.paused = rks.paused || game.paused;
+		current_objective = rks.current_objective || current_objective;
+
+		auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
+		auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
+		protium_particles = rks.protium_particles || protium_particles;
+
+		var save_version = rks.version || null;
+
+		if ( game.paused ) {
+			pause();
+		} else {
+			unpause();
+		}
+
+		if ( auto_sell_disabled ) {
+			disable_auto_sell();
+		} else {
+			enable_auto_sell();
+		}
+
+		if ( auto_buy_disabled ) {
+			disable_auto_buy();
+		} else {
+			enable_auto_buy();
+		}
+
+		ui.say('var', 'manual_heat_reduce', game.manual_heat_reduce);
+		ui.say('var', 'auto_heat_reduce', max_heat/10000);
+
+		// Tiles
+		if ( rks.tiles ) {
+			for ( ri = 0; ri < game.max_rows; ri++ ) {
+				row = game.tiles[ri];
+				srow = rks.tiles[ri];
+
+				if ( srow ) {
+					for ( ci = 0; ci < game.max_cols; ci++ ) {
+						stile = srow[ci];
+
+						if ( stile ) {
+							tile = row[ci];
+							tile.setTicks(stile.ticks);
+							tile.activated = stile.activated;
+							tile.setHeat_contained(stile.heat_contained);
+							part = game.part_objects[stile.id];
+							apply_to_tile(tile, part, true);
+						}
+					}
+				}
+			}
+		}
+
+		// Tile queue
+		if ( rks.tile_queue ) {
+			for ( i = 0, l = rks.tile_queue.length; i < l; i++ ) {
+				stile = rks.tile_queue[i];
+				tile_queue.push(game.tiles[stile.row][stile.col]);
+			}
+		}
+
+		// Upgrades
+		if ( rks.upgrades ) {
+			for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
+				supgrade = rks.upgrades[i];
+				supgrade_object = game.upgrade_objects[supgrade.id];
+
+				if ( supgrade_object ) {
+					game.upgrade_objects[supgrade.id].setLevel(supgrade.level);
+					if ( tooltip_showing ) {
+						game.upgrade_objects[supgrade.id].updateTooltip();
+					}
+				}
+			}
+		}
+
+		update_nodes();
+		update_tiles();
+		update_heat_and_power();
+
+		// Show the patch notes if this is a new version
+		if ( save_version !== game.version ) {
+			ui.say('evt', 'game_updated');
+		}
+	}
+
+	game.update_cell_power();
+	update_nodes();
+	update_tiles();
+	update_heat_and_power();
+
+	if ( !game.paused ) {
+		clearTimeout(loop_timeout);
+		loop_timeout = setTimeout(game_loop, game.loop_wait);
+	}
+
+	set_objective(current_objective, true);
+
+	ui.say('evt', 'game_loaded');
+
+	if ( game.debug === false ) {
+		save_timeout = setTimeout(save, game.save_interval);
+	}
+}
+
+game.loads = loads;
 
   /////////////////////////////
  // Reboot (Decoupled)
@@ -1808,96 +1692,6 @@ window.stop_check_upgrades_affordability = function() {
 	clearTimeout(check_upgrades_affordability_timeout);
 }; */
 
-  /////////////////////////////
- // Save game
-/////////////////////////////
-
-var srows;
-var spart;
-var sstring;
-var squeue;
-var supgrades;
-var save_timeout;
-
-var save = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	clearTimeout(save_timeout);
-
-	srows = [];
-
-	// Tiles
-	for ( ri = 0; ri < game.rows; ri++ ) {
-		row = game.tiles[ri];
-		srow = [];
-
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-
-			if ( tile.part ) {
-				srow.push({
-					id: tile.part.id,
-					ticks: tile.ticks,
-					activated: tile.activated,
-					heat_contained: tile.heat_contained
-				});
-			} else {
-				srow.push(null);
-			}
-		}
-
-		srows.push(srow);
-	}
-
-	// Tile queue
-	squeue = [];
-	for ( i = 0, l = tile_queue.length; i < l; i++ ) {
-		tile = tile_queue[i];
-		squeue.push({
-			row: tile.row,
-			col: tile.col
-		});
-	}
-
-	// Upgrades
-	supgrades = [];
-	for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
-		upgrade = game.upgrade_objects_array[i];
-		supgrades.push({
-			id: upgrade.upgrade.id,
-			level: upgrade.level
-		});
-	}
-
-	save_game.save(
-		window.btoa(JSON.stringify({
-			tiles: srows,
-			tile_queue: squeue,
-			upgrades: supgrades,
-			current_power: current_power,
-			current_money: game.current_money,
-			current_heat: game.current_heat,
-			exotic_particles: game.exotic_particles,
-			current_exotic_particles: game.current_exotic_particles,
-			total_exotic_particles: total_exotic_particles,
-			paused: game.paused,
-			auto_sell_disabled: auto_sell_disabled,
-			auto_buy_disabled: auto_buy_disabled,
-			protium_particles: protium_particles,
-			current_objective: current_objective,
-			version: game.version
-		})),
-		function() {
-			game.save_debug && console.log('saved');
-			if ( game.debug === false ) {
-				save_timeout = setTimeout(save, game.save_interval);
-			}
-		}
-	);
-};
-
 // Select part
 var active_replace = /[\b\s]part_active\b/;
 var clicked_part = null;
@@ -3105,135 +2899,6 @@ if ( localStorage.getItem('google_drive_save') ) {
 
 save_game.enable();
 
-var stile;
-var supgrade;
-var srow;
-var supgrade_object;
-
-save_game.load(function(rks) {
-	game.save_debug && console.log('save_game.load', rks);
-
-	if ( rks ) {
-		try {
-			rks = JSON.parse(window.atob(rks));
-		} catch (err) {
-			rks = {};
-		}
-
-		// Current values
-		game.current_heat = rks.current_heat || game.current_heat;
-		current_power = rks.current_power || current_power;
-		game.current_money = rks.current_money || 0;
-		game.exotic_particles = rks.exotic_particles || game.exotic_particles;
-		game.current_exotic_particles = rks.current_exotic_particles || game.current_exotic_particles;
-		total_exotic_particles = rks.total_exotic_particles || total_exotic_particles;
-		ui.say('var', 'total_exotic_particles', total_exotic_particles);
-
-		max_heat = rks.max_heat || max_heat;
-		game.manual_heat_reduce = rks.manual_heat_reduce || game.manual_heat_reduce;
-		game.paused = rks.paused || game.paused;
-		current_objective = rks.current_objective || current_objective;
-
-		auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
-		auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
-		protium_particles = rks.protium_particles || protium_particles;
-
-		var save_version = rks.version || null;
-
-		if ( game.paused ) {
-			pause();
-		} else {
-			unpause();
-		}
-
-		if ( auto_sell_disabled ) {
-			disable_auto_sell();
-		} else {
-			enable_auto_sell();
-		}
-
-		if ( auto_buy_disabled ) {
-			disable_auto_buy();
-		} else {
-			enable_auto_buy();
-		}
-
-		ui.say('var', 'manual_heat_reduce', game.manual_heat_reduce);
-		ui.say('var', 'auto_heat_reduce', max_heat/10000);
-
-		// Tiles
-		if ( rks.tiles ) {
-			for ( ri = 0; ri < game.max_rows; ri++ ) {
-				row = game.tiles[ri];
-				srow = rks.tiles[ri];
-
-				if ( srow ) {
-					for ( ci = 0; ci < game.max_cols; ci++ ) {
-						stile = srow[ci];
-
-						if ( stile ) {
-							tile = row[ci];
-							tile.setTicks(stile.ticks);
-							tile.activated = stile.activated;
-							tile.setHeat_contained(stile.heat_contained);
-							part = game.part_objects[stile.id];
-							apply_to_tile(tile, part, true);
-						}
-					}
-				}
-			}
-		}
-
-		// Tile queue
-		if ( rks.tile_queue ) {
-			for ( i = 0, l = rks.tile_queue.length; i < l; i++ ) {
-				stile = rks.tile_queue[i];
-				tile_queue.push(game.tiles[stile.row][stile.col]);
-			}
-		}
-
-		// Upgrades
-		if ( rks.upgrades ) {
-			for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
-				supgrade = rks.upgrades[i];
-				supgrade_object = game.upgrade_objects[supgrade.id];
-
-				if ( supgrade_object ) {
-					game.upgrade_objects[supgrade.id].setLevel(supgrade.level);
-					if ( tooltip_showing ) {
-						game.upgrade_objects[supgrade.id].updateTooltip();
-					}
-				}
-			}
-		}
-
-		update_nodes();
-		update_tiles();
-		update_heat_and_power();
-
-		// Show the patch notes if this is a new version
-		if ( save_version !== game.version ) {
-			ui.say('evt', 'game_updated');
-		}
-	}
-
-	game.update_cell_power();
-	update_nodes();
-	update_tiles();
-	update_heat_and_power();
-
-	if ( !game.paused ) {
-		clearTimeout(loop_timeout);
-		loop_timeout = setTimeout(game_loop, game.loop_wait);
-	}
-
-	set_objective(current_objective, true);
-
-	ui.say('evt', 'game_loaded');
-
-	if ( game.debug === false ) {
-		save_timeout = setTimeout(save, game.save_interval);
-	}
-});
+save_game.load(game.loads);
 
 })();
