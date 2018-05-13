@@ -2,8 +2,6 @@
 
 TODO:
 
-Display issue with percent on reflectors when loading - only corrects when cell is placed near it
-
 Bugs:
 When powerful fans are placed next to less powerful outlets, the reactor takes on heat
 stats display issue on mobile
@@ -348,6 +346,7 @@ var supgrade_object;
 var loads = function(rks) {
 	game.save_debug && console.log('save_game.load', rks);
 
+	ui.update_interface();
 	if ( rks ) {
 		try {
 			rks = JSON.parse(window.atob(rks));

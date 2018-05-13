@@ -269,6 +269,7 @@ var update_interface = function() {
 
 	//console.log(performance.now() - start_ui_loop);
 };
+ui.update_interface = update_interface;
 
 setTimeout(update_interface, update_interface_interval);
 
