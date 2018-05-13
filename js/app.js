@@ -2268,7 +2268,57 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	tile_mousedown = true;
 	tile_mousedown_right = e.which === 3;
 
-	if ( e.shiftKey || ( double_click_tile && last_click === e.which && double_click_tile === this.tile ) ) {
+	if ( e.shiftKey && e.ctrlKey && e.altKey ) {
+		// Figure out whether to place on the first tile of the row
+		// ie: if it's an even or odd tile pattern
+		var placement, toggle;
+		placement = !((this.tile.row%2)^(this.tile.col%2));
+		for ( ri = 0; ri < game.rows; ri++ ) {
+			// TODO: better name?
+			toggle = placement;
+			row = game.tiles[ri];
+			for ( ci = 0; ci < game.cols; ci++ ) {
+				if (toggle){
+					tile = row[ci];
+					mouse_apply_to_tile.call(tile.$el, e, true);
+				}
+				toggle = !toggle;
+			}
+			// for next row first tile
+			placement = !placement;
+		}
+		update_tiles();
+	} else if ( e.shiftKey && e.ctrlKey ) {
+		row = game.tiles[this.tile.row];
+		// TODO: more hotkeys for different spacing
+		for ( ci = this.tile.col%2; ci < game.cols; ci+=2 ) {
+			tile = row[ci];
+			mouse_apply_to_tile.call(tile.$el, e, true);
+		}
+		update_tiles();
+	} else if ( e.shiftKey && e.altKey ) {
+		// TODO: more hotkeys for different spacing
+		for ( ri = this.tile.row%2; ri < game.rows; ri+=2 ) {
+			row = game.tiles[ri];
+			tile = row[this.tile.col];
+			mouse_apply_to_tile.call(tile.$el, e, true);
+		}
+		update_tiles();
+	} else if ( e.ctrlKey ) {
+		row = game.tiles[this.tile.row];
+		for ( ci = 0; ci < game.cols; ci++ ) {
+			tile = row[ci];
+			mouse_apply_to_tile.call(tile.$el, e, true);
+		}
+		update_tiles();
+	} else if ( e.altKey ) {
+		for ( ri = 0; ri < game.rows; ri++ ) {
+			row = game.tiles[ri];
+			tile = row[this.tile.col];
+			mouse_apply_to_tile.call(tile.$el, e, true);
+		}
+		update_tiles();
+	} else if ( e.shiftKey || ( double_click_tile && last_click === e.which && double_click_tile === this.tile ) ) {
 		var ri, ci, row, tile;
 		var part_replacement_result
 		if ( e.shiftKey ){
@@ -2306,13 +2356,6 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 			}
 			update_tiles();
 		}
-	} else if ( e.ctrlKey ) {
-		row = game.tiles[this.tile.row];
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-			mouse_apply_to_tile.call(tile.$el, e, true);
-		}
-		update_tiles();
 	} else {
 		// Store tile part for finding matching tiles in double click
 		double_click_tile_part = this.tile.part;
