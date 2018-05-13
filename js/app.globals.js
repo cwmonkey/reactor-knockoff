@@ -1,7 +1,7 @@
-;(function() {
+(function() {
 
-  /////////////////////////////
- // Delegate
+/////////////////////////////
+// Delegate
 /////////////////////////////
 
 Element.prototype.delegate = function(className, type, fn) {
@@ -37,8 +37,8 @@ Element.prototype.delegate = function(className, type, fn) {
 	}
 }
 
-  /////////////////////////////
- // fauxQuery
+/////////////////////////////
+// fauxQuery
 /////////////////////////////
 
 var _div = document.createElement('div');
@@ -53,8 +53,8 @@ window.$ = function(a1) {
 	}
 }
 
-  /////////////////////////////
- // Number formatting
+/////////////////////////////
+// Number formatting
 /////////////////////////////
 
 var cm_names = ("K M B T Qa Qi Sx Sp Oc No Dc").split(" ");
@@ -100,8 +100,8 @@ window.fmt = function(num, places) {
 	return fnum;
 };
 
-  /////////////////////////////
- // Timing
+/////////////////////////////
+// Timing
 /////////////////////////////
 
 window.performance = window.performance || {};
@@ -114,8 +114,8 @@ performance.now = (function() {
          function() { return new Date().getTime(); };
 })();
 
-  /////////////////////////////
- // Objects
+/////////////////////////////
+// Objects
 /////////////////////////////
 
 // Function to add setter, updated and property to object

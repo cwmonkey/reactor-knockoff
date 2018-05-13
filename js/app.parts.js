@@ -1,4 +1,4 @@
-;(function() {
+(function() {
 
 window.parts = function() {
 	return [

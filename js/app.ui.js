@@ -1,4 +1,4 @@
-;(function(undefined) {
+(function() {
 'use strict';
 
 var UI = function() {
@@ -272,8 +272,8 @@ var update_interface = function() {
 
 setTimeout(update_interface, update_interface_interval);
 
-  /////////////////////////////
- // Listen to app events
+/////////////////////////////
+// Listen to app events
 /////////////////////////////
 
 var evts = {};
@@ -302,8 +302,8 @@ ui.say = function(type, name, val) {
 	//console.log(arguments);
 };
 
-  /////////////////////////////
- // Events
+/////////////////////////////
+// Events
 /////////////////////////////
 
 evts.row_added = function() {
@@ -461,8 +461,8 @@ evts.objective_loaded = function(val) {
 	}, 100);
 };
 
-  /////////////////////////////
- // Reboot
+/////////////////////////////
+// Reboot
 /////////////////////////////
 
 var $reboot = $('#reboot');
@@ -492,8 +492,8 @@ var refund = function(event) {
 $refund.onclick = refund;
 $refund.ontouchend = refund;
 
-  /////////////////////////////
- // Reduce Heat Manually
+/////////////////////////////
+// Reduce Heat Manually
 /////////////////////////////
 
 var $reduce_heat = $('#reduce_heat');
@@ -507,8 +507,8 @@ var reduce_heat = function(event) {
 $reduce_heat.onclick = reduce_heat;
 $reduce_heat.ontouchend = reduce_heat;
 
-  /////////////////////////////
- // Tooltip Buttons
+/////////////////////////////
+// Tooltip Buttons
 /////////////////////////////
 
 // TODO: Handle all the tooltip functionality so the ui.game has no idea what tooltips are
@@ -579,8 +579,8 @@ var tooltip_close = function() {
 $tooltip_close.onclick = tooltip_close;
 $tooltip_close.ontouchend = tooltip_close;
 
-  /////////////////////////////
- // Misc UI
+/////////////////////////////
+// Misc UI
 /////////////////////////////
 
 // Pause
@@ -689,8 +689,8 @@ var sell = function(event) {
 $sell.onclick = sell;
 $sell.ontouchend = sell;
 
-  /////////////////////////////
- // Pure UI
+/////////////////////////////
+// Pure UI
 /////////////////////////////
 
 // Show Pages

@@ -1,4 +1,4 @@
-;(function() {
+(function() {
 
 window.upgrades = function(game) {
 	var upgrades = [
@@ -313,8 +313,8 @@ window.upgrades = function(game) {
 			}
 		},
 
-		  /////////////////////////////
-		 // Experimental Upgrades
+		/////////////////////////////
+		// Experimental Upgrades
 		/////////////////////////////
 
 		{

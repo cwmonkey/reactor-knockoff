@@ -57,11 +57,11 @@ console.log
 */
 
 
-;(function() {
+(function() {
 'use strict';
 
-  /////////////////////////////
- // General
+/////////////////////////////
+// General
 /////////////////////////////
 
 var ui = window.ui;
@@ -184,8 +184,8 @@ window.addEventListener('touchstart', function setHasTouch () {
 	window.removeEventListener('touchstart', setHasTouch);
 }, false);
 
-  /////////////////////////////
- // Online Saves and related functions
+/////////////////////////////
+// Online Saves and related functions
 /////////////////////////////
 var save_manager = window.save_manager;
 window.save_manager = null;
@@ -473,8 +473,8 @@ var loads = function(rks) {
 
 game.loads = loads;
 
-  /////////////////////////////
- // Reboot (Decoupled)
+/////////////////////////////
+// Reboot (Decoupled)
 /////////////////////////////
 
 window.reboot = function(refund) {
@@ -556,8 +556,8 @@ var upgrade;
 var single_cell_description = 'Produces %power power and %heat heat per tick. Lasts for %ticks ticks.';
 var multi_cell_description = 'Acts as %count %type cells. Produces %power power and %heat heat per tick.';
 
-  /////////////////////////////
- // Tiles
+/////////////////////////////
+// Tiles
 /////////////////////////////
 
 var Tile = function(row, col) {
@@ -1008,8 +1008,8 @@ if ( !is_touch ) {
 	$reactor.delegate('tile', 'blur', tile_tooltip_hide);
 }
 
-  /////////////////////////////
- // Parts
+/////////////////////////////
+// Parts
 /////////////////////////////
 
 var parts = window.parts();
@@ -1366,8 +1366,8 @@ if ( !is_touch ) {
 	$all_parts.delegate('part', 'blur', part_tooltip_hide);
 }
 
-  /////////////////////////////
- // Reduce Heat Manually (Decoupled)
+/////////////////////////////
+// Reduce Heat Manually (Decoupled)
 /////////////////////////////
 
 window.reduce_heat = function() {
@@ -1386,8 +1386,8 @@ window.reduce_heat = function() {
 	}
 };
 
-  /////////////////////////////
- // Upgrades
+/////////////////////////////
+// Upgrades
 /////////////////////////////
 
 game.epart_onclick = function(upgrade) {
@@ -2013,8 +2013,8 @@ window.enable_auto_buy = function() {
 	ui.say('evt', 'auto_buy_enabled');
 };
 
-  /////////////////////////////
- // Tile clicks
+/////////////////////////////
+// Tile clicks
 /////////////////////////////
 
 var tile_mouseup_fn = function(e) {
@@ -2187,8 +2187,8 @@ window.sell = function() {
 	}
 };
 
-  /////////////////////////////
- // Scrounge
+/////////////////////////////
+// Scrounge
 /////////////////////////////
 
 /* var $scrounge = $('#scrounge');
@@ -2201,8 +2201,8 @@ $scrounge.onclick = function() {
 	}
 }; */
 
-  /////////////////////////////
- // Game Loop
+/////////////////////////////
+// Game Loop
 /////////////////////////////
 
 var loop_timeout;
@@ -2805,8 +2805,8 @@ window.check_affordability = function() {
 	}
 };
 
-  /////////////////////////////
- // Objectives
+/////////////////////////////
+// Objectives
 /////////////////////////////
 
 var objectives = window.objectives(game);
@@ -2857,8 +2857,8 @@ var set_objective = function(objective_key, skip_wait) {
 	}
 };
 
-  /////////////////////////////
- // Debug
+/////////////////////////////
+// Debug
 /////////////////////////////
 
 if ( game.debug ) {
@@ -2871,8 +2871,8 @@ if ( game.debug ) {
 	$game_nav.appendChild($save);
 };
 
-  /////////////////////////////
- // Load
+/////////////////////////////
+// Load
 /////////////////////////////
 
 var update_heat_and_power = function() {
