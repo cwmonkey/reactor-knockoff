@@ -2385,7 +2385,15 @@ var game_loop = function() {
 	ui.say('var', 'heat_add', heat_add);
 
 	// Reduce reactor heat parts
-	max_shared_heat = game.current_heat / stat_outlet;
+	if ( game.heat_controlled ) {
+		if (game.current_heat > max_heat) {
+			max_shared_heat = (heat_add + (game.current_heat - max_heat)) /stat_outlet;
+		} else {
+			max_shared_heat = heat_add /stat_outlet;
+		}
+	} else {
+		max_shared_heat = game.current_heat / stat_outlet;
+	}
 
 	for ( ri = 0; ri < game.rows; ri++ ) {
 		row = game.tiles[ri];
