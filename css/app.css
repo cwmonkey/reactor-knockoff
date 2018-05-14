@@ -79,6 +79,11 @@ button::-moz-focus-inner {
 	border: 0
 }
 
+.button_disabled {
+  color: #aaa !important;
+  background-color: #46506b !important;
+}
+
 #main p {
 	font-family: Arial, sans-serif;
 	font-size: .875em;

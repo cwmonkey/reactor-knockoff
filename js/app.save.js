@@ -126,7 +126,8 @@ var GoogleSaver = function() {
 		var el = document.createElement('script');
 		el.setAttribute('type', 'text/javascript');
 		el.setAttribute('src', src);
-		el.onerror = function(event) { self.loadfailed = true }
+		// don't actually disable the button since we want to give some kind of feedback if players click it
+		el.onerror = function(event) { self.loadfailed = true; $('#enable_google_drive_save').classList.add("button_disabled") }
 
 		document.getElementsByTagName('head')[0].appendChild(el);
 	};
