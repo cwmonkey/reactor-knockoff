@@ -847,7 +847,7 @@ var update_tiles = function() {
 				max_heat += tile_part.reactor_heat;
 			}
 
-			if ( tile_part && tile_part.id === 'reactor_plating6' ) {
+			if ( tile_part && tile.activated && tile_part.id === 'reactor_plating6' ) {
 				max_power += tile_part.reactor_heat;
 			}
 		}
