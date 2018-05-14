@@ -3,7 +3,6 @@
 TODO:
 
 Bugs:
-When powerful fans are placed next to less powerful outlets, the reactor takes on heat
 stats display issue on mobile
 Replace All doesn't work as expected on depleted cells on mobile
 
@@ -599,7 +598,6 @@ var tile_cell;
 var tile_part;
 var tile_reflector;
 var heat_remove;
-var heat_outlet_countainments_count;
 var transfer_multiplier = 0;
 var vent_multiplier = 0;
 var ri2;
@@ -621,7 +619,6 @@ var pack_multipliers = [1, 4, 12];
 var part_count;
 
 var update_tiles = function() {
-	heat_outlet_countainments_count = 0;
 	transfer_multiplier = 0;
 	vent_multiplier = 0;
 	max_power = game.altered_max_power;
@@ -721,9 +718,7 @@ var update_tiles = function() {
 			}
 
 			if ( tile_part && tile.activated ) {
-				if ( tile_part.category === 'heat_outlet' ) {
-					heat_outlet_countainments_count += tile.containments.length;
-				} else if ( tile_part.category === 'capacitor' ) {
+				if ( tile_part.category === 'capacitor' ) {
 					transfer_multiplier += tile_part.part.level * game.transfer_capacitor_multiplier;
 					vent_multiplier += tile_part.part.level * game.vent_capacitor_multiplier;
 				} else if ( tile_part.category === 'reactor_plating' ) {
@@ -2390,7 +2385,7 @@ var game_loop = function() {
 	ui.say('var', 'heat_add', heat_add);
 
 	// Reduce reactor heat parts
-	max_shared_heat = game.current_heat / heat_outlet_countainments_count;
+	max_shared_heat = game.current_heat / stat_outlet;
 
 	for ( ri = 0; ri < game.rows; ri++ ) {
 		row = game.tiles[ri];
@@ -2521,13 +2516,13 @@ var game_loop = function() {
 					shared_heat = max_heat_transfer;
 
 					// Distribute evenly
-					if ( game.current_heat < max_heat_transfer * heat_outlet_countainments_count ) {
-						shared_heat = game.current_heat / heat_outlet_countainments_count;
+					if ( game.current_heat < max_heat_transfer * tile.containments.length ) {
+						shared_heat = game.current_heat / stat_outlet * tile_part.transfer;
 					}
 
 					// If the heat in the reactor is less than transfer
-					if ( shared_heat > max_shared_heat ) {
-						shared_heat = max_shared_heat;
+					if ( shared_heat > max_shared_heat * tile_part.transfer ) {
+						shared_heat = max_shared_heat * tile_part.transfer;
 					}
 
 					for ( pi = 0; pi < l; pi++ ) {
