@@ -690,6 +690,62 @@ var sell = function(event) {
 $sell.onclick = sell;
 $sell.ontouchend = sell;
 
+function ExportAs() {
+	var save_data = ui.game.saves();
+	ui.game.save_manager.active_saver.save(save_data);
+	var saveAsBlob = new Blob([ save_data ], { type: 'text/plain' });
+	var downloadLink = document.createElement("a");
+	downloadLink.download = "reactor_knockoff_save.base64";
+	downloadLink.innerHTML = "Download File";
+	if (window.webkitURL != null) {
+		// Chrome allows the link to be clicked without actually adding it to the DOM.
+		downloadLink.href = window.webkitURL.createObjectURL(saveAsBlob);
+	} else {
+		// Firefox requires the link to be added to the DOM before it can be clicked.
+		downloadLink.href = window.URL.createObjectURL(saveAsBlob);
+		downloadLink.onclick = destroyClickedElement;
+		downloadLink.style.display = "none";
+		document.body.appendChild(downloadLink);
+	}
+
+	downloadLink.click();
+}
+$('#download_save').onclick = ExportAs;
+
+var $import_button = $('#import_button');
+
+function Export() {
+	var save_data = ui.game.saves();
+	ui.game.save_manager.active_saver.save(save_data);
+	$import_button.style.display = "none";
+	$("#txtImportExport").value = save_data;
+	$("#txtImportExport").select();
+	$("#Import_Export_dialog").showModal();
+}
+$('#export_save').onclick = Export;
+
+function ShowImport() {
+	$import_button.style.display = null;
+	$("#txtImportExport").value = "";
+	$("#Import_Export_dialog").showModal();
+}
+$('#import_save').onclick = ShowImport;
+
+function Import() {
+	ui.game.loads($("#txtImportExport").value);
+	$("#txtImportExport").value = "";
+}
+$import_button.onclick = Import;
+
+$('#reset_game').onclick = function() {
+	if (confirm("confirm reset game?")){
+		ui.game.save_manager.active_saver.save("");
+		document.location.reload();
+	}
+}
+
+$('#Import_Export_close_button').onclick = function() { $('#Import_Export_dialog').close() }
+
 /////////////////////////////
 // Pure UI
 /////////////////////////////
