@@ -466,10 +466,7 @@ evts.objective_loaded = function(val) {
 // Reboot
 /////////////////////////////
 
-var $reboot = $('#reboot');
-var $refund = $('#refund');
-
-var reboot_click = function(event) {
+$('#reboot').onclick = function(event) {
 	event.preventDefault();
 
 	var response = confirm("Are you sure?");
@@ -478,10 +475,7 @@ var reboot_click = function(event) {
 	reboot();
 };
 
-$reboot.onclick = reboot_click;
-$reboot.ontouchend = reboot_click;
-
-var refund = function(event) {
+$('#refund').onclick = function(event) {
 	event.preventDefault();
 
 	var response = confirm("Are you sure?");
@@ -490,23 +484,15 @@ var refund = function(event) {
 	reboot(true);
 };
 
-$refund.onclick = refund;
-$refund.ontouchend = refund;
-
 /////////////////////////////
 // Reduce Heat Manually
 /////////////////////////////
 
-var $reduce_heat = $('#reduce_heat');
-
-var reduce_heat = function(event) {
+$('#reduce_heat').onclick = function(event) {
 	event.preventDefault();
 
 	window.reduce_heat();
 };
-
-$reduce_heat.onclick = reduce_heat;
-$reduce_heat.ontouchend = reduce_heat;
 
 /////////////////////////////
 // Tooltip Buttons
@@ -515,9 +501,7 @@ $reduce_heat.ontouchend = reduce_heat;
 // TODO: Handle all the tooltip functionality so the ui.game has no idea what tooltips are
 
 // Delete
-var $tooltip_delete = $('#tooltip_delete');
-
-var tooltip_delete = function(event) {
+$('#tooltip_delete').onclick = function(event) {
 	if ( event ) {
 		event.preventDefault();
 	}
@@ -525,13 +509,8 @@ var tooltip_delete = function(event) {
 	window.tooltip_delete();
 };
 
-$tooltip_delete.onclick = tooltip_delete;
-$tooltip_delete.ontouchend = tooltip_delete;
-
 // Delete all
-var $tooltip_delete_all = $('#tooltip_delete_all');
-
-var tooltip_delete_all = function(event) {
+$('#tooltip_delete_all').onclick = function(event) {
 	if ( event ) {
 		event.preventDefault();
 	}
@@ -539,13 +518,8 @@ var tooltip_delete_all = function(event) {
 	window.tooltip_delete_all();
 };
 
-$tooltip_delete_all.onclick = tooltip_delete_all;
-$tooltip_delete_all.ontouchend = tooltip_delete_all;
-
 // Replace all
-var $tooltip_replace_all = $('#tooltip_replace_all');
-
-var tooltip_replace_all = function(event) {
+$('#tooltip_replace_all').onclick = function(event) {
 	if ( event ) {
 		event.preventDefault();
 	}
@@ -553,13 +527,8 @@ var tooltip_replace_all = function(event) {
 	window.tooltip_replace_all();
 };
 
-$tooltip_replace_all.onclick = tooltip_replace_all;
-$tooltip_replace_all.ontouchend = tooltip_replace_all;
-
 // Upgrade all
-var $tooltip_upgrade_all = $('#tooltip_upgrade_all');
-
-var tooltip_upgrade_all = function(event) {
+$('#tooltip_upgrade_all').onclick = function(event) {
 	if ( event ) {
 		event.preventDefault();
 	}
@@ -567,50 +536,32 @@ var tooltip_upgrade_all = function(event) {
 	window.tooltip_upgrade_all();
 };
 
-$tooltip_upgrade_all.onclick = tooltip_upgrade_all;
-$tooltip_upgrade_all.ontouchend = tooltip_upgrade_all;
-
 // Close
-var $tooltip_close = $('#tooltip_close');
-
-var tooltip_close = function() {
+$('#tooltip_close').onclick = function() {
 	window.tooltip_close();
 };
-
-$tooltip_close.onclick = tooltip_close;
-$tooltip_close.ontouchend = tooltip_close;
 
 /////////////////////////////
 // Misc UI
 /////////////////////////////
 
 // Pause
-var $pause = $('#pause');
-
-var pause = function(event) {
+$('#pause').onclick = function(event) {
 	event.preventDefault();
 
 	window.pause();
 };
-
-$pause.onclick = pause;
-$pause.ontouchend = pause;
 
 evts.paused = function() {
 	$main.className += ' paused';
 };
 
 // Unpause
-var $unpause = $('#unpause');
-
-var unpause = function(event) {
+$('#unpause').onclick = function(event) {
 	event.preventDefault();
 
 	window.unpause();
 };
-
-$unpause.onclick = unpause;
-$unpause.ontouchend = unpause;
 
 var pause_replace = /[\b\s]paused\b/;
 
@@ -619,40 +570,28 @@ evts.unpaused = function() {
 };
 
 // Enable/Disable auto sell
-var $disable_auto_sell = $('#disable_auto_sell');
-var $enable_auto_sell = $('#enable_auto_sell');
-var auto_sell_disabled_find = /[\b\s]auto_sell_disabled\b/;
-
-var disable_auto_sell = function(event) {
+$('#disable_auto_sell').onclick = function(event) {
 	event.preventDefault();
 	window.disable_auto_sell();
 };
 
-evts.auto_sell_disabled = function() {
-	$main.className += ' auto_sell_disabled';
-};
-
-var enable_auto_sell = function(event) {
+$('#enable_auto_sell').onclick = function(event) {
 	event.preventDefault();
 	window.enable_auto_sell();
+};
+
+var auto_sell_disabled_find = /[\b\s]auto_sell_disabled\b/;
+
+evts.auto_sell_disabled = function() {
+	$main.className += ' auto_sell_disabled';
 };
 
 evts.auto_sell_enabled = function() {
 	$main.className = $main.className.replace(auto_sell_disabled_find, '');
 };
 
-$disable_auto_sell.onclick = disable_auto_sell;
-$disable_auto_sell.ontouchend = disable_auto_sell;
-
-$enable_auto_sell.onclick = enable_auto_sell;
-$enable_auto_sell.ontouchend = enable_auto_sell;
-
 // Enable/Disable auto buy
-var $disable_auto_buy = $('#disable_auto_buy');
-var $enable_auto_buy = $('#enable_auto_buy');
-var auto_buy_disabled_find = /[\b\s]auto_buy_disabled\b/;
-
-var disable_auto_buy = function(event) {
+var $disable_auto_buy = $('#disable_auto_buy').onclick = function(event) {
 	if ( event ) {
 		event.preventDefault();
 	}
@@ -660,37 +599,29 @@ var disable_auto_buy = function(event) {
 	window.disable_auto_buy();
 };
 
-evts.auto_buy_disabled = function() {
-	$main.className += ' auto_buy_disabled';
+var $enable_auto_buy = $('#enable_auto_buy').onclick = function() {
+	window.enable_auto_buy();
 };
 
-var enable_auto_buy = function() {
-	window.enable_auto_buy();
+var auto_buy_disabled_find = /[\b\s]auto_buy_disabled\b/;
+
+evts.auto_buy_disabled = function() {
+	$main.className += ' auto_buy_disabled';
 };
 
 evts.auto_buy_enabled = function() {
 	$main.className = $main.className.replace(auto_buy_disabled_find, '');
 };
 
-$disable_auto_buy.onclick = disable_auto_buy;
-$disable_auto_buy.ontouchend = disable_auto_buy;
-
-$enable_auto_buy.onclick = enable_auto_buy;
-$enable_auto_buy.ontouchend = enable_auto_buy;
-
 //Sell
-var $sell = $('#sell');
-
-var sell = function(event) {
+$('#sell').onclick = function(event) {
 	event.preventDefault();
 
 	window.sell();
 };
 
-$sell.onclick = sell;
-$sell.ontouchend = sell;
-
-function ExportAs() {
+// Save
+$('#download_save').onclick = function() {
 	var save_data = ui.game.saves();
 	ui.game.save_manager.active_saver.save(save_data);
 	var saveAsBlob = new Blob([ save_data ], { type: 'text/plain' });
@@ -709,33 +640,27 @@ function ExportAs() {
 	}
 
 	downloadLink.click();
-}
-$('#download_save').onclick = ExportAs;
+};
 
-var $import_button = $('#import_button');
-
-function Export() {
+$('#export_save').onclick = function() {
 	var save_data = ui.game.saves();
 	ui.game.save_manager.active_saver.save(save_data);
-	$import_button.style.display = "none";
+	$('#import_button').style.display = "none";
 	$("#txtImportExport").value = save_data;
 	$("#txtImportExport").select();
 	$("#Import_Export_dialog").showModal();
-}
-$('#export_save').onclick = Export;
+};
 
-function ShowImport() {
-	$import_button.style.display = null;
+$('#import_save').onclick = function() {
+	$('#import_button').style.display = null;
 	$("#txtImportExport").value = "";
 	$("#Import_Export_dialog").showModal();
-}
-$('#import_save').onclick = ShowImport;
+};
 
-function Import() {
+$('#import_button').onclick = function() {
 	ui.game.loads($("#txtImportExport").value);
 	$("#txtImportExport").value = "";
-}
-$import_button.onclick = Import;
+};
 
 $('#reset_game').onclick = function() {
 	if (confirm("confirm reset game?")){
@@ -744,7 +669,9 @@ $('#reset_game').onclick = function() {
 	}
 }
 
-$('#Import_Export_close_button').onclick = function() { $('#Import_Export_dialog').close() }
+$('#Import_Export_close_button').onclick = function() {
+	$('#Import_Export_dialog').close()
+}
 
 /////////////////////////////
 // Pure UI
@@ -778,7 +705,7 @@ var _show_page = function(section, id, notrack) {
 	}
 };
 
-var show_page = function(event) {
+$main.delegate('nav', 'click', function(event) {
 	if ( event ) {
 		event.preventDefault();
 	}
@@ -786,52 +713,35 @@ var show_page = function(event) {
 	var id = this.getAttribute('data-page');
 	var section = this.getAttribute('data-section');
 	_show_page(section, id);
-};
-
-$main.delegate('nav', 'click', show_page);
-$main.delegate('nav', 'touchend', show_page);
+});
 
 // TODO: Save preference
 // Nav more/less
-var $nav_more = $('#nav_more');
-var $nav_less = $('#nav_less');
 var nav_more_find = /[\s\b]nav_more\b/;
-var nav_more = function(event) {
+
+$('#nav_more').onclick = function(event) {
 	event.preventDefault();
 	$main.className += ' nav_more';
 };
 
-$nav_more.onclick = nav_more;
-$nav_more.ontouchend = nav_more;
-
-var nav_less = function(event) {
+$('#nav_less').onclick = function(event) {
 	event.preventDefault();
 	$main.className = $main.className.replace(nav_more_find, '');
 };
 
-$nav_less.onclick = nav_less;
-$nav_less.ontouchend = nav_less;
-
 // TODO: Save preference
 // Stats more/less
-var $show_more_stats = $('#show_more_stats');
-var $hide_more_stats = $('#hide_more_stats');
 var show_more_stats_find = /[\s\b]show_more_stats\b/;
-var show_more_stats = function(event) {
+
+$('#show_more_stats').onclick = function(event) {
 	event.preventDefault();
 	$main.className += ' show_more_stats';
 };
 
-$show_more_stats.onclick = show_more_stats;
-$show_more_stats.ontouchend = show_more_stats;
-
-var hide_more_stats = function(event) {
+$('#hide_more_stats').onclick = function(event) {
 	event.preventDefault();
 	$main.className = $main.className.replace(show_more_stats_find, '');
 };
-
-$hide_more_stats.onclick = hide_more_stats;
-$hide_more_stats.ontouchend = hide_more_stats;
 
 // Show spoilers
 var has_spoiler_find = /\bhas_spoiler\b/;

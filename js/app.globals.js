@@ -25,13 +25,6 @@ Element.prototype.delegate = function(className, type, fn) {
 
 	if ( type === 'focus' || type === 'blur' ) {
 		this.addEventListener(type, onfn, true);
-	} else if ( type === 'click' ) {
-		this['on' + type] = onfn;
-
-		// Since we can't know ahead of time if this is a touch device
-		//if ( is_touch ) {
-		this['ontouchend'] = onfn;
-		//}
 	} else {
 		this['on' + type] = onfn;
 	}
