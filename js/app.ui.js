@@ -35,6 +35,16 @@ var perc = function(numerator, denominator, dom) {
 	dom.style.width = percent + '%';
 };
 
+var update_heat_background = function (current_heat, max_heat) {
+	if ( current_heat <= max_heat ) {
+		$reactor.style.backgroundColor = 'transparent';
+	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
+		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
+	} else {
+		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
+	}
+}
+
 var var_objs = {
 	manual_heat_reduce: {
 		onupdate: function() {
@@ -81,13 +91,7 @@ var var_objs = {
 			var current_heat = current_vars.current_heat;
 			var max_heat = current_vars.max_heat;
 
-			if ( current_heat <= max_heat ) {
-				$reactor.style.backgroundColor = 'transparent';
-			} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
-				$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
-			} else {
-				$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
-			}
+			update_heat_background(current_heat, max_heat)
 		}
 	},
 	total_heat: {
@@ -98,8 +102,13 @@ var var_objs = {
 		dom: $('#max_heat'),
 		num: true,
 		onupdate: function() {
+			var current_heat = current_vars.current_heat;
+			var max_heat = current_vars.max_heat;
+
 			perc('current_heat', 'max_heat', $heat_percentage);
 			$auto_heat_reduce.innerHTML = '-' + (fmt(current_vars.max_heat/10000));
+
+			update_heat_background(current_heat, max_heat)
 		}
 	},
 	exotic_particles: {
