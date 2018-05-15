@@ -21,7 +21,6 @@ unshift vents - vent6 power issue?
 figure out reflector experiment upgrade
 finish help section
 Statistics
-full reset
 idle countdown timer & upgrades
 Hotkeys for place part, delete/sell all, close tooltip, focus navs, pages, pause, etc
 multiple reactors
