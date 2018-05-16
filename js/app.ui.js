@@ -630,6 +630,13 @@ $('#sell').onclick = function(event) {
 };
 
 // Save
+$('#trigger_save').onclick = function() {
+	ui.game.save_manager.active_saver.save(ui.game.saves());
+
+	// TODO: replace with a nice tooltip/notification
+	alert("Game saved")
+}
+
 $('#download_save').onclick = function() {
 	var save_data = ui.game.saves();
 	ui.game.save_manager.active_saver.save(save_data);
