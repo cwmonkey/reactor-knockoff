@@ -258,8 +258,7 @@ menu {
 	background-clip: padding-box;
 }
 
-#more_stats,
-#more_nav {
+#more_stats {
 	display: none;
 }
 
@@ -593,8 +592,10 @@ menu {
 ////////////////////////// */
 
 #nav {
-	position: relative;
 	height: 100%;
+	display: flex;
+	place-content: space-between;
+	flex-wrap: wrap;
 }
 
 #reactor_upgrades .explanitory button,
@@ -662,22 +663,21 @@ body:before {
 	background-color: #91a1c8;
 }
 
+.flex_nav {
+	display: flex;
+	place-content: space-between;
+	flex-direction: column;
+}
+
 #controls_nav {
-	position: absolute;
-	top: 0;
-	right: 0;
+	text-align: right;
 }
 
 #pages_nav {
-	position: absolute;
-	bottom: 0;
-	left: 0;
 }
 
 #controls_nav button {
 	margin-bottom: 4px;
-	clear: both;
-	float: right;
 }
 
   /* //////////////////////////
@@ -1740,10 +1740,6 @@ body:before {
 		float: none;
 	}
 
-	#main #game_nav {
-		display: none;
-	}
-
 	#main #pages_nav,
 	#main #game_nav,
 	#main #controls_nav {
@@ -1755,23 +1751,6 @@ body:before {
 		border-image: url("../img/medium_panel.png") 2 2 stretch;
 		padding: 10px 6px 6px 12px;
 		position: relative;
-	}
-
-	#main #more_nav {
-		position: absolute;
-		top: 0;
-		right: 0;
-		display: block;
-	}
-
-	#main.nav_more #nav_more,
-	#main #nav_less {
-		display: none;
-	}
-
-	#main.nav_more #nav_less,
-	#main.nav_more #game_nav {
-		display: block;
 	}
 
 	/* /Touch? */
@@ -1792,15 +1771,6 @@ body:before {
 
 	#tooltip_description {
 		display: inline;
-	}
-
-	#more_nav button {
-		border-top: 0;
-		border-right: 0;
-		vertical-align: top;
-		padding: 8px 4px 4px 0;
-		font-family: monospace;
-		margin: 0;
 	}
 
 	#main #parts_section,

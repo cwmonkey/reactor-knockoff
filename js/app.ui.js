@@ -732,23 +732,6 @@ $main.delegate('nav', 'click', function(event) {
 });
 
 // TODO: Save preference
-// Nav more/less
-create_toggle_button('#nav_toggle', '[+]', '[-]')(
-	()=>$main.classList.contains('nav_more'),
-	function(event) {
-		event.preventDefault();
-		$main.classList.remove('nav_more');
-		toggle_buttons['#nav_toggle']();
-	},
-	function(event) {
-		event.preventDefault();
-		$main.classList.add('nav_more');
-		toggle_buttons['#nav_toggle']();
-	}
-);
-toggle_buttons['#nav_toggle']()
-
-// TODO: Save preference
 // Stats more/less
 create_toggle_button('#more_stats_toggle', '[+]', '[-]')(
 	()=>$main.classList.contains('show_more_stats'),
