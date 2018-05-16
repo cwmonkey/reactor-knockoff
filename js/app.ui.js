@@ -557,10 +557,10 @@ $('#tooltip_close').onclick = function() {
 var toggle_buttons = {};
 
 var create_toggle_button = function(button, enable_text, disable_text) {
-	var $button = $(button)
+	var $button = $(button);
 	return (disabled, enable_callback, disable_callback) => {
 		var update_text = () => $button.textContent = !disabled() ? enable_text : disable_text;
-		toggle_buttons[button] = update_text
+		toggle_buttons[button] = update_text;
 		$button.onclick = (event) => {
 			disabled() ? enable_callback(event) : disable_callback(event);
 		};
@@ -634,7 +634,7 @@ $('#trigger_save').onclick = function() {
 	ui.game.save_manager.active_saver.save(ui.game.saves());
 
 	// TODO: replace with a nice tooltip/notification
-	alert("Game saved")
+	alert("Game saved");
 }
 
 $('#download_save').onclick = function() {
@@ -686,7 +686,7 @@ $('#reset_game').onclick = function() {
 }
 
 $('#Import_Export_close_button').onclick = function() {
-	$('#Import_Export_dialog').close()
+	$('#Import_Export_dialog').close();
 }
 
 /////////////////////////////
@@ -738,12 +738,12 @@ create_toggle_button('#nav_toggle', '[+]', '[-]')(
 	function(event) {
 		event.preventDefault();
 		$main.classList.remove('nav_more');
-		toggle_buttons['#nav_toggle']()
+		toggle_buttons['#nav_toggle']();
 	},
 	function(event) {
 		event.preventDefault();
 		$main.classList.add('nav_more');
-		toggle_buttons['#nav_toggle']()
+		toggle_buttons['#nav_toggle']();
 	}
 );
 toggle_buttons['#nav_toggle']()
@@ -755,15 +755,15 @@ create_toggle_button('#more_stats_toggle', '[+]', '[-]')(
 	function(event) {
 		event.preventDefault();
 		$main.classList.remove('show_more_stats');
-		toggle_buttons['#more_stats_toggle']()
+		toggle_buttons['#more_stats_toggle']();
 	},
 	function(event) {
 		event.preventDefault();
 		$main.classList.add('show_more_stats');
-		toggle_buttons['#more_stats_toggle']()
+		toggle_buttons['#more_stats_toggle']();
 	}
 );
-toggle_buttons['#more_stats_toggle']()
+toggle_buttons['#more_stats_toggle']();
 
 // Show spoilers
 var has_spoiler_find = /\bhas_spoiler\b/;
