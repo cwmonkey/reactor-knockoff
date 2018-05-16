@@ -2386,9 +2386,10 @@ var game_loop = function() {
 	// Reduce reactor heat parts
 	if ( game.heat_controlled ) {
 		if (game.current_heat > max_heat) {
-			max_shared_heat = (game.current_heat - max_heat) /stat_outlet;
+			max_shared_heat = (game.current_heat - max_heat) / stat_outlet;
 		} else {
-			max_shared_heat = heat_add /stat_outlet;
+			// Don't remove any heat when not in danger of overheating
+			max_shared_heat = 0;
 		}
 	} else {
 		max_shared_heat = game.current_heat / stat_outlet;
@@ -2555,18 +2556,8 @@ var game_loop = function() {
 	if ( game.current_heat > 0 ) {
 		// TODO: Set these variables up in update tiles
 		if ( game.current_heat <= max_heat ) {
+			// Heat Control Operator should not interfere with passive heat loss
 			reduce_heat = max_heat / 10000;
-
-			if ( game.heat_controlled ) {
-				if ( heat_add - heat_remove < reduce_heat ) {
-					if ( heat_add - heat_remove > 0 ){
-						reduce_heat = heat_add - heat_remove;
-					} else {
-						// Prevent additional of heat
-						reduce_heat = 0
-					}
-				}
-			}
 		} else {
 			reduce_heat = (game.current_heat - max_heat) / 20;
 			if ( reduce_heat < max_heat / 10000 ) {
