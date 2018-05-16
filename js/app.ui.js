@@ -6,6 +6,8 @@ var UI = function() {
 
 	this.init = function(game) {
 		this.game = game;
+		Object.values(toggle_buttons).forEach((f)=>f())
+		setTimeout(update_interface, update_interface_interval);
 	}
 };
 
@@ -279,8 +281,6 @@ var update_interface = function() {
 	//console.log(performance.now() - start_ui_loop);
 };
 ui.update_interface = update_interface;
-
-setTimeout(update_interface, update_interface_interval);
 
 /////////////////////////////
 // Listen to app events
