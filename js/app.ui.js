@@ -733,31 +733,37 @@ $main.delegate('nav', 'click', function(event) {
 
 // TODO: Save preference
 // Nav more/less
-var nav_more_find = /[\s\b]nav_more\b/;
-
-$('#nav_more').onclick = function(event) {
-	event.preventDefault();
-	$main.className += ' nav_more';
-};
-
-$('#nav_less').onclick = function(event) {
-	event.preventDefault();
-	$main.className = $main.className.replace(nav_more_find, '');
-};
+create_toggle_button('#nav_toggle', '[+]', '[-]')(
+	()=>$main.classList.contains('nav_more'),
+	function(event) {
+		event.preventDefault();
+		$main.classList.remove('nav_more');
+		toggle_buttons['#nav_toggle']()
+	},
+	function(event) {
+		event.preventDefault();
+		$main.classList.add('nav_more');
+		toggle_buttons['#nav_toggle']()
+	}
+);
+toggle_buttons['#nav_toggle']()
 
 // TODO: Save preference
 // Stats more/less
-var show_more_stats_find = /[\s\b]show_more_stats\b/;
-
-$('#show_more_stats').onclick = function(event) {
-	event.preventDefault();
-	$main.className += ' show_more_stats';
-};
-
-$('#hide_more_stats').onclick = function(event) {
-	event.preventDefault();
-	$main.className = $main.className.replace(show_more_stats_find, '');
-};
+create_toggle_button('#more_stats_toggle', '[+]', '[-]')(
+	()=>$main.classList.contains('show_more_stats'),
+	function(event) {
+		event.preventDefault();
+		$main.classList.remove('show_more_stats');
+		toggle_buttons['#more_stats_toggle']()
+	},
+	function(event) {
+		event.preventDefault();
+		$main.classList.add('show_more_stats');
+		toggle_buttons['#more_stats_toggle']()
+	}
+);
+toggle_buttons['#more_stats_toggle']()
 
 // Show spoilers
 var has_spoiler_find = /\bhas_spoiler\b/;
