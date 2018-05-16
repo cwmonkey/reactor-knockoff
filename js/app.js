@@ -2041,6 +2041,12 @@ $reactor.delegate('tile', 'click', function(e) {
 	}
 });
 
+var hotkeys = window.hotkeys;
+window.hotkeys = null;
+
+hotkeys.init(game);
+game.hotkeys = hotkeys;
+
 var last_click = null;
 var double_click_tile = null;
 var double_click_tile_part = null;
@@ -2050,63 +2056,23 @@ var clear_double_click = function() {
 	double_click_tile_part = null;
 };
 
-$reactor.delegate('tile', 'mousedown', function(e) {
-	tile_mousedown = true;
-	tile_mousedown_right = e.which === 3;
+var part_replacement_result;
+var tiles;
+
+var click_func = function(e) {
+	part_replacement_result = undefined;
 
 	if ( e.shiftKey && e.ctrlKey && e.altKey ) {
-		// Figure out whether to place on the first tile of the row
-		// ie: if it's an even or odd tile pattern
-		var placement, toggle;
-		placement = !((this.tile.row%2)^(this.tile.col%2));
-		for ( ri = 0; ri < game.rows; ri++ ) {
-			// TODO: better name?
-			toggle = placement;
-			row = game.tiles[ri];
-			for ( ci = 0; ci < game.cols; ci++ ) {
-				if (toggle){
-					tile = row[ci];
-					mouse_apply_to_tile.call(tile.$el, e, true);
-				}
-				toggle = !toggle;
-			}
-			// for next row first tile
-			placement = !placement;
-		}
-		update_tiles();
+		return hotkeys.checker(this.tile);
 	} else if ( e.shiftKey && e.ctrlKey ) {
-		row = game.tiles[this.tile.row];
-		// TODO: more hotkeys for different spacing
-		for ( ci = this.tile.col%2; ci < game.cols; ci+=2 ) {
-			tile = row[ci];
-			mouse_apply_to_tile.call(tile.$el, e, true);
-		}
-		update_tiles();
+		return hotkeys.shift_row(this.tile);
 	} else if ( e.shiftKey && e.altKey ) {
-		// TODO: more hotkeys for different spacing
-		for ( ri = this.tile.row%2; ri < game.rows; ri+=2 ) {
-			row = game.tiles[ri];
-			tile = row[this.tile.col];
-			mouse_apply_to_tile.call(tile.$el, e, true);
-		}
-		update_tiles();
+		return hotkeys.shift_column(this.tile);
 	} else if ( e.ctrlKey ) {
-		row = game.tiles[this.tile.row];
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-			mouse_apply_to_tile.call(tile.$el, e, true);
-		}
-		update_tiles();
+		return hotkeys.row(this.tile);
 	} else if ( e.altKey ) {
-		for ( ri = 0; ri < game.rows; ri++ ) {
-			row = game.tiles[ri];
-			tile = row[this.tile.col];
-			mouse_apply_to_tile.call(tile.$el, e, true);
-		}
-		update_tiles();
+		return hotkeys.column(this.tile);
 	} else if ( e.shiftKey || ( double_click_tile && last_click === e.which && double_click_tile === this.tile ) ) {
-		var ri, ci, row, tile;
-		var part_replacement_result
 		if ( e.shiftKey ){
 			var part = this.tile.part;
 		} else {
@@ -2114,34 +2080,26 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 			var part = double_click_tile_part;
 		}
 
-		if ( part ){
-			var level = part.part.level;
-			var type = part.part.type;
-			var category = part.part.category;
-			var ticks = this.tile.ticks;
+		if ( tile_mousedown_right && part ) {
+			return hotkeys.remover.call(this);
+
+		} else if ( !tile_mousedown_right ) {
+			part_replacement_result = part_replaceable(part);
+			return hotkeys.replacer.call(this);
 		}
 
-		if ( (tile_mousedown_right && part)
-		     || (!tile_mousedown_right && (part_replacement_result=part_replaceable(part))) ){
-			// All matching tiles
-			for ( ri = 0; ri < game.rows; ri++ ) {
-				row = game.tiles[ri];
+	}
+};
 
-				for ( ci = 0; ci < game.cols; ci++ ) {
-					tile = row[ci];
-					if ( !tile_mousedown_right && part === tile.part ) {
-						mouse_apply_to_tile.call(tile.$el, e, true, part_replacement_result);
-					} else if (
-						tile_mousedown_right
-						&& part == tile.part
-						&& ( !tile.part.part.base_ticks || ticks || !tile.ticks )
-					) {
-						mouse_apply_to_tile.call(tile.$el, e, true);
-					}
-				}
-			}
-			update_tiles();
+$reactor.delegate('tile', 'mousedown', function(e) {
+	tile_mousedown = true;
+	tile_mousedown_right = e.which === 3;
+
+	if ( tiles = click_func.call(this, e) ) {
+		for ( const tile of tiles ) {
+			mouse_apply_to_tile.call(tile.$el, e, true, part_replacement_result);
 		}
+		update_tiles();
 	} else {
 		// Store tile part for finding matching tiles in double click
 		double_click_tile_part = this.tile.part;
@@ -2162,7 +2120,14 @@ $reactor.onmouseleave = tile_mouseup_fn;
 
 $reactor.delegate('tile', 'mousemove', function(e) {
 	if ( tile_mousedown ) {
-		mouse_apply_to_tile.call(this, e);
+		if ( tiles = click_func.call(this, e) ) {
+			for ( const tile of tiles ) {
+				mouse_apply_to_tile.call(tile.$el, e, true, part_replacement_result);
+			}
+			update_tiles();
+		} else {
+			mouse_apply_to_tile.call(this, e);
+		}
 	}
 });
 
