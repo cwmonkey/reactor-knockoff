@@ -924,7 +924,6 @@ ui.say('var', 'max_heat', max_heat);
 ui.say('var', 'max_power', max_power);
 
 // create tiles
-var $row;
 for ( ri = 0; ri < game.max_rows; ri++ ) {
 	ui.say('evt', 'row_added', ri);
 	row = [];
