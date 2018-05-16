@@ -103,6 +103,8 @@ var Game = function() {
 	this.stats_power;
 	this.stats_cash = 0;
 	this.paused = false;
+	this.auto_sell_disabled = false;
+	this.auto_buy_disabled = false;
 	this.has_melted_down = false;
 	this.current_money = 0;
 	this.exotic_particles = 0;
@@ -135,8 +137,6 @@ var power_multiplier;
 var heat_multiplier;
 var protium_particles;
 
-var auto_sell_disabled = false;
-var auto_buy_disabled = false;
 var total_exotic_particles = 0;
 
 var set_defaults = function() {
@@ -326,8 +326,8 @@ var saves = function() {
 			current_exotic_particles: game.current_exotic_particles,
 			total_exotic_particles: total_exotic_particles,
 			paused: game.paused,
-			auto_sell_disabled: auto_sell_disabled,
-			auto_buy_disabled: auto_buy_disabled,
+			auto_sell_disabled: game.auto_sell_disabled,
+			auto_buy_disabled: game.auto_buy_disabled,
 			protium_particles: protium_particles,
 			current_objective: current_objective,
 			version: game.version
@@ -366,8 +366,8 @@ var loads = function(rks) {
 		game.paused = rks.paused || game.paused;
 		current_objective = rks.current_objective || current_objective;
 
-		auto_sell_disabled = rks.auto_sell_disabled || auto_sell_disabled;
-		auto_buy_disabled = rks.auto_buy_disabled || auto_buy_disabled;
+		game.auto_sell_disabled = rks.auto_sell_disabled || game.auto_sell_disabled;
+		game.auto_buy_disabled = rks.auto_buy_disabled || game.auto_buy_disabled;
 		protium_particles = rks.protium_particles || protium_particles;
 
 		var save_version = rks.version || null;
@@ -378,13 +378,13 @@ var loads = function(rks) {
 			unpause();
 		}
 
-		if ( auto_sell_disabled ) {
+		if ( game.auto_sell_disabled ) {
 			disable_auto_sell();
 		} else {
 			enable_auto_sell();
 		}
 
-		if ( auto_buy_disabled ) {
+		if ( game.auto_buy_disabled ) {
 			disable_auto_buy();
 		} else {
 			enable_auto_buy();
@@ -1986,23 +1986,23 @@ window.unpause = function() {
 
 // Enable/Disable auto sell (Decoupled)
 window.disable_auto_sell = function() {
-	auto_sell_disabled = true;
+	game.auto_sell_disabled = true;
 	ui.say('evt', 'auto_sell_disabled');
 };
 
 window.enable_auto_sell = function() {
-	auto_sell_disabled = false;
+	game.auto_sell_disabled = false;
 	ui.say('evt', 'auto_sell_enabled');
 };
 
 // Enable/Disable auto buy
 window.disable_auto_buy = function() {
-	auto_buy_disabled = true;
+	game.auto_buy_disabled = true;
 	ui.say('evt', 'auto_buy_disabled');
 };
 
 window.enable_auto_buy = function() {
-	auto_buy_disabled = false;
+	game.auto_buy_disabled = false;
 	ui.say('evt', 'auto_buy_enabled');
 };
 
@@ -2264,7 +2264,7 @@ var game_loop = function() {
 
 								// TODO: dedupe this and cell ticks
 								if ( tile_reflector.ticks === 0 ) {
-									if ( auto_buy_disabled !== true && tile_reflector.part.perpetual && game.current_money >= tile_reflector.part.cost ) {
+									if ( game.auto_buy_disabled !== true && tile_reflector.part.perpetual && game.current_money >= tile_reflector.part.cost ) {
 										// auto replenish reflector
 										game.current_money -= tile_reflector.part.cost;
 										ui.say('var', 'current_money', game.current_money);
@@ -2281,7 +2281,7 @@ var game_loop = function() {
 						}
 
 						if ( tile.ticks === 0 ) {
-							if ( auto_buy_disabled !== true && tile.part.perpetual && game.current_money >= tile.part.cost * 1.5 ) {
+							if ( game.auto_buy_disabled !== true && tile.part.perpetual && game.current_money >= tile.part.cost * 1.5 ) {
 								// auto replenish cell
 								game.current_money -= tile.part.cost * 1.5;
 								ui.say('var', 'current_money', game.current_money);
@@ -2647,7 +2647,7 @@ var game_loop = function() {
 				}
 
 				if ( tile.heat_contained > tile.part.containment ) {
-					if ( auto_buy_disabled !== true && tile.heat <= 0 && tile.part.category === 'capacitor' && game.upgrade_objects['perpetual_capacitors'].level > 0 && game.current_money >= tile.part.cost * 10 ) {
+					if ( game.auto_buy_disabled !== true && tile.heat <= 0 && tile.part.category === 'capacitor' && game.upgrade_objects['perpetual_capacitors'].level > 0 && game.current_money >= tile.part.cost * 10 ) {
 						game.current_money -= tile.part.cost * 10;
 						heat_add_next_loop += tile.heat_contained;
 						tile.setHeat_contained(0);
@@ -2671,7 +2671,7 @@ var game_loop = function() {
 	}
 
 	// Auto Sell
-	if ( !auto_sell_disabled ) {
+	if ( !game.auto_sell_disabled ) {
 		sell_amount = Math.ceil(max_power * game.auto_sell_multiplier);
 		if ( sell_amount ) {
 			if ( sell_amount > current_power ) {

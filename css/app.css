@@ -680,21 +680,6 @@ body:before {
 	float: right;
 }
 
-#main.paused #pause,
-#unpause,
-#main.auto_sell_disabled #disable_auto_sell,
-#main.auto_buy_disabled #disable_auto_buy,
-#enable_auto_sell,
-#enable_auto_buy {
-	display: none !important;
-}
-
-#main.paused #unpause,
-#main.auto_sell_disabled #enable_auto_sell,
-#main.auto_buy_disabled #enable_auto_buy {
-	display: inline-block !important;
-}
-
   /* //////////////////////////
  // Pages
 ////////////////////////// */

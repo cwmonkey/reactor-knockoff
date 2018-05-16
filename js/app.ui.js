@@ -551,76 +551,76 @@ $('#tooltip_close').onclick = function() {
 };
 
 /////////////////////////////
-// Misc UI
+// Toggle UI
 /////////////////////////////
 
-// Pause
-$('#pause').onclick = function(event) {
-	event.preventDefault();
+var toggle_buttons = {};
 
-	window.pause();
+var create_toggle_button = function(button, enable_text, disable_text) {
+	var $button = $(button)
+	return (disabled, enable_callback, disable_callback) => {
+		var update_text = () => $button.textContent = !disabled() ? enable_text : disable_text;
+		toggle_buttons[button] = update_text
+		$button.onclick = (event) => {
+			disabled() ? enable_callback(event) : disable_callback(event);
+		};
+	};
 };
 
-evts.paused = function() {
-	$main.className += ' paused';
-};
+// Pause/Unpause
+create_toggle_button('#pause_toggle', 'Pause', 'Unpause')(
+	()=>ui.game.paused,
+	function(event) {
+		event.preventDefault();
+		window.unpause();
+	},
+	function(event) {
+		event.preventDefault();
+		window.pause();
+	}
+);
 
-// Unpause
-$('#unpause').onclick = function(event) {
-	event.preventDefault();
+evts.paused = toggle_buttons['#pause_toggle'];
 
-	window.unpause();
-};
-
-var pause_replace = /[\b\s]paused\b/;
-
-evts.unpaused = function() {
-	$main.className = $main.className.replace(pause_replace, '');
-};
+evts.unpaused = toggle_buttons['#pause_toggle'];
 
 // Enable/Disable auto sell
-$('#disable_auto_sell').onclick = function(event) {
-	event.preventDefault();
-	window.disable_auto_sell();
-};
+create_toggle_button('#auto_sell_toggle', 'Disable Auto Sell', 'Enable Auto Sell')(
+	()=>ui.game.auto_sell_disabled,
+	function(event) {
+		event.preventDefault();
+		window.enable_auto_sell();
+	},
+	function(event) {
+		event.preventDefault();
+		window.disable_auto_sell();
+	}
+);
 
-$('#enable_auto_sell').onclick = function(event) {
-	event.preventDefault();
-	window.enable_auto_sell();
-};
+evts.auto_sell_disabled = toggle_buttons['#auto_sell_toggle'];
 
-var auto_sell_disabled_find = /[\b\s]auto_sell_disabled\b/;
-
-evts.auto_sell_disabled = function() {
-	$main.className += ' auto_sell_disabled';
-};
-
-evts.auto_sell_enabled = function() {
-	$main.className = $main.className.replace(auto_sell_disabled_find, '');
-};
+evts.auto_sell_enabled = toggle_buttons['#auto_sell_toggle'];
 
 // Enable/Disable auto buy
-var $disable_auto_buy = $('#disable_auto_buy').onclick = function(event) {
-	if ( event ) {
+create_toggle_button('#auto_buy_toggle', 'Disable Auto Buy', 'Enable Auto Buy')(
+	()=>ui.game.auto_buy_disabled,
+	function(event) {
 		event.preventDefault();
+		window.enable_auto_buy();
+	},
+	function(event) {
+		event.preventDefault();
+		window.disable_auto_buy();
 	}
+);
 
-	window.disable_auto_buy();
-};
+evts.auto_buy_disabled = toggle_buttons['#auto_buy_toggle'];
 
-var $enable_auto_buy = $('#enable_auto_buy').onclick = function() {
-	window.enable_auto_buy();
-};
+evts.auto_buy_enabled = toggle_buttons['#auto_buy_toggle'];
 
-var auto_buy_disabled_find = /[\b\s]auto_buy_disabled\b/;
-
-evts.auto_buy_disabled = function() {
-	$main.className += ' auto_buy_disabled';
-};
-
-evts.auto_buy_enabled = function() {
-	$main.className = $main.className.replace(auto_buy_disabled_find, '');
-};
+/////////////////////////////
+// Misc UI
+/////////////////////////////
 
 //Sell
 $('#sell').onclick = function(event) {
