@@ -642,18 +642,17 @@ $('#download_save').onclick = function() {
 	ui.game.save_manager.active_saver.save(save_data);
 	var saveAsBlob = new Blob([ save_data ], { type: 'text/plain' });
 	var downloadLink = document.createElement("a");
+
 	downloadLink.download = "reactor_knockoff_save.base64";
 	downloadLink.innerHTML = "Download File";
-	if (window.webkitURL != null) {
-		// Chrome allows the link to be clicked without actually adding it to the DOM.
-		downloadLink.href = window.webkitURL.createObjectURL(saveAsBlob);
-	} else {
-		// Firefox requires the link to be added to the DOM before it can be clicked.
-		downloadLink.href = window.URL.createObjectURL(saveAsBlob);
-		downloadLink.onclick = destroyClickedElement;
-		downloadLink.style.display = "none";
-		document.body.appendChild(downloadLink);
-	}
+	downloadLink.href = URL.createObjectURL(saveAsBlob);
+	downloadLink.onclick = (event) => {
+		// clean up blob after the browser get it
+		setTimeout(URL.revokeObjectURL, 100, event.target.href);
+		document.body.removeChild(event.target)
+	};
+	downloadLink.style.display = "none";
+	document.body.appendChild(downloadLink);
 
 	downloadLink.click();
 };
