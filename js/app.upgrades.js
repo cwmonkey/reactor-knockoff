@@ -39,7 +39,7 @@ window.upgrades = function(game) {
 		{
 			id: 'heat_outlet_control_operator',
 			type: 'other',
-			title: 'Heat Outlet Control Operator',
+			title: 'Better Heat Control Operator',
 			description: 'Your reactor outlets no longer output more heat than what the connected vents can handle.',
 			erequires: 'heat_control_operator',
 			// TODO: Figure out a good price for this
