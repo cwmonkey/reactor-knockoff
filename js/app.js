@@ -15,7 +15,6 @@ browser testing
 when placed, change tooltip/focus to tile
 Add "purchase" to tooltip for upgrades?
 Add "sell all of type" button
-disable heat controller button?
 saving/loading indicator, cancel save/load button
 unshift vents - vent6 power issue?
 figure out reflector experiment upgrade
