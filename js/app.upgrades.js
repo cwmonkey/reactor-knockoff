@@ -37,6 +37,19 @@ window.upgrades = function(game) {
 			}
 		},
 		{
+			id: 'heat_outlet_control_operator',
+			type: 'other',
+			title: 'Heat Outlet Control Operator',
+			description: 'Your reactor outlets no longer output more heat than what the connected vents can handle.',
+			erequires: 'heat_control_operator',
+			// TODO: Figure out a good price for this
+			cost: 10000000,
+			levels: 1,
+			onclick: function(upgrade) {
+				game.heat_outlet_controlled = upgrade.level;
+			}
+		},
+		{
 			id: 'improved_piping',
 			type: 'other',
 			title: 'Improved Piping',

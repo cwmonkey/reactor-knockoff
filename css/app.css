@@ -1326,6 +1326,7 @@ body:before {
 	background-image: url("../img/upgrade_flux.gif");
 }
 
+#heat_outlet_control_operator.upgrade .image:after,
 #heat_control_operator.upgrade .image:after {
 	background-image: url("../img/upgrade_computer.gif");
 }

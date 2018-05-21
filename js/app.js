@@ -157,6 +157,7 @@ var set_defaults = function() {
 	game.transfer_plating_multiplier = 0;
 	game.heat_power_multiplier = 0;
 	game.heat_controlled = 0;
+	game.heat_outlet_controlled = 0;
 	game.altered_max_heat = game.base_max_heat;
 	game.altered_max_power = game.base_max_power;
 	protium_particles = 0;
@@ -576,6 +577,8 @@ var Tile = function(row, col) {
 
 	this.addProperty('heat_contained', 0);
 	this.addProperty('ticks', 0);
+
+	Object.defineProperty(this, 'vent', { get: () => this.part.vent ? this.part.vent * (1 + vent_multiplier / 100) : undefined });
 };
 
 Tile.prototype.addProperty = addProperty;
@@ -2518,6 +2521,9 @@ var game_loop = function() {
 							tile_containment.setHeat_contained(tile_containment.heat_contained + (shared_heat / 2));
 							power_add += shared_heat / 2;
 						} else {
+							if ( game.heat_outlet_controlled && tile_containment.vent ) {
+								shared_heat = Math.min(shared_heat, tile_containment.vent-tile_containment.heat_contained)
+							}
 							tile_containment.setHeat_contained(tile_containment.heat_contained + shared_heat);
 						}
 
