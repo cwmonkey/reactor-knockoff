@@ -2118,7 +2118,7 @@ $reactor.onmouseup = tile_mouseup_fn;
 $reactor.onmouseleave = tile_mouseup_fn;
 
 $reactor.delegate('tile', 'mousemove', function(e) {
-	if ( tile_mousedown ) {
+	if ( tile_mousedown && double_click_tile != this.tile ) {
 		if ( tiles = click_func.call(this, e) ) {
 			for ( const tile of tiles ) {
 				mouse_apply_to_tile.call(tile.$el, e, true, part_replacement_result);
