@@ -6,7 +6,7 @@ var UI = function() {
 
 	this.init = function(game) {
 		this.game = game;
-		Object.values(toggle_buttons).forEach((f)=>f())
+		Object.keys(toggle_buttons).forEach((f)=>update_button(f)())
 		setTimeout(update_interface, update_interface_interval);
 	}
 };
@@ -556,13 +556,38 @@ $('#tooltip_close').onclick = function() {
 
 var toggle_buttons = {};
 
+var toggle_buttons_saves = function() {
+	var sbuttons = {};
+	for (var button of Object.keys(toggle_buttons)) {
+		sbuttons[button] = toggle_buttons[button].state();
+	}
+	return sbuttons
+}
+ui.toggle_buttons_saves = toggle_buttons_saves;
+
+var toggle_buttons_loads = function(buttons) {
+	for (var [button, state] of Object.entries(buttons)) {
+		var button_obj = toggle_buttons[button];
+		!state ? button_obj.enable() : button_obj.disable()
+	}
+}
+ui.toggle_buttons_loads = toggle_buttons_loads;
+
+var update_button = function(button) {
+	return toggle_buttons[button]['update_text']
+}
+
 var create_toggle_button = function(button, enable_text, disable_text) {
 	var $button = $(button);
-	return (disabled, enable_callback, disable_callback) => {
-		var update_text = () => $button.textContent = !disabled() ? enable_text : disable_text;
-		toggle_buttons[button] = update_text;
+	// Initiate with some text in the button so it isn't empty when something goes wrong when starting
+	$button.textContent = enable_text;
+	return (state, enable_callback, disable_callback) => {
+		var update_text = () => $button.textContent = !state() ? enable_text : disable_text;
+		toggle_buttons[button] = {update_text: update_text, state: state,
+		                          enable: enable_callback, disable: disable_callback};
 		$button.onclick = (event) => {
-			disabled() ? enable_callback(event) : disable_callback(event);
+			event.preventDefault();
+			state() ? enable_callback() : disable_callback();
 		};
 	};
 };
@@ -570,69 +595,61 @@ var create_toggle_button = function(button, enable_text, disable_text) {
 // Pause/Unpause
 create_toggle_button('#pause_toggle', 'Pause', 'Unpause')(
 	()=>ui.game.paused,
-	function(event) {
-		event.preventDefault();
+	function() {
 		window.unpause();
 	},
-	function(event) {
-		event.preventDefault();
+	function() {
 		window.pause();
 	}
 );
 
-evts.paused = toggle_buttons['#pause_toggle'];
+evts.paused = update_button('#pause_toggle');
 
-evts.unpaused = toggle_buttons['#pause_toggle'];
+evts.unpaused = update_button('#pause_toggle');
 
 // Enable/Disable auto sell
 create_toggle_button('#auto_sell_toggle', 'Disable Auto Sell', 'Enable Auto Sell')(
 	()=>ui.game.auto_sell_disabled,
-	function(event) {
-		event.preventDefault();
+	function() {
 		window.enable_auto_sell();
 	},
-	function(event) {
-		event.preventDefault();
+	function() {
 		window.disable_auto_sell();
 	}
 );
 
-evts.auto_sell_disabled = toggle_buttons['#auto_sell_toggle'];
+evts.auto_sell_disabled = update_button('#auto_sell_toggle');
 
-evts.auto_sell_enabled = toggle_buttons['#auto_sell_toggle'];
+evts.auto_sell_enabled = update_button('#auto_sell_toggle');
 
 // Enable/Disable auto buy
 create_toggle_button('#auto_buy_toggle', 'Disable Auto Buy', 'Enable Auto Buy')(
 	()=>ui.game.auto_buy_disabled,
-	function(event) {
-		event.preventDefault();
+	function() {
 		window.enable_auto_buy();
 	},
-	function(event) {
-		event.preventDefault();
+	function() {
 		window.disable_auto_buy();
 	}
 );
 
-evts.auto_buy_disabled = toggle_buttons['#auto_buy_toggle'];
+evts.auto_buy_disabled = update_button('#auto_buy_toggle');
 
-evts.auto_buy_enabled = toggle_buttons['#auto_buy_toggle'];
+evts.auto_buy_enabled = update_button('#auto_buy_toggle');
 
 
 create_toggle_button('#heat_control_toggle', 'Disable Heat Controller', 'Enable Heat Controller')(
 	()=>!ui.game.heat_controlled,
-	function(event) {
-		event.preventDefault();
+	function() {
 		window.enable_heat_control();
 	},
-	function(event) {
-		event.preventDefault();
+	function() {
 		window.disable_heat_control();
 	}
 )
 
-evts.heat_control_disabled = toggle_buttons['#heat_control_toggle'];
-evts.heat_control_enabled = toggle_buttons['#heat_control_toggle'];
+evts.heat_control_disabled = update_button('#heat_control_toggle');
+evts.heat_control_enabled = update_button('#heat_control_toggle');
 
 /////////////////////////////
 // Misc UI
@@ -750,18 +767,16 @@ $main.delegate('nav', 'click', function(event) {
 // Stats more/less
 create_toggle_button('#more_stats_toggle', '[+]', '[-]')(
 	()=>$main.classList.contains('show_more_stats'),
-	function(event) {
-		event.preventDefault();
+	function() {
 		$main.classList.remove('show_more_stats');
-		toggle_buttons['#more_stats_toggle']();
+		update_button('#more_stats_toggle')();
 	},
-	function(event) {
-		event.preventDefault();
+	function() {
 		$main.classList.add('show_more_stats');
-		toggle_buttons['#more_stats_toggle']();
+		update_button('#more_stats_toggle')();
 	}
 );
-toggle_buttons['#more_stats_toggle']();
+update_button('#more_stats_toggle')();
 
 // Show spoilers
 var has_spoiler_find = /\bhas_spoiler\b/;

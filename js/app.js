@@ -325,9 +325,7 @@ var saves = function() {
 			exotic_particles: game.exotic_particles,
 			current_exotic_particles: game.current_exotic_particles,
 			total_exotic_particles: total_exotic_particles,
-			paused: game.paused,
-			auto_sell_disabled: game.auto_sell_disabled,
-			auto_buy_disabled: game.auto_buy_disabled,
+			buttons_state: game.ui.toggle_buttons_saves(),
 			protium_particles: protium_particles,
 			current_objective: current_objective,
 			version: game.version
@@ -366,28 +364,12 @@ var loads = function(rks) {
 		game.paused = rks.paused || game.paused;
 		current_objective = rks.current_objective || current_objective;
 
-		game.auto_sell_disabled = rks.auto_sell_disabled || game.auto_sell_disabled;
-		game.auto_buy_disabled = rks.auto_buy_disabled || game.auto_buy_disabled;
 		protium_particles = rks.protium_particles || protium_particles;
 
 		var save_version = rks.version || null;
 
-		if ( game.paused ) {
-			pause();
-		} else {
-			unpause();
-		}
-
-		if ( game.auto_sell_disabled ) {
-			disable_auto_sell();
-		} else {
-			enable_auto_sell();
-		}
-
-		if ( game.auto_buy_disabled ) {
-			disable_auto_buy();
-		} else {
-			enable_auto_buy();
+		if ( rks.buttons_state ) {
+			ui.toggle_buttons_loads(rks.buttons_state)
 		}
 
 		ui.say('var', 'manual_heat_reduce', game.manual_heat_reduce);
