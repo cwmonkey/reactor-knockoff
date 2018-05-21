@@ -618,6 +618,22 @@ evts.auto_buy_disabled = toggle_buttons['#auto_buy_toggle'];
 
 evts.auto_buy_enabled = toggle_buttons['#auto_buy_toggle'];
 
+
+create_toggle_button('#heat_control_toggle', 'Disable Heat Controller', 'Enable Heat Controller')(
+	()=>!ui.game.heat_controlled,
+	function(event) {
+		event.preventDefault();
+		window.enable_heat_control();
+	},
+	function(event) {
+		event.preventDefault();
+		window.disable_heat_control();
+	}
+)
+
+evts.heat_control_disabled = toggle_buttons['#heat_control_toggle'];
+evts.heat_control_enabled = toggle_buttons['#heat_control_toggle'];
+
 /////////////////////////////
 // Misc UI
 /////////////////////////////

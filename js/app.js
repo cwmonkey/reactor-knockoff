@@ -2005,6 +2005,17 @@ window.enable_auto_buy = function() {
 	ui.say('evt', 'auto_buy_enabled');
 };
 
+// Enable/Disable heat control operator
+window.disable_heat_control = function() {
+	game.heat_controlled = false;
+	ui.say('evt', 'heat_control_disabled');
+};
+
+window.enable_heat_control = function() {
+	game.heat_controlled = true;
+	ui.say('evt', 'heat_control_enabled');
+};
+
 /////////////////////////////
 // Tile clicks
 /////////////////////////////
