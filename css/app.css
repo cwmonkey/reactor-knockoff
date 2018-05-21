@@ -591,13 +591,6 @@ menu {
  // Navs
 ////////////////////////// */
 
-#nav {
-	height: 100%;
-	display: flex;
-	place-content: space-between;
-	flex-wrap: wrap;
-}
-
 #reactor_upgrades .explanitory button,
 #tooltip button,
 #nav button {
@@ -663,21 +656,20 @@ body:before {
 	background-color: #91a1c8;
 }
 
-.flex_nav {
+#tooltip_nav {
+	display: flex;
+}
+
+#nav {
+	flex: 1 1 auto;
 	display: flex;
 	place-content: space-between;
 	flex-direction: column;
 }
 
-#controls_nav {
-	text-align: right;
-}
-
-#pages_nav {
-}
-
-#controls_nav button {
-	margin-bottom: 4px;
+.flex_nav {
+	display: flex;
+	place-content: space-between;
 }
 
   /* //////////////////////////
@@ -1728,22 +1720,6 @@ body:before {
 
 	#main.part_active.tooltip_showing #tooltip {
 		left: 46px;
-	}
-
-	#main #controls_nav,
-	#main #pages_nav {
-		position: static;
-	}
-
-	#main #controls_nav button {
-		clear: none;
-		float: none;
-	}
-
-	#main #pages_nav,
-	#main #game_nav,
-	#main #controls_nav {
-		margin-bottom: 2px;
 	}
 
 	#main #tooltip_nav {
