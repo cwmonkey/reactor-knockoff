@@ -29,8 +29,7 @@ var equal_filter = function (tile) {
 	}
 }
 
-var replacer = function* () {
-	var part = this.tile.part;
+var replacer = function* (part) {
 	for ( ri = 0; ri < hotkeys.game.rows; ri++ ) {
 		row = hotkeys.game.tiles[ri];
 		for ( ci = 0; ci < hotkeys.game.cols; ci++ ) {
@@ -44,9 +43,7 @@ var replacer = function* () {
 
 hotkeys.replacer = replacer;
 
-var remover = function* () {
-	var part = this.tile.part;
-	var ticks = this.tile.ticks;
+var remover = function* (part, ticks) {
 	for ( ri = 0; ri < hotkeys.game.rows; ri++ ) {
 		row = hotkeys.game.tiles[ri];
 		for ( ci = 0; ci < hotkeys.game.cols; ci++ ) {

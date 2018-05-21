@@ -2061,6 +2061,7 @@ game.hotkeys = hotkeys;
 var last_click = null;
 var double_click_tile = null;
 var double_click_tile_part = null;
+var double_click_tile_ticks = null;
 var clear_double_click_task = null;
 var clear_double_click = function() {
 	double_click_tile = null;
@@ -2086,17 +2087,19 @@ var click_func = function(e) {
 	} else if ( e.shiftKey || ( double_click_tile && last_click === e.which && double_click_tile === this.tile ) ) {
 		if ( e.shiftKey ){
 			var part = this.tile.part;
+			var ticks = this.tile.ticks;
 		} else {
 			// Use the stored (last) tile for comparing
 			var part = double_click_tile_part;
+			var ticks = double_click_tile_ticks;
 		}
 
 		if ( tile_mousedown_right && part ) {
-			return hotkeys.remover.call(this);
+			return hotkeys.remover.call(this, part, ticks);
 
 		} else if ( !tile_mousedown_right ) {
 			part_replacement_result = part_replaceable(part);
-			return hotkeys.replacer.call(this);
+			return hotkeys.replacer.call(this, part);
 		}
 
 	}
@@ -2114,6 +2117,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	} else {
 		// Store tile part for finding matching tiles in double click
 		double_click_tile_part = this.tile.part;
+		double_click_tile_ticks = this.tile.ticks;
 		mouse_apply_to_tile.call(this, e);
 		double_click_tile = this.tile;
 	}
