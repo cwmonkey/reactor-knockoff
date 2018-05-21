@@ -18,6 +18,17 @@ var tile;
 var hotkeys = new Hotkeys();
 window.hotkeys = hotkeys;
 
+var equal_filter = function (tile) {
+	var part = tile.part;
+	return function* (g) {
+		for (var tile of g) {
+			if (part === tile.part) {
+				yield tile;
+			}
+		}
+	}
+}
+
 var replacer = function* () {
 	var part = this.tile.part;
 	for ( ri = 0; ri < hotkeys.game.rows; ri++ ) {
@@ -71,7 +82,7 @@ var checker = function* (tile) {
 
 hotkeys.checker = checker;
 
-var skip = 2;
+var skip = 1;
 
 var _row = function* (tile, start, i) {
 	row = hotkeys.game.tiles[tile.row];
@@ -80,7 +91,7 @@ var _row = function* (tile, start, i) {
 	}
 };
 
-hotkeys.row = (tile) => _row(tile, 0 , 1);
+hotkeys.row = (tile) => equal_filter(tile)(_row(tile, tile.col%skip ,skip));
 hotkeys.shift_row = (tile) => _row(tile, tile.col%skip ,skip)
 
 var _column = function* (tile, start, i) {
@@ -90,12 +101,12 @@ var _column = function* (tile, start, i) {
 	}
 }
 
-hotkeys.column = (tile) => _column(tile, 0 ,1);
+hotkeys.column = (tile) => equal_filter(tile)(_column(tile, tile.row%skip ,skip));
 hotkeys.shift_column = (tile) => _column(tile, tile.row%skip ,skip)
 
 window.addEventListener("keydown", function(event) {
 	var key;
-	var r = /Digit([3-9])/.exec(event.code);
+	var r = /Digit([2-9])/.exec(event.code);
 	if ( !event.repeat && r && (key = r[1]) ) {
 		skip = parseInt(key);
 	}
@@ -103,10 +114,10 @@ window.addEventListener("keydown", function(event) {
 
 window.addEventListener("keyup", function(event) {
 	var key;
-	var r = /Digit([3-9])/.exec(event.code);
+	var r = /Digit([2-9])/.exec(event.code);
 	if ( !event.repeat && r && (key = r[1]) ) {
 		if ( parseInt(key) === skip ){
-			skip = 2;
+			skip = 1;
 		}
 	}
 });
