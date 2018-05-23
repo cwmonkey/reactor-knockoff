@@ -28,11 +28,11 @@ var $parts = $('#parts');
 var $primary = $('#primary');
 
 var rows = [];
-var current_vars = {};
-var update_vars = {};
+var current_vars = new Map();
+var update_vars = new Map();
 
 var perc = function(numerator, denominator, dom) {
-	var percent = current_vars[numerator] / current_vars[denominator] * 100;
+	var percent = current_vars.get(numerator) / current_vars.get(denominator) * 100;
 	if ( percent > 100 ) percent = 100;
 	dom.style.width = percent + '%';
 };
@@ -50,12 +50,12 @@ var update_heat_background = function (current_heat, max_heat) {
 var var_objs = {
 	manual_heat_reduce: {
 		onupdate: function() {
-			$manual_heat_reduce.textContent = '-' + fmt(current_vars.manual_heat_reduce);
+			$manual_heat_reduce.textContent = '-' + fmt(current_vars.get('manual_heat_reduce'));
 		}
 	},
 	auto_heat_reduce: {
 		onupdate: function() {
-			$auto_heat_reduce.textContent = '-' + fmt(current_vars.auto_heat_reduce);
+			$auto_heat_reduce.textContent = '-' + fmt(current_vars.get('auto_heat_reduce'));
 		}
 	},
 	// TODO: Bad naming
@@ -90,8 +90,8 @@ var var_objs = {
 		onupdate: function() {
 			perc('current_heat', 'max_heat', $heat_percentage);
 
-			var current_heat = current_vars.current_heat;
-			var max_heat = current_vars.max_heat;
+			var current_heat = current_vars.get('current_heat');
+			var max_heat = current_vars.get('max_heat');
 
 			update_heat_background(current_heat, max_heat)
 		}
@@ -104,11 +104,11 @@ var var_objs = {
 		dom: $('#max_heat'),
 		num: true,
 		onupdate: function() {
-			var current_heat = current_vars.current_heat;
-			var max_heat = current_vars.max_heat;
+			var current_heat = current_vars.get('current_heat');
+			var max_heat = current_vars.get('max_heat');
 
 			perc('current_heat', 'max_heat', $heat_percentage);
-			$auto_heat_reduce.textContent = '-' + (fmt(current_vars.max_heat/10000));
+			$auto_heat_reduce.textContent = '-' + (fmt(current_vars.get('max_heat')/10000));
 
 			update_heat_background(current_heat, max_heat)
 		}
@@ -118,7 +118,7 @@ var var_objs = {
 		num: true,
 		// TODO: Have more than one dom?
 		onupdate: function() {
-			var exotic_particles = current_vars.exotic_particles;
+			var exotic_particles = current_vars.get('exotic_particles');
 			$reboot_exotic_particles.textContent = fmt(exotic_particles);
 		}
 	},
@@ -126,8 +126,8 @@ var var_objs = {
 		dom: $('#current_exotic_particles'),
 		num: true,
 		onupdate: function() {
-			var total_exotic_particles = current_vars.total_exotic_particles;
-			var current_exotic_particles = current_vars.current_exotic_particles;
+			var total_exotic_particles = current_vars.get('total_exotic_particles');
+			var current_exotic_particles = current_vars.get('current_exotic_particles');
 			$refund_exotic_particles.textContent = fmt(total_exotic_particles - current_exotic_particles);
 		}
 	},
@@ -173,9 +173,7 @@ var var_objs = {
 };
 
 // Update formatted numbers
-var update_var = function(key, obj) {
-	var value = update_vars[key];
-
+var update_var = function(obj, value) {
 	if ( obj.dom ) {
 		if ( obj.num ) {
 			obj.dom.textContent = fmt(value, obj.places || null);
@@ -187,22 +185,18 @@ var update_var = function(key, obj) {
 	if ( obj.onupdate ) {
 		obj.onupdate();
 	}
-
-	delete(update_vars[key]);
 };
 
-var update_vars = function() {
+var Update_vars = function() {
 	var perc;
 
-	for ( var key in update_vars ) {
-		// skip loop if the property is from prototype
-		if ( !update_vars.hasOwnProperty(key) ) continue;
-
+	for ( var [key, value] of update_vars ) {
 		var obj = var_objs[key];
 		if ( !obj ) continue;
 
-		update_var(key, obj);
+		update_var(obj, value);
 	}
+	update_vars.clear();
 };
 
 // Update Interface
@@ -213,7 +207,7 @@ var locked_find = /[\b\s]locked\b/;
 var do_check_upgrades_affordability = false;
 var update_interface = function() {
 	var start_ui_loop = performance.now();
-	update_vars();
+	Update_vars();
 	setTimeout(update_interface, update_interface_interval);
 
 	if ( $reactor_section.classList.contains('showing') ) {
@@ -290,9 +284,9 @@ var evts = {};
 
 ui.say = function(type, name, val) {
 	if ( type === 'var' ) {
-		if ( val === current_vars[name] ) return;
-		current_vars[name] = val;
-		update_vars[name] = val;
+		if ( val === current_vars.get(name) ) return;
+		current_vars.set(name, val);
+		update_vars.set(name, val);
 
 		if ( var_objs[name] && var_objs[name].instant === true ) {
 			update_var(name, var_objs[name]);
