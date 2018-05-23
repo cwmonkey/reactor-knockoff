@@ -50,12 +50,12 @@ var update_heat_background = function (current_heat, max_heat) {
 var var_objs = {
 	manual_heat_reduce: {
 		onupdate: function() {
-			$manual_heat_reduce.innerHTML = '-' + fmt(current_vars.manual_heat_reduce);
+			$manual_heat_reduce.textContent = '-' + fmt(current_vars.manual_heat_reduce);
 		}
 	},
 	auto_heat_reduce: {
 		onupdate: function() {
-			$auto_heat_reduce.innerHTML = '-' + fmt(current_vars.auto_heat_reduce);
+			$auto_heat_reduce.textContent = '-' + fmt(current_vars.auto_heat_reduce);
 		}
 	},
 	// TODO: Bad naming
@@ -108,7 +108,7 @@ var var_objs = {
 			var max_heat = current_vars.max_heat;
 
 			perc('current_heat', 'max_heat', $heat_percentage);
-			$auto_heat_reduce.innerHTML = '-' + (fmt(current_vars.max_heat/10000));
+			$auto_heat_reduce.textContent = '-' + (fmt(current_vars.max_heat/10000));
 
 			update_heat_background(current_heat, max_heat)
 		}
@@ -119,7 +119,7 @@ var var_objs = {
 		// TODO: Have more than one dom?
 		onupdate: function() {
 			var exotic_particles = current_vars.exotic_particles;
-			$reboot_exotic_particles.innerHTML = fmt(exotic_particles);
+			$reboot_exotic_particles.textContent = fmt(exotic_particles);
 		}
 	},
 	current_exotic_particles: {
@@ -128,7 +128,7 @@ var var_objs = {
 		onupdate: function() {
 			var total_exotic_particles = current_vars.total_exotic_particles;
 			var current_exotic_particles = current_vars.current_exotic_particles;
-			$refund_exotic_particles.innerHTML = fmt(total_exotic_particles - current_exotic_particles);
+			$refund_exotic_particles.textContent = fmt(total_exotic_particles - current_exotic_particles);
 		}
 	},
 
@@ -178,9 +178,9 @@ var update_var = function(key, obj) {
 
 	if ( obj.dom ) {
 		if ( obj.num ) {
-			obj.dom.innerHTML = fmt(value, obj.places || null);
+			obj.dom.textContent = fmt(value, obj.places || null);
 		} else {
-			obj.dom.innerHTML = value;
+			obj.dom.textContent = value;
 		}
 	}
 
@@ -371,7 +371,7 @@ evts.part_added = function(val) {
 	part_obj.$el.part = part_obj;
 
 	var $image = $('<div class="image">');
-	$image.innerHTML = 'Click to Select';
+	$image.textContent = 'Click to Select';
 
 	part_obj.$el.appendChild($image);
 
@@ -455,13 +455,13 @@ evts.objective_unloaded = function() {
 
 evts.objective_loaded = function(val) {
 	$objectives_section.className += ' ' + objectives_loading_class;
-	$objective_title.innerHTML = val.title;
+	$objective_title.textContent = val.title;
 	if ( val.reward ) {
-		$objective_reward.innerHTML = '$' + fmt(val.reward);
+		$objective_reward.textContent = '$' + fmt(val.reward);
 	} else if ( val.ep_reward ) {
-		$objective_reward.innerHTML = fmt(val.ep_reward) + 'EP';
+		$objective_reward.textContent = fmt(val.ep_reward) + 'EP';
 	} else {
-		$objective_reward.innerHTML = '';
+		$objective_reward.textContent = '';
 	}
 	$objectives_section.className = $objectives_section.className.replace(objectives_unloading_find, '');
 
@@ -677,7 +677,7 @@ $('#download_save').onclick = function() {
 	var downloadLink = document.createElement("a");
 
 	downloadLink.download = "reactor_knockoff_save.base64";
-	downloadLink.innerHTML = "Download File";
+	downloadLink.textContent = "Download File";
 	downloadLink.href = URL.createObjectURL(saveAsBlob);
 	downloadLink.onclick = (event) => {
 		// clean up blob after the browser get it

@@ -1060,7 +1060,7 @@ Part.prototype.updateDescription = function(tile) {
 };
 
 Part.prototype.showTooltip = function(tile) {
-	$tooltip_name.innerHTML = this.part.title;
+	$tooltip_name.textContent = this.part.title;
 
 	if ( tile ) {
 		this.updateDescription(tile);
@@ -1102,12 +1102,12 @@ Part.prototype.showTooltip = function(tile) {
 
 		if ( tile.activated && tile.part.category === 'cell' ) {
 			$tooltip_sells_wrapper.style.display = 'none';
-			$tooltip_delete.innerHTML = 'Delete';
-			$tooltip_delete_all.innerHTML = 'Delete All';
+			$tooltip_delete.textContent = 'Delete';
+			$tooltip_delete_all.textContent = 'Delete All';
 		} else {
 			$tooltip_sells_wrapper.style.display = null;
-			$tooltip_delete.innerHTML = 'Sell';
-			$tooltip_delete_all.innerHTML = 'Sell All';
+			$tooltip_delete.textContent = 'Sell';
+			$tooltip_delete_all.textContent = 'Sell All';
 		}
 
 		if ( tile.activated && tile.part.category === 'particle_accelerator' ) {
@@ -1139,49 +1139,49 @@ Part.prototype.showTooltip = function(tile) {
 
 Part.prototype.updateTooltip = function(tile) {
 	if ( tile ) {
-		if ( $tooltip_description.innerHTML !== tile.part.description ) {
-			$tooltip_description.innerHTML = tile.part.description;
+		if ( $tooltip_description.textContent !== tile.part.description ) {
+			$tooltip_description.textContent = tile.part.description;
 		}
 
 		if ( tile.activated && tile.part.containment ) {
-			$tooltip_heat.innerHTML = fmt(tile.heat_contained);
-			$tooltip_max_heat.innerHTML = fmt(tile.part.containment);
+			$tooltip_heat.textContent = fmt(tile.heat_contained);
+			$tooltip_max_heat.textContent = fmt(tile.part.containment);
 		}
 
 		if ( tile.activated && tile.part.ticks ) {
-			$tooltip_ticks.innerHTML = fmt(tile.ticks);
-			$tooltip_max_ticks.innerHTML = fmt(tile.part.ticks);
+			$tooltip_ticks.textContent = fmt(tile.ticks);
+			$tooltip_max_ticks.textContent = fmt(tile.part.ticks);
 		}
 
 		if ( tile.activated && tile.part.heat ) {
-			$tooltip_heat_per.innerHTML = fmt(tile.display_heat);
+			$tooltip_heat_per.textContent = fmt(tile.display_heat);
 		}
 
 		if ( tile.activated && tile.part.power ) {
-			$tooltip_power_per.innerHTML = fmt(tile.display_power);
+			$tooltip_power_per.textContent = fmt(tile.display_power);
 		}
 
 		if ( tile.activated && tile.part.category !== 'cell' ) {
 			if ( tile.part.ticks ) {
-				$tooltip_sells.innerHTML = fmt(Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost));
+				$tooltip_sells.textContent = fmt(Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost));
 			} else if ( tile.part.containment ) {
-				$tooltip_sells.innerHTML = fmt(tile.part.cost - Math.ceil(tile.heat_contained / tile.part.containment * tile.part.cost));
+				$tooltip_sells.textContent = fmt(tile.part.cost - Math.ceil(tile.heat_contained / tile.part.containment * tile.part.cost));
 			} else {
-				$tooltip_sells.innerHTML = fmt(tile.part.cost);
+				$tooltip_sells.textContent = fmt(tile.part.cost);
 			}
 		}
 
 		if ( tile.activated && tile.part.category === 'particle_accelerator' ) {
-			$tooltip_chance.innerHTML = fmt(tile.display_chance);
-			$tooltip_chance_percent_of_total.innerHTML = fmt(tile.display_chance_percent_of_total);
+			$tooltip_chance.textContent = fmt(tile.display_chance);
+			$tooltip_chance_percent_of_total.textContent = fmt(tile.display_chance_percent_of_total);
 		}
 	} else {
-		$tooltip_description.innerHTML = this.description;
+		$tooltip_description.textContent = this.description;
 
 		if ( this.erequires && !game.upgrade_objects[this.erequires].level ) {
-			$tooltip_cost.innerHTML = 'LOCKED';
+			$tooltip_cost.textContent = 'LOCKED';
 		} else {
-			$tooltip_cost.innerHTML = fmt(this.cost);
+			$tooltip_cost.textContent = fmt(this.cost);
 		}
 	}
 };
@@ -1390,7 +1390,7 @@ window.upgrades = null;
 // Upgrade tooltips
 
 window.Upgrade.prototype.showTooltip = function() {
-	$tooltip_name.innerHTML = this.upgrade.title;
+	$tooltip_name.textContent = this.upgrade.title;
 
 	$tooltip_cost.style.display = null;
 	$tooltip_ticks_wrapper.style.display = 'none';
@@ -1408,12 +1408,12 @@ window.Upgrade.prototype.showTooltip = function() {
 };
 
 Upgrade.prototype.updateTooltip = function(tile) {
-	$tooltip_description.innerHTML = this.upgrade.description;
+	$tooltip_description.textContent = this.upgrade.description;
 
 	if ( this.ecost ) {
-		$tooltip_cost.innerHTML = this.display_cost + ' EP';
+		$tooltip_cost.textContent = this.display_cost + ' EP';
 	} else {
-		$tooltip_cost.innerHTML = this.display_cost;
+		$tooltip_cost.textContent = this.display_cost;
 	}
 };
 
