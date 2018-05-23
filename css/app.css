@@ -1423,15 +1423,6 @@ body:before {
 	display: none;
 }
 
-#tooltip_controls {
-	display: none;
-}
-
-.touch #tooltip_controls {
-	display: block;
-	margin-top: 10px;
-}
-
   /* //////////////////////////
  // Debug
 ////////////////////////// */

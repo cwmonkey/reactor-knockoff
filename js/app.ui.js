@@ -504,53 +504,6 @@ $('#reduce_heat').onclick = function(event) {
 };
 
 /////////////////////////////
-// Tooltip Buttons
-/////////////////////////////
-
-// TODO: Handle all the tooltip functionality so the ui.game has no idea what tooltips are
-
-// Delete
-$('#tooltip_delete').onclick = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	window.tooltip_delete();
-};
-
-// Delete all
-$('#tooltip_delete_all').onclick = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	window.tooltip_delete_all();
-};
-
-// Replace all
-$('#tooltip_replace_all').onclick = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	window.tooltip_replace_all();
-};
-
-// Upgrade all
-$('#tooltip_upgrade_all').onclick = function(event) {
-	if ( event ) {
-		event.preventDefault();
-	}
-
-	window.tooltip_upgrade_all();
-};
-
-// Close
-$('#tooltip_close').onclick = function() {
-	window.tooltip_close();
-};
-
-/////////////////////////////
 // Toggle UI
 /////////////////////////////
 

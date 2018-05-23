@@ -165,21 +165,6 @@ var set_defaults = function() {
 
 set_defaults();
 
-// Mark ios since it's an idiot with mouseover events
-
-var is_touch = false;
-var is_ios = navigator.userAgent.match(/(iPod|iPhone|iPad)/) ? true : false;
-
-// Only mark as a touch device when the first touch happens
-
-window.addEventListener('touchstart', function setHasTouch () {
-	is_touch = true;
-	$main.className += ' touch';
-	// Remove event listener once fired, otherwise it'll kill scrolling
-	// performance
-	window.removeEventListener('touchstart', setHasTouch);
-}, false);
-
 /////////////////////////////
 // Online Saves and related functions
 /////////////////////////////
@@ -210,7 +195,6 @@ var enable_local_save = function(event) {
 };
 
 $enable_local_save.onclick = enable_local_save;
-$enable_local_save.ontouchend = enable_local_save;
 
 // Google Drive
 var enable_google_drive_save = function(event) {
@@ -240,7 +224,6 @@ var enable_google_drive_save = function(event) {
 };
 
 $enable_google_drive_save.onclick = enable_google_drive_save;
-$enable_google_drive_save.ontouchend = enable_google_drive_save;
 
 // Save handler
 var save_timeout;
@@ -895,11 +878,6 @@ var $tooltip_chance_wrapper = $('#tooltip_chance_wrapper');
 var $tooltip_chance = $('#tooltip_chance');
 var $tooltip_chance_percent_of_total = $('#tooltip_chance_percent_of_total');
 
-var $tooltip_delete = $('#tooltip_delete');
-var $tooltip_delete_all = $('#tooltip_delete_all');
-var $tooltip_replace_all = $('#tooltip_replace_all');
-var $tooltip_upgrade_all = $('#tooltip_upgrade_all');
-
 if ( game.debug ) {
 	$main.className += ' debug';
 }
@@ -932,8 +910,6 @@ for ( ri = 0; ri < game.max_rows; ri++ ) {
 // Tile tooltips
 
 // TODO: DRY this
-var tooltip_tile = null;
-var tile_active_find = /[\s\b]tile_active\b/g;
 var tile_tooltip_show = function(e) {
 	var tile = this.tile;
 	var part = tile.part;
@@ -944,18 +920,9 @@ var tile_tooltip_show = function(e) {
 		$main.className += ' tooltip_showing';
 	}
 
-	if ( is_touch ) {
-		if ( tooltip_tile ) {
-			tooltip_tile.$el.className = tooltip_tile.$el.className.replace(tile_active_find, '');
-		}
-
-		tile.$el.className += ' tile_active';
-	}
-
 	part.showTooltip(tile);
 	tooltip_showing = true;
 
-	tooltip_tile = tile;
 	tooltip_update = (function(tile) {
 		return function() {
 			part.updateTooltip(tile);
@@ -964,25 +931,15 @@ var tile_tooltip_show = function(e) {
 };
 
 var tile_tooltip_hide = function(e) {
-	if ( is_touch && tooltip_tile ) {
-		tooltip_tile.$el.className = tooltip_tile.$el.className.replace(tile_active_find, '');
-	}
-
 	tooltip_showing = false;
 	tooltip_update = null;
-	tooltip_tile = null;
 	$main.className = $main.className.replace(tooltip_showing_replace, '');
 };
 
-if ( !is_ios ) {
-	$reactor.delegate('tile', 'mouseover', tile_tooltip_show);
-	$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
-}
-
-if ( !is_touch ) {
-	$reactor.delegate('tile', 'focus', tile_tooltip_show);
-	$reactor.delegate('tile', 'blur', tile_tooltip_hide);
-}
+$reactor.delegate('tile', 'mouseover', tile_tooltip_show);
+$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
+$reactor.delegate('tile', 'focus', tile_tooltip_show);
+$reactor.delegate('tile', 'blur', tile_tooltip_hide);
 
 /////////////////////////////
 // Parts
@@ -1065,10 +1022,6 @@ Part.prototype.showTooltip = function(tile) {
 	if ( tile ) {
 		this.updateDescription(tile);
 		$tooltip_cost.style.display = 'none';
-		$tooltip_delete.style.display = null;
-		$tooltip_delete_all.style.display = null;
-		$tooltip_replace_all.style.display = null;
-		$tooltip_upgrade_all.style.display = 'none';
 
 		if ( tile.activated && tile.part.containment ) {
 			$tooltip_heat_wrapper.style.display = null;
@@ -1102,12 +1055,8 @@ Part.prototype.showTooltip = function(tile) {
 
 		if ( tile.activated && tile.part.category === 'cell' ) {
 			$tooltip_sells_wrapper.style.display = 'none';
-			$tooltip_delete.textContent = 'Delete';
-			$tooltip_delete_all.textContent = 'Delete All';
 		} else {
 			$tooltip_sells_wrapper.style.display = null;
-			$tooltip_delete.textContent = 'Sell';
-			$tooltip_delete_all.textContent = 'Sell All';
 		}
 
 		if ( tile.activated && tile.part.category === 'particle_accelerator' ) {
@@ -1116,10 +1065,6 @@ Part.prototype.showTooltip = function(tile) {
 			$tooltip_chance_wrapper.style.display = 'none';
 		}
 	} else {
-		$tooltip_delete.style.display = 'none';
-		$tooltip_delete_all.style.display = null;
-		$tooltip_replace_all.style.display = null;
-		$tooltip_upgrade_all.style.display = null;
 
 		this.updateDescription();
 		$tooltip_cost.style.display = null;
@@ -1332,15 +1277,10 @@ var part_tooltip_hide = function(e) {
 
 };
 
-if ( !is_ios ) {
-	$all_parts.delegate('part', 'mouseover', part_tooltip_show);
-	$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
-}
-
-if ( !is_touch ) {
-	$all_parts.delegate('part', 'focus', part_tooltip_show);
-	$all_parts.delegate('part', 'blur', part_tooltip_hide);
-}
+$all_parts.delegate('part', 'mouseover', part_tooltip_show);
+$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
+$all_parts.delegate('part', 'focus', part_tooltip_show);
+$all_parts.delegate('part', 'blur', part_tooltip_hide);
 
 /////////////////////////////
 // Reduce Heat Manually (Decoupled)
@@ -1398,10 +1338,6 @@ window.Upgrade.prototype.showTooltip = function() {
 	$tooltip_heat_per_wrapper.style.display = 'none';
 	$tooltip_power_per_wrapper.style.display = 'none';
 	$tooltip_heat_wrapper.style.display = 'none';
-	$tooltip_delete.style.display = 'none';
-	$tooltip_delete_all.style.display = 'none';
-	$tooltip_replace_all.style.display = 'none';
-	$tooltip_upgrade_all.style.display = 'none';
 	$tooltip_chance_wrapper.style.display = 'none';
 
 	this.updateTooltip();
@@ -1439,15 +1375,10 @@ var upgrade_tooltip_hide = function(e) {
 	$main.className = $main.className.replace(tooltip_showing_replace, '');
 };
 
-if ( !is_ios ) {
-	$all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
-	$all_upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
-}
-
-if ( is_touch ) {
-	$all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
-	$all_upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
-}
+$all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
+$all_upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
+$all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
+$all_upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
 
 // More stuff I guess
 
@@ -1573,12 +1504,6 @@ for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
 $all_upgrades.delegate('upgrade', 'click', function(event) {
 	var upgrade = this.upgrade;
 
-	if ( is_touch && !upgrade.clicked ) {
-		upgrade_tooltip_show.apply(this, event);
-		upgrade.clicked = true;
-		return;
-	}
-
 	if ( upgrade.level >= upgrade.upgrade.levels ) {
 		return;
 	} else if (
@@ -1678,10 +1603,6 @@ $all_parts.delegate('part', 'click', function(e) {
 		this.className = this.className.replace(active_replace, '');
 		$main.className = $main.className.replace(active_replace, '');
 		part_tooltip_hide();
-
-		if ( is_touch ) {
-			document.body.scrollTop = 0;
-		}
 	} else {
 		part_tooltip_show.apply(this, e);
 
@@ -1760,10 +1681,6 @@ var remove_part = function(remove_tile, skip_update, sell) {
 		}
 	}
 
-	if ( tooltip_tile && tooltip_tile.part && tooltip_tile.part == remove_tile.part ) {
-		tile_tooltip_hide();
-	}
-
 	remove_tile.part = null;
 	remove_tile.setTicks(0);
 	remove_tile.setHeat_contained(0);
@@ -1790,109 +1707,6 @@ var remove_part = function(remove_tile, skip_update, sell) {
 				rpl--;
 			}
 		}
-	}
-};
-
-// TODO: Move this
-// tooltip buttons
-// Delete
-window.tooltip_delete = function() {
-	remove_part(tooltip_tile, false, true);
-	tooltip_close();
-};
-
-// Delete all
-window.tooltip_delete_all = function() {
-	var type;
-	var level;
-
-	if ( tooltip_tile ) {
-		type = tooltip_tile.part.part.type;
-		level = tooltip_tile.part.part.level;
-	} else if ( tooltip_part ) {
-		type = tooltip_part.part.type;
-		level = tooltip_part.part.level;
-	}
-
-	for ( var ri = 0; ri < game.rows; ri++ ) {
-		var row = game.tiles[ri];
-
-		for ( var ci = 0; ci < game.cols; ci++ ) {
-			var tile = row[ci];
-
-			if ( tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
-				remove_part(tile, false, true);
-			}
-		}
-	}
-
-	tooltip_close();
-};
-
-// Replace all
-window.tooltip_replace_all = function() {
-	var type;
-	var level;
-
-	if ( tooltip_tile ) {
-		type = tooltip_tile.part.part.type;
-		level = tooltip_tile.part.part.level;
-	} else if ( tooltip_part ) {
-		type = tooltip_part.part.type;
-		level = tooltip_part.part.level;
-	}
-
-	for ( var ri = 0; ri < game.rows; ri++ ) {
-		var row = game.tiles[ri];
-
-		for ( var ci = 0; ci < game.cols; ci++ ) {
-			var tile = row[ci];
-
-			if ( tile.part && type === tile.part.part.type && level === tile.part.part.level ) {
-				mouse_apply_to_tile.call(tile.$el, event);
-			}
-		}
-	}
-
-	tooltip_close();
-};
-
-// Upgrade all
-window.tooltip_upgrade_all = function() {
-	var type;
-	var level;
-
-	if ( tooltip_tile ) {
-		type = tooltip_tile.part.part.type;
-		level = tooltip_tile.part.part.level;
-	} else if ( tooltip_part ) {
-		type = tooltip_part.part.type;
-		level = tooltip_part.part.level;
-	}
-
-	for ( var ri = 0; ri < game.rows; ri++ ) {
-		var row = game.tiles[ri];
-
-		for ( var ci = 0; ci < game.cols; ci++ ) {
-			var tile = row[ci];
-
-			if ( tile.part && type === tile.part.part.type && level > tile.part.part.level ) {
-				mouse_apply_to_tile.call(tile.$el, event);
-			}
-		}
-	}
-
-	tooltip_close();
-};
-
-// Close
-window.tooltip_close = function() {
-	if ( tooltip_tile ) {
-		tile_tooltip_hide();
-	} else if ( tooltip_part ) {
-		part_tooltip_hide();
-	} else if ( tooltip_upgrade ) {
-		upgrade_tooltip_hide();
 	}
 };
 
@@ -2015,18 +1829,7 @@ document.oncontextmenu = function(e) {
 	}
 };
 
-var is_scrolling = false;
-window.ontouchmove = function() {
-	is_scrolling = true;
-};
-
 $reactor.delegate('tile', 'click', function(e) {
-	if ( is_scrolling === true ) {
-		is_scrolling = false;
-		return;
-	}
-
-
 	if ( !tile_mousedown ) {
 		mouse_apply_to_tile.call(this, e);
 	}
