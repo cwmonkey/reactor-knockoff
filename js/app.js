@@ -2816,20 +2816,6 @@ var set_objective = function(objective_key, skip_wait) {
 };
 
 /////////////////////////////
-// Debug
-/////////////////////////////
-
-if ( game.debug ) {
-	var $game_nav = $('#game_nav');
-	var $save = $('<button id="save">Save</button>');
-	//var $save = $('#save');
-	$save.onclick = save;
-	$save.ontouchend = save;
-
-	$game_nav.appendChild($save);
-};
-
-/////////////////////////////
 // Load
 /////////////////////////////
 
