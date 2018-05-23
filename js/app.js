@@ -397,9 +397,6 @@ var loads = function(rks) {
 
 				if ( supgrade_object ) {
 					game.upgrade_objects[supgrade.id].setLevel(supgrade.level);
-					if ( tooltip_showing ) {
-						game.upgrade_objects[supgrade.id].updateTooltip();
-					}
 				}
 			}
 		}
@@ -464,9 +461,6 @@ window.reboot = function(refund) {
 		for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
 			upgrade = game.upgrade_objects_array[i];
 			upgrade.setLevel(0);
-			if ( tooltip_showing ) {
-				upgrade.updateTooltip();
-			}
 		}
 
 		game.current_exotic_particles = total_exotic_particles;
@@ -476,14 +470,8 @@ window.reboot = function(refund) {
 
 			if ( !upgrade.ecost ) {
 				upgrade.setLevel(0);
-				if ( tooltip_showing ) {
-					upgrade.updateTooltip();
-				}
 			} else {
 				upgrade.setLevel(upgrade.level);
-				if ( tooltip_showing ) {
-					upgrade.updateTooltip();
-				}
 			}
 		}
 
@@ -907,39 +895,92 @@ for ( ri = 0; ri < game.max_rows; ri++ ) {
 	game.tiles.push(row);
 }
 
-// Tile tooltips
+/////////////////////////////
+// Tooltip
+/////////////////////////////
+var tooltip_task;
+var tooltip_update = null;
+var tooltip_showing;
 
-// TODO: DRY this
-var tile_tooltip_show = function(e) {
-	var tile = this.tile;
-	var part = tile.part;
-
+var tooltip_show = function(part, tile, update) {
 	if ( !part ) return;
 
-	if ( !tooltip_showing ) {
-		$main.className += ' tooltip_showing';
+	clearTimeout(tooltip_task);
+	if ( !tooltip_showing )	{
+		$main.classList.add('tooltip_showing');
+		tooltip_showing = true;
+		part.showTooltip(tile);
+	} else {
+		part.updateTooltip(tile)
 	}
+	
+	tooltip_update = update;
+}
 
-	part.showTooltip(tile);
-	tooltip_showing = true;
-
-	tooltip_update = (function(tile) {
-		return function() {
-			part.updateTooltip(tile);
-		};
-	})(tile);
-};
-
-var tile_tooltip_hide = function(e) {
-	tooltip_showing = false;
+var _tooltip_hide = function() {
 	tooltip_update = null;
-	$main.className = $main.className.replace(tooltip_showing_replace, '');
-};
+	$main.classList.remove('tooltip_showing');
+	tooltip_showing = false;
+}
+
+var tooltip_hide = function() {
+	tooltip_task = setTimeout(_tooltip_hide, 200);
+}
+
+// Tile tooltips
+var tile_tooltip_show = function(e) {
+	tooltip_show(this.tile.part, this.tile, ()=>{this.tile.part.updateTooltip(this.tile)});
+}
 
 $reactor.delegate('tile', 'mouseover', tile_tooltip_show);
-$reactor.delegate('tile', 'mouseout', tile_tooltip_hide);
+$reactor.delegate('tile', 'mouseout', tooltip_hide);
 $reactor.delegate('tile', 'focus', tile_tooltip_show);
-$reactor.delegate('tile', 'blur', tile_tooltip_hide);
+$reactor.delegate('tile', 'blur', tooltip_hide);
+
+// Part tooltips
+var part_tooltip_show = function(e) {
+	tooltip_show(this.part, undefined, ()=>{this.part.updateTooltip()});
+}
+
+$all_parts.delegate('part', 'mouseover', part_tooltip_show);
+$all_parts.delegate('part', 'mouseout', tooltip_hide);
+$all_parts.delegate('part', 'focus', part_tooltip_show);
+$all_parts.delegate('part', 'blur', tooltip_hide);
+
+// Upgrade tooltips
+
+window.Upgrade.prototype.showTooltip = function() {
+	$tooltip_name.textContent = this.upgrade.title;
+
+	$tooltip_cost.style.display = null;
+	$tooltip_ticks_wrapper.style.display = 'none';
+	$tooltip_sells_wrapper.style.display = 'none';
+	$tooltip_heat_per_wrapper.style.display = 'none';
+	$tooltip_power_per_wrapper.style.display = 'none';
+	$tooltip_heat_wrapper.style.display = 'none';
+	$tooltip_chance_wrapper.style.display = 'none';
+
+	this.updateTooltip();
+};
+
+Upgrade.prototype.updateTooltip = function(tile) {
+	$tooltip_description.textContent = this.upgrade.description;
+
+	if ( this.ecost ) {
+		$tooltip_cost.textContent = this.display_cost + ' EP';
+	} else {
+		$tooltip_cost.textContent = this.display_cost;
+	}
+};
+
+var upgrade_tooltip_show = function(e) {
+	tooltip_show(this.upgrade)
+}
+
+$all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
+$all_upgrades.delegate('upgrade', 'mouseout', tooltip_hide);
+$all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
+$all_upgrades.delegate('upgrade', 'blur', tooltip_hide);
 
 /////////////////////////////
 // Parts
@@ -1246,42 +1287,6 @@ game.update_cell_power = function() {
 	}
 };
 
-// Part tooltips
-var tooltip_showing_replace = /[\s\b]tooltip_showing\b/;
-var tooltip_showing = false;
-var tooltip_update = null;
-var tooltip_part;
-
-var part_tooltip_update = function() {
-	tooltip_part.updateTooltip();
-}
-
-var part_tooltip_show = function(e) {
-	var part = this.part;
-
-	if ( !tooltip_showing ) {
-		$main.className += ' tooltip_showing';
-	}
-
-	part.showTooltip();
-	tooltip_showing = true;
-	tooltip_part = part;
-	tooltip_update = part_tooltip_update;
-};
-
-var part_tooltip_hide = function(e) {
-	tooltip_showing = false;
-	tooltip_update = null;
-	tooltip_part = null;
-	$main.className = $main.className.replace(tooltip_showing_replace, '');
-
-};
-
-$all_parts.delegate('part', 'mouseover', part_tooltip_show);
-$all_parts.delegate('part', 'mouseout', part_tooltip_hide);
-$all_parts.delegate('part', 'focus', part_tooltip_show);
-$all_parts.delegate('part', 'blur', part_tooltip_hide);
-
 /////////////////////////////
 // Reduce Heat Manually (Decoupled)
 /////////////////////////////
@@ -1327,58 +1332,6 @@ game.epart_onclick = function(upgrade) {
 var upgrades = window.upgrades(game);
 window.upgrades = null;
 
-// Upgrade tooltips
-
-window.Upgrade.prototype.showTooltip = function() {
-	$tooltip_name.textContent = this.upgrade.title;
-
-	$tooltip_cost.style.display = null;
-	$tooltip_ticks_wrapper.style.display = 'none';
-	$tooltip_sells_wrapper.style.display = 'none';
-	$tooltip_heat_per_wrapper.style.display = 'none';
-	$tooltip_power_per_wrapper.style.display = 'none';
-	$tooltip_heat_wrapper.style.display = 'none';
-	$tooltip_chance_wrapper.style.display = 'none';
-
-	this.updateTooltip();
-};
-
-Upgrade.prototype.updateTooltip = function(tile) {
-	$tooltip_description.textContent = this.upgrade.description;
-
-	if ( this.ecost ) {
-		$tooltip_cost.textContent = this.display_cost + ' EP';
-	} else {
-		$tooltip_cost.textContent = this.display_cost;
-	}
-};
-
-// TODO: DRY this
-var tooltip_upgrade = null;
-var upgrade_tooltip_show = function(e) {
-	var upgrade = this.upgrade;
-
-	upgrade.showTooltip();
-	if ( !tooltip_showing ) {
-		$main.className += ' tooltip_showing';
-	}
-
-	tooltip_showing = true;
-	tooltip_upgrade = upgrade;
-	//tooltip_update = upgrade.updateTooltip;
-};
-
-var upgrade_tooltip_hide = function(e) {
-	tooltip_showing = false;
-	tooltip_upgrade = null;
-	//tooltip_update = null;
-	$main.className = $main.className.replace(tooltip_showing_replace, '');
-};
-
-$all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
-$all_upgrades.delegate('upgrade', 'mouseout', upgrade_tooltip_hide);
-$all_upgrades.delegate('upgrade', 'focus', upgrade_tooltip_show);
-$all_upgrades.delegate('upgrade', 'blur', upgrade_tooltip_hide);
 
 // More stuff I guess
 
@@ -1495,9 +1448,6 @@ for ( var i = 0, l = upgrades.length; i < l; i++ ) {
 
 for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
 	game.upgrade_objects_array[i].setLevel(0);
-	if ( tooltip_showing ) {
-		game.upgrade_objects_array[i].updateTooltip();
-	}
 }
 
 // Upgrade delegate event
@@ -1832,10 +1782,6 @@ document.oncontextmenu = function(e) {
 $reactor.delegate('tile', 'click', function(e) {
 	if ( !tile_mousedown ) {
 		mouse_apply_to_tile.call(this, e);
-	}
-
-	if ( !tooltip_part || tooltip_showing === true ) {
-		tile_tooltip_show.apply(this, e);
 	}
 });
 
