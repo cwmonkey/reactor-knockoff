@@ -1,0 +1,13 @@
+#currency,
+#power_indicator,
+#heat_indicator,
+#reboot_section,
+#tooltip_nav,
+#parts {
+	/* 
+		Lie to the browser about the will-change so they are on their own layers
+		since their content is changing multiple times per second
+		so they wouldn't cause the monstrosity known as #reactor to getting repainted.
+	*/
+	will-change: transform;
+}
