@@ -929,7 +929,7 @@ var tooltip_hide = function() {
 
 // Tile tooltips
 var tile_tooltip_show = function(e) {
-	tooltip_show(this.tile.part, this.tile, ()=>{this.tile.part.updateTooltip(this.tile)});
+	tooltip_show(this.tile.part, this.tile, ()=>{if ( this.tile.part ){this.tile.part.updateTooltip(this.tile)}});
 }
 
 $reactor.delegate('tile', 'mouseover', tile_tooltip_show);
