@@ -1,0 +1,312 @@
+@media all and (max-width: 938px) {
+	#wrapper {
+		display: block;
+		height: auto;
+	}
+
+	#main {
+		display: block;
+		padding-top: 52px;
+	}
+
+	#main:before {
+		display: none;
+	}
+
+	#secondary {
+		width: auto;
+		margin-bottom: 4px;
+		float: none;
+	}
+
+	#stats_section {
+		height: auto;
+	}
+
+	#heat,
+	#power_section,
+	#currency {
+		max-width: 228px;
+		float: left;
+		width: 30%;
+		margin-right: 5%;
+	}
+
+	#currency {
+		margin-right: 0;
+	}
+
+	/* Parts */
+
+	#parts_section {
+		/* for ie */
+		/*display: table;*/
+	}
+
+	#parts {
+		/*overflow-y: auto;
+		max-height: 82px;*/
+	}
+
+	/*#parts_nav,
+	#top,
+	#bottom {
+		display: none;
+	}*/
+
+	#parts #power {
+		float: left;
+	}
+
+	#parts #cooling {
+		display: inline;
+	}
+
+	#parts #power > menu,
+	#parts #cooling > menu {
+		margin-right: 8px;
+		display: table-cell;
+		vertical-align: bottom;
+		float: none;
+	}
+
+	#main #parts #cells {
+		max-width: 216px;
+	}
+
+	#parts button {
+		display: block;
+	}
+
+	#main.part_active #parts button {
+		display: none;
+	}
+
+	#main.part_active #parts button.part_active {
+		display: block;
+	}
+
+	#cells button {
+		display: inline-block;
+		vertical-align: top;
+	}
+
+	#parts #cells .part {
+		margin: 0 4px 0 0;
+	}
+
+	/*#parts_section .cells .part.unaffordable + .locked {
+		display: block;
+	}*/
+
+	#main #primary {
+		/*padding-left: 46px;*/
+	}
+
+	#main #nav {
+		position: static;
+	}
+
+	/* Touch? */
+	#main #tooltip_nav {
+		height: auto;
+		padding: 0;
+	}
+
+	#main #nav {
+		/*padding: 8px;*/
+	}
+
+	#main #game_nav button {
+		margin-bottom: 4px;
+	}
+
+	#main.tooltip_showing #nav {
+		display: block;
+	}
+
+	#main.tooltip_showing #tooltip {
+		position: fixed;
+		z-index: 7;
+		left: 0;
+		top: 60px;
+		right: 0;
+		border-top: 0;
+		border: 12px solid #eee;
+		border-image: url("../img/panel_border.png") 12 12 stretch;
+		background-color: #485667;
+		background-clip: padding-box;
+		height: auto;
+		padding: 2px;
+	}
+
+	#main.part_active.tooltip_showing #tooltip {
+		left: 46px;
+	}
+
+	#main #tooltip_nav {
+		border: 2px solid #eee;
+		border-image: url("../img/medium_panel.png") 2 2 stretch;
+		padding: 10px 6px 6px 12px;
+		position: relative;
+	}
+
+	/* /Touch? */
+
+	#tooltip_info {
+		text-align: left;
+		padding: 0 20px 0 2px;
+		margin-bottom: .5em;
+	}
+
+	#tooltip_name {
+		display: inline;
+	}
+
+	#tooltip_name:after {
+		content: " - ";
+	}
+
+	#tooltip_description {
+		display: inline;
+	}
+
+	#main #parts_section,
+	#main #stats_section {
+		border: 12px solid #eee;
+		border-image: url("../img/panel_border.png") 12 12 stretch;
+		border-top: 0;
+	}
+
+	#main #stats_section {
+		position: fixed;
+		z-index: 10;
+		top: 0;
+		left: 0;
+		width: 100%;
+		padding: 0;
+		border-left: 0;
+		border-right: 0;
+	}
+
+	#stats_section button {
+		font-size: .75em;
+	}
+
+	#heat_indicator,
+	#power_indicator {
+		border-top-width: 0;
+		padding: 2px 0;
+	}
+
+	#heat,
+	#power_section {
+		margin-bottom: 0;
+	}
+
+	#main #parts_section {
+		padding: 12px 2px 2px 2px;
+	}
+
+	#main.part_active #parts_section {
+		position: fixed;
+		z-index: 8;
+		left: -12px;
+		top: 52px;
+		padding: 11px 0 0 4px;
+	}
+
+	#main.part_active #power > menu,
+	#main.part_active #cooling > menu {
+		margin: 0;
+	}
+
+	#main.part_active #parts .part {
+		margin: 0;
+	}
+
+	#power_section,
+	#currency,
+	#heat {
+		max-width: none;
+		width: 29.5%;
+	}
+
+	#power_section,
+	#heat {
+		margin-right: 1%;
+		margin-left: 1%;
+		padding-left: 1em;
+		position: relative;
+	}
+
+	#stats_section .heading {
+		-ms-transform: rotate(-90deg); /* IE 9 */
+		-ms-transform-origin: 16% 45%; /* IE 9 */
+		-webkit-transform: rotate(-90deg); /* Chrome, Safari, Opera */
+		-webkit-transform-origin: 16% 45%; /* Chrome, Safari, Opera */
+		transform: rotate(-90deg);
+		transform-origin: 16% 45%;
+		position: absolute;
+		line-height: 1em;
+		left: 0;
+		bottom: 0;
+	}
+
+	#stats_section .heading:after,
+	#stats_section .heading .current {
+		display: none;
+	}
+
+	#currency {
+		margin-left: 1%;
+	}
+
+	#more_stats {
+		display: block;
+		position: absolute;
+		right: 0;
+		top: 0;
+	}
+
+	#more_stats button {
+		border-top: 0;
+		border-right: 0;
+		vertical-align: top;
+		padding: 8px 4px 4px 0;
+		font-family: monospace;
+	}
+
+	/* Hide more stats */
+	#hide_more_stats,
+	#money_per_tick_wrapper,
+	#power_per_tick_wrapper,
+	#heat_per_tick_wrapper {
+		display: none;
+	}
+
+	/* Show more stats */
+	#main.show_more_stats {
+		padding-top: 70px;
+	}
+
+	#main.part_active.show_more_stats #parts_section {
+		top: 70px;
+	}
+
+	#main.show_more_stats #hide_more_stats,
+	#main.show_more_stats #money_per_tick_wrapper,
+	#main.show_more_stats #power_per_tick_wrapper,
+	#main.show_more_stats #heat_per_tick_wrapper {
+		display: block;
+	}
+
+	#main.show_more_stats #show_more_stats {
+		display: none;
+	}
+
+	#main.show_more_stats #heat_indicator,
+	#main.show_more_stats #power_indicator {
+		border-top-width: 1px;
+	}
+}
