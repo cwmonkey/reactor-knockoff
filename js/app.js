@@ -974,7 +974,7 @@ Upgrade.prototype.updateTooltip = function(tile) {
 };
 
 var upgrade_tooltip_show = function(e) {
-	tooltip_show(this.upgrade)
+	tooltip_show(this.upgrade, undefined, null)
 }
 
 $all_upgrades.delegate('upgrade', 'mouseover', upgrade_tooltip_show);
