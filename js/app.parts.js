@@ -1,7 +1,7 @@
 (function() {
+'use strict';
 
-window.parts = function() {
-	return [
+window.parts = [
 		// Cells
 		{
 			id: 'uranium1',
@@ -58,6 +58,7 @@ window.parts = function() {
 			base_description: '%single_cell_description',
 			category: 'cell',
 			base_cost: 6000,
+			cost_multiplier: 2.2,
 			base_ticks: 60,
 			base_power: 150,
 			base_heat: 150,
@@ -75,6 +76,7 @@ window.parts = function() {
 			base_description: '%single_cell_description',
 			category: 'cell',
 			base_cost: 4700000,
+			cost_multiplier: 2.2,
 			base_ticks: 900,
 			base_power: 7400,
 			base_heat: 7400,
@@ -92,6 +94,7 @@ window.parts = function() {
 			base_description: '%single_cell_description',
 			category: 'cell',
 			base_cost: 4000000000,
+			cost_multiplier: 2.2,
 			base_ticks: 3600,
 			base_power: 1600000,
 			base_heat: 1600000,
@@ -109,6 +112,7 @@ window.parts = function() {
 			base_description: '%single_cell_description',
 			category: 'cell',
 			base_cost: 3900000000000,
+			cost_multiplier: 2.2,
 			base_ticks: 22000,
 			base_power: 230000000,
 			base_heat: 230000000,
@@ -126,6 +130,7 @@ window.parts = function() {
 			base_description: '%single_cell_description',
 			category: 'cell',
 			base_cost: 3600000000000000,
+			cost_multiplier: 2.2,
 			base_ticks: 86000,
 			base_power: 52000000000,
 			base_heat: 52000000000,
@@ -145,6 +150,7 @@ window.parts = function() {
 			experimental: true,
 			erequires: 'protium_cells',
 			base_cost: 3000000000000000,
+			cost_multiplier: 2.2,
 			base_ticks: 3600,
 			base_power: 1250000000000,
 			base_heat: 1250000000000
@@ -395,7 +401,8 @@ window.parts = function() {
 			type: 'particle_accelerator',
 			title: 'Black Hole Particle Accelerator',
 			base_description: 'Generates Exotic Particles based on heat passing through the accelerator (maximum %ep_heat). If this part explodes it causes instant reactor meltdown. Holds a maximum of %containment heat. Actively draws %transfer heat from the reactor at the cost of 1 power per 1 heat.',
-			category: 'singularity_harnessing',
+			//category: 'singularity_harnessing',
+			category: 'particle_accelerator',
 			experimental: true,
 			erequires: '',
 			level: 6,
@@ -404,5 +411,5 @@ window.parts = function() {
 			base_ep_heat: 1600000000000000000000000000000
 		}
 	];
-};
+
 })();

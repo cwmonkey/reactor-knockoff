@@ -970,7 +970,7 @@ $all_upgrades.delegate('upgrade', 'blur', tooltip_hide);
 // Parts
 /////////////////////////////
 
-var parts = window.parts();
+var parts = window.parts;
 window.parts = null;
 
 game.parts = parts;
