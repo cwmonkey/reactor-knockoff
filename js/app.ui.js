@@ -525,8 +525,10 @@ ui.toggle_buttons_saves = toggle_buttons_saves;
 var toggle_buttons_loads = function(buttons) {
 	for (var [button, state] of Object.entries(buttons)) {
 		var button_obj = toggle_buttons[button];
-		!state ? button_obj.enable() : button_obj.disable();
-		button_obj.update_text();
+		if ( button_obj ) {
+			!state ? button_obj.enable() : button_obj.disable();
+			button_obj.update_text();
+		}
 	}
 }
 ui.toggle_buttons_loads = toggle_buttons_loads;
