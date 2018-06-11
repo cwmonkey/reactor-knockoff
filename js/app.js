@@ -600,6 +600,8 @@ var tile_part2;
 var range;
 var pulses;
 
+var active_cells = [];
+
 var stat_vent;
 var stat_inlet;
 var stat_outlet;
@@ -607,9 +609,59 @@ var total_heat;
 
 var tile_power_mult;
 var tile_heat_mult;
-var pack_multipliers = [1, 4, 12];
 
 var part_count;
+
+function* get_tile_in_range(tile, x) {
+	// Above tile in range
+	for (i=x; i>0; i--){;
+		row = game.tiles[tile.row-i];
+		if ( row ) {
+			for (col=tile.col+i-x; col<=tile.col-i+x; col++){
+				tile2 = row[col];
+				if ( tile2 ){
+					yield tile2;
+				}
+			}
+		}
+	}
+
+	// Same row as tile
+	row = game.tiles[tile.row]
+	for (col=tile.col-x; col<tile.col; col++){
+		tile2 = row[col];
+		if ( tile2 ){
+			yield tile2;
+		}
+	}
+
+	for (col=tile.col+1; col<tile.col+x+1; col++){
+		tile2 = row[col];
+		if ( tile2 ){
+			yield tile2;
+		}
+	}
+
+	// Below tile in range
+	for (i=1; i<x+1; i++){
+		row = game.tiles[tile.row+i];
+		if ( row ) {
+			for (col=tile.col+i-x; col<=tile.col-i+x; col++){
+				tile2 = row[col];
+				if ( tile2 ){
+					yield tile2;
+				}
+			}
+		}
+	}
+}
+
+function* heat_exchanger6_range(tile) {
+	if ( tile.row-1 >= 0 ) yield game.tiles[tile.row-1][tile.col];
+	yield* game.tiles[tile.row].slice(0,tile.col);
+	yield* game.tiles[tile.row].slice(tile.col+1);
+	if ( tile.row+1 <= game.max_rows ) yield game.tiles[tile.row+1][tile.col];
+}
 
 var update_tiles = function() {
 	transfer_multiplier = 0;
@@ -619,229 +671,151 @@ var update_tiles = function() {
 	total_heat = 0;
 	game.stats_power = 0;
 
+	active_cells.length = 0;
+
 	stat_vent = 0;
 	stat_inlet = 0;
 	stat_outlet = 0;
 
 	part_count = 0;
 
-	for ( ri = 0; ri < game.max_rows; ri++ ) {
-		row = game.tiles[ri];
-
-		for ( ci = 0; ci < game.max_cols; ci++ ) {
-			tile = row[ci];
-
-			if ( tile.enabled === false && ci < game.cols && ri < game.rows ) {
-				tile.enable();
-			}
+	for ( tile of game.active_tiles_2d ){
+		// Enable all disabled tile in active tiles
+		if ( tile.enabled === false ){
+			tile.enable();
 		}
-	}
 
-	for ( ri = 0; ri < game.rows; ri++ ) {
-		row = game.tiles[ri];
+		tile_part = tile.part;
 
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-			tile_part = tile.part;
+		// Zero out heat and power
+		tile.heat = 0;
+		tile.power = 0;
 
-			// Zero out heat and power
-			tile.heat = 0;
-			tile.power = 0;
+		// Alter counts
+		tile.containments.length = 0;
+		tile.cells.length = 0;
+		tile.reflectors.length = 0;
 
+		if ( tile_part && tile.activated ) {
 			// collect stats
-			if ( tile_part && tile.activated ) {
-				part_count++;
+			part_count++;
 
-				if ( tile_part.vent ) {
-					stat_vent += tile_part.vent;
-				}
+			if ( tile_part.vent ) {
+				stat_vent += tile_part.vent;
 			}
-		}
-	}
 
-	// Alter counts
-	for ( ri = 0; ri < game.rows; ri++ ) {
-		row = game.tiles[ri];
-
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-			tile_part = tile.part;
-			tile.containments.length = 0;
-			tile.cells.length = 0;
-			tile.reflectors.length = 0;
-
-			if ( tile_part && tile.activated && (tile_part.category !== 'cell' || tile.ticks) ) {
-				range = tile.part.range || 1;
+			// Process all tile, initiate part status
+			if ( tile_part.category !== 'cell' || tile.ticks ) {
+				var tiles;
+				if ( tile_part.id === 'heat_exchanger6' ) {
+					tiles = heat_exchanger6_range(tile);
+				} else {
+					tiles = get_tile_in_range(tile, tile.part.range || 1);
+				}
 
 				// Find containment parts and cells within range
-				for ( ri2 = 0; ri2 < game.rows; ri2++ ) {
-					for ( ci2 = 0; ci2 < game.cols; ci2++ ) {
-						if ( (Math.abs(ri2 - ri) + Math.abs(ci2 - ci)) <= range ) {
-							if ( ri2 === ri && ci2 === ci ) {
-								continue;
-							}
-
-							tile2 = game.tiles[ri2][ci2];
-
-							if ( tile2.part && tile2.activated && tile2.part.containment ) {
-								if ( tile.part.category === 'vent' || tile.part.id === 'coolant_cell6' ) {
-									tile.containments.unshift(tile2);
-								} else {
-									tile.containments.push(tile2);
-								}
-							} else if ( tile2.part && tile2.activated && tile2.part.category === 'cell' && tile2.ticks !== 0 ) {
-								tile.cells.push(tile2);
-							} else if ( tile2.part && tile2.activated && tile2.part.category === 'reflector' ) {
-								tile.reflectors.push(tile2);
-							}
-						} else if ( tile_part.id === 'heat_exchanger6' && ri2 === ri ) {
-							// TODO: repeated code from above
-							if ( ri2 === ri && ci2 === ci ) {
-								continue;
-							}
-
-							tile2 = game.tiles[ri2][ci2];
-
-							if ( tile2.part && tile2.activated && tile2.part.containment ) {
+				for ( tile2 of tiles ) {
+					if ( tile2.part && tile2.activated ) {
+						if ( tile2.part.containment ) {
+							if ( tile.part.category === 'vent' || tile.part.id === 'coolant_cell6' ) {
+								tile.containments.unshift(tile2);
+							} else {
 								tile.containments.push(tile2);
 							}
+						} else if ( tile2.part.category === 'cell' && tile2.ticks !== 0 ) {
+							tile.cells.push(tile2);
+						} else if ( tile2.part.category === 'reflector' ) {
+							tile.reflectors.push(tile2);
 						}
 					}
 				}
 			}
 
-			if ( tile_part && tile.activated ) {
-				if ( tile_part.category === 'capacitor' ) {
-					transfer_multiplier += tile_part.part.level * game.transfer_capacitor_multiplier;
-					vent_multiplier += tile_part.part.level * game.vent_capacitor_multiplier;
-				} else if ( tile_part.category === 'reactor_plating' ) {
-					transfer_multiplier += tile_part.part.level * game.transfer_plating_multiplier;
-					vent_multiplier += tile_part.part.level * game.vent_plating_multiplier;
-				}
-
-				if ( tile_part.category === 'heat_inlet' ) {
-					stat_inlet += tile_part.transfer * tile.containments.length;
-				}
-
-				if ( tile_part.category === 'heat_outlet' ) {
-					stat_outlet += tile_part.transfer * tile.containments.length;
-				}
-			}
-		}
-	}
-
-	// Heat and power generators
-	for ( ri = 0; ri < game.rows; ri++ ) {
-		row = game.tiles[ri];
-
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-			tile_part = tile.part;
-
-			if ( tile_part && tile.activated ) {
-				if ( tile_part.category === 'cell' && tile.ticks ) {
-					if ( tile.cells.length ) {
-						// Neighbor Cells
-						pulses = 0;
-						for ( i = 0, l = tile.cells.length; i < l; i++ ) {
-							tile2 = tile.cells[i];
-							pulses += tile2.part.cell_count * tile2.part.pulse_multiplier;
-						}
-
-						tile.heat += game.part_objects[tile_part.part.type + '1'].heat * (Math.pow((pack_multipliers[tile_part.part.level - 1] + pulses), 2)) / tile_part.cell_count;
-						tile.power += game.part_objects[tile_part.part.type + '1'].power * (pack_multipliers[tile_part.part.level - 1] + pulses);
-					} else {
-						tile.heat += tile_part.heat;
-						tile.power += tile_part.power;
-					}
-
-					tile.display_heat = tile.heat;
-					tile.display_power = tile.power;
-				}
+			if ( tile_part.category === 'capacitor' ) {
+				transfer_multiplier += tile_part.part.level * game.transfer_capacitor_multiplier;
+				vent_multiplier += tile_part.part.level * game.vent_capacitor_multiplier;
+			} else if ( tile_part.category === 'reactor_plating' ) {
+				transfer_multiplier += tile_part.part.level * game.transfer_plating_multiplier;
+				vent_multiplier += tile_part.part.level * game.vent_plating_multiplier;
 			}
 
-		}
-	}
-
-	// Reflectors
-	for ( ri = 0; ri < game.rows; ri++ ) {
-		row = game.tiles[ri];
-
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-			tile_part = tile.part;
-
-			if ( tile_part && tile.activated ) {
-				if ( tile_part.category === 'cell' ) {
-					l = tile.reflectors.length;
-
-					if ( l ) {
-						tile_power_mult = 0;
-						tile_heat_mult = 0;
-
-						for ( i = 0; i < l; i++ ) {
-							tile_reflector = tile.reflectors[i];
-							tile_power_mult += tile_reflector.part.power_increase;
-
-							if ( tile_reflector.part.heat_increase ) {
-								tile_heat_mult += tile_reflector.part.heat_increase;
-							}
-						}
-
-						tile.power += tile.power * ( tile_power_mult / 100 );
-						tile.heat += tile.heat * ( tile_heat_mult / 100 );
-						tile.display_power = tile.power;
-						tile.display_heat = tile.heat;
-					}
-				}
+			if ( tile_part.category === 'heat_inlet' ) {
+				stat_inlet += tile_part.transfer * tile.containments.length;
 			}
-		}
-	}
 
-	// Containments
-	for ( ri = 0; ri < game.rows; ri++ ) {
-		row = game.tiles[ri];
-
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-			tile_part = tile.part;
-
-			if ( tile_part && tile.activated ) {
-				if ( tile_part.category === 'cell' ) {
-					l = tile.containments.length;
-
-					if ( l ) {
-						heat_remove = Math.ceil(tile.heat / l);
-
-						for ( i = 0; i < l; i++ ) {
-							tile_containment = tile.containments[i];
-							tile.heat -= heat_remove;
-							tile_containment.heat += heat_remove;
-						}
-					}
-				}
+			if ( tile_part.category === 'heat_outlet' ) {
+				stat_outlet += tile_part.transfer * tile.containments.length;
 			}
-		}
-	}
 
-	// Capacitors/Plating
-	for ( ri = 0; ri < game.rows; ri++ ) {
-		row = game.tiles[ri];
+			// tile.ticks have been checked above so the cell should be alive
+			if ( tile_part.category === 'cell' ) {
+				active_cells.push(tile)
+			}
 
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-			tile_part = tile.part;
-
-			if ( tile_part && tile.activated && tile_part.reactor_power ) {
+			// Capacitors/Plating
+			if ( tile_part.reactor_power ) {
 				max_power += tile_part.reactor_power;
 			}
 
-			if ( tile_part && tile.activated && tile_part.reactor_heat ) {
+			if ( tile_part.reactor_heat ) {
 				max_heat += tile_part.reactor_heat;
 			}
 
-			if ( tile_part && tile.activated && tile_part.id === 'reactor_plating6' ) {
+			if ( tile_part.id === 'reactor_plating6' ) {
 				max_power += tile_part.reactor_heat;
+			}
+		}
+	}
+
+	for ( tile of active_cells ) {
+		tile_part = tile.part;
+
+		// Heat and power generators
+		if ( tile.cells.length ) {
+			// Neighbor Cells
+			pulses = 0;
+			for ( tile2 of tile.cells ) {
+				pulses += tile2.part.pulses;
+			}
+
+			tile.heat += tile_part.base_heat * Math.pow(tile_part.part.cell_multiplier + pulses, 2) / tile_part.cell_count;
+			tile.power += tile_part.base_power * (tile_part.part.cell_multiplier + pulses);
+		} else {
+			tile.heat += tile_part.heat;
+			tile.power += tile_part.power;
+		}
+
+		// Reflectors
+		if ( tile.reflectors.length ) {
+			tile_power_mult = 0;
+			tile_heat_mult = 0;
+
+			for ( tile_reflector of tile.reflectors ) {
+				tile_power_mult += tile_reflector.part.power_increase;
+
+				if ( tile_reflector.part.heat_increase ) {
+					tile_heat_mult += tile_reflector.part.heat_increase;
+				}
+			}
+
+			tile.power += tile.power * ( tile_power_mult / 100 );
+			tile.heat += tile.heat * ( tile_heat_mult / 100 );
+		}
+
+		tile.display_heat = tile.heat;
+		tile.display_power = tile.power;
+
+		// heat and power stats
+		total_heat += tile.heat;
+		game.stats_power += tile.power;
+
+		// Containments
+		if ( tile.containments.length ) {
+			heat_remove = Math.ceil(tile.heat / tile.containments.length);
+
+			for ( tile_containment of tile.containments ) {
+				tile.heat -= heat_remove;
+				tile_containment.heat += heat_remove;
 			}
 		}
 	}
