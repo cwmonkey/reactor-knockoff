@@ -205,8 +205,6 @@ var set_defaults = function() {
 	protium_particles = 0;
 };
 
-set_defaults();
-
 /////////////////////////////
 // Online Saves and related functions
 /////////////////////////////
@@ -287,7 +285,7 @@ var save = function(event) {
 	);
 };
 
-var srows;
+var stiles;
 var spart;
 var sstring;
 var squeue;
@@ -295,53 +293,17 @@ var supgrades;
 var save_timeout;
 
 var saves = function() {
-	srows = [];
-
-	// Tiles
-	for ( ri = 0; ri < game.rows; ri++ ) {
-		row = game.tiles[ri];
-		srow = [];
-
-		for ( ci = 0; ci < game.cols; ci++ ) {
-			tile = row[ci];
-
-			if ( tile.part ) {
-				srow.push({
-					id: tile.part.id,
-					ticks: tile.ticks,
-					activated: tile.activated,
-					heat_contained: tile.heat_contained
-				});
-			} else {
-				srow.push(null);
-			}
-		}
-
-		srows.push(srow);
-	}
+	stiles = game.active_tiles_2d.map((tile)=>tile.part ?
+	    {id: tile.part.id, ticks:tile.ticks, activated: tile.activated, heat_contained: tile.heat_contained} : null);
 
 	// Tile queue
-	squeue = [];
-	for ( i = 0, l = tile_queue.length; i < l; i++ ) {
-		tile = tile_queue[i];
-		squeue.push({
-			row: tile.row,
-			col: tile.col
-		});
-	}
+	squeue = tile_queue.map((tile)=>{return {row:tile.row, col:tile.col}});
 
 	// Upgrades
-	supgrades = [];
-	for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
-		upgrade = game.upgrade_objects_array[i];
-		supgrades.push({
-			id: upgrade.upgrade.id,
-			level: upgrade.level
-		});
-	}
+	supgrades = game.upgrade_objects_array.map((upgrade)=>{return {id: upgrade.upgrade.id, level:upgrade.level}});
 
 	return window.btoa(JSON.stringify({
-			tiles: srows,
+			active_tiles_2d: {rows:game.rows, cols:game.cols, tiles: stiles},
 			tile_queue: squeue,
 			upgrades: supgrades,
 			current_power: current_power,
@@ -366,6 +328,7 @@ var supgrade_object;
 
 var loads = function(rks) {
 	game.save_debug && console.log('save_game.load', rks);
+	set_defaults();
 
 	if ( rks ) {
 		try {
@@ -400,6 +363,7 @@ var loads = function(rks) {
 		ui.say('var', 'auto_heat_reduce', max_heat/10000);
 
 		// Tiles
+		// old save loading for backward compatibility
 		if ( rks.tiles ) {
 			for ( ri = 0; ri < game.max_rows; ri++ ) {
 				row = game.tiles[ri];
@@ -422,18 +386,30 @@ var loads = function(rks) {
 			}
 		}
 
+		if ( rks.active_tiles_2d ) {
+			game.set_active_tiles(rks.active_tiles_2d.rows, rks.active_tiles_2d.cols)
+			for ( [i, stile] of rks.active_tiles_2d.tiles.entries() ){
+				if ( stile ){
+					tile = game.active_tiles_2d[i];
+					tile.setTicks(stile.ticks);
+					tile.activated = stile.activated;
+					tile.setHeat_contained(stile.heat_contained);
+					part = game.part_objects[stile.id];
+					apply_to_tile(tile, part, true);
+				}
+			}
+		}
+
 		// Tile queue
 		if ( rks.tile_queue ) {
-			for ( i = 0, l = rks.tile_queue.length; i < l; i++ ) {
-				stile = rks.tile_queue[i];
+			for ( stile of rks.tile_queue ) {
 				tile_queue.push(game.tiles[stile.row][stile.col]);
 			}
 		}
 
 		// Upgrades
 		if ( rks.upgrades ) {
-			for ( i = 0, l = rks.upgrades.length; i < l; i++ ) {
-				supgrade = rks.upgrades[i];
+			for ( supgrade of rks.upgrades ) {
 				supgrade_object = game.upgrade_objects[supgrade.id];
 
 				if ( supgrade_object ) {
@@ -482,33 +458,22 @@ window.reboot = function(refund) {
 
 	set_defaults();
 
-	for ( ri = 0; ri < game.max_rows; ri++ ) {
-		row = game.tiles[ri];
-
-		for ( ci = 0; ci < game.max_cols; ci++ ) {
-			tile = row[ci];
-			remove_part(tile, true);
-
-			if ( ri >= game.rows || ci >= game.cols ) {
-				tile.disable();
-			}
-		}
+	for ( tile of game.tiles_2d ) {
+		remove_part(tile, true);
+		tile.disable();
 	}
 
 	total_exotic_particles += game.exotic_particles;
 	ui.say('var', 'total_exotic_particles', total_exotic_particles);
 
 	if ( refund === true ) {
-		for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
-			upgrade = game.upgrade_objects_array[i];
+		for ( upgrade of game.upgrade_objects_array ) {
 			upgrade.setLevel(0);
 		}
 
 		game.current_exotic_particles = total_exotic_particles;
 	} else {
-		for ( i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
-			upgrade = game.upgrade_objects_array[i];
-
+		for ( upgrade of game.upgrade_objects_array ) {
 			if ( !upgrade.ecost ) {
 				upgrade.setLevel(0);
 			} else {
