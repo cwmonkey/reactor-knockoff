@@ -367,7 +367,8 @@ window.upgrades = function(game) {
 				for ( var i = 0, l = game.part_objects_array.length; i < l; i++ ) {
 					part = game.part_objects_array[i];
 					if ( part.category === 'cell' ) {
-						part.heat = part.part.base_heat * Math.pow(2, upgrade.level);
+						part.base_heat = part.part.base_heat * Math.pow(2, upgrade.level);
+						part.heat = part.part.heat * Math.pow(2, upgrade.level);
 					}
 				}
 

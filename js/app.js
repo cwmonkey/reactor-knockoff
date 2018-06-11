@@ -1174,27 +1174,29 @@ var cell_heat_multipliers = [1, 8, 36];
 var cell_counts = [1, 2, 4, 9, 16];
 
 var create_part = function(part, level) {
+	level = level || part.level;
 	if ( level ) {
-		part = JSON.parse(JSON.stringify(part));
+		part = Object.assign({}, part);
 		part.level = level;
+
+		part.base_cost *= Math.pow(part.cost_multiplier || 1, level - 1);
 
 		if ( part.category === 'cell' ) {
 			part.id = part.type + level;
-			part.title = cell_prefixes[level -1] + part.title;
-			part.base_cost = part.base_cost
+			part.title = (cell_prefixes[level -1] || '') + part.title;
+
 			if ( level > 1 ) {
-				part.base_cost *= Math.pow(2.2, level - 1);
 				part.base_description = multi_cell_description;
 			}
-			part.base_power = part.base_power * cell_power_multipliers[level - 1];
-			part.base_heat = part.base_heat * cell_heat_multipliers[level - 1];
+			part.power = part.base_power * cell_power_multipliers[level - 1];
+			part.heat = part.base_heat * cell_heat_multipliers[level - 1];
 
 			part.cell_count = cell_counts[level - 1];
+			part.cell_multiplier = cell_power_multipliers[level - 1];
 			part.pulse_multiplier = 1;
 		} else {
 			part.id = part.category + level;
-			part.title = prefixes[level -1] + part.title;
-			part.base_cost = part.base_cost * Math.pow(part.cost_multiplier, level -1);
+			part.title = (prefixes[level -1] || '') + part.title;
 
 			if ( part.base_ticks && part.ticks_multiplier ) {
 				part.base_ticks = part.base_ticks * Math.pow(part.ticks_multiplier, level - 1);
@@ -1265,14 +1267,18 @@ game.update_cell_power = function() {
 
 		if ( part.category === 'cell' ) {
 			if ( game.upgrade_objects['cell_power_' + part.part.type] ) {
-				part.power = part.part.base_power * (game.upgrade_objects['cell_power_' + part.part.type].level + game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+				part.base_power = part.part.base_power * (game.upgrade_objects['cell_power_' + part.part.type].level + game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+				part.power = part.part.power * (game.upgrade_objects['cell_power_' + part.part.type].level + game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 			} else {
-				part.power = part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+				part.base_power = part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+				part.power = part.part.power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 			}
 
 			if ( part.part.type === 'protium' ) {
 				// TODO: DRY this
-				part.power = part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unstable_protium'].level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+				part.base_power = part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unstable_protium'].level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+				part.base_power *= 1 + protium_particles / 10;
+				part.power = part.part.power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, game.upgrade_objects['unstable_protium'].level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 				part.power *= 1 + protium_particles / 10;
 			}
 		}
