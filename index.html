@@ -17,14 +17,10 @@
 	<link rel="stylesheet" href="css/reset.css">
 	<link rel="stylesheet" href="css/app.css">
 	<link rel="stylesheet" href="css/app.perf.css">
-	<link rel="stylesheet" href="css/app.legacy.css">
 	<link rel="stylesheet" href="css/cms.css">
 </head>
 <body>
 	<div id="wrapper">
-		<header id="main_header">
-			<h1 class="heading">Reactor Knockoff</h1>
-		</header>
 		<main id="main" class="reactor_showing">
 			<!-- ---- Secondary ---- -->
 			<div id="secondary" class="panel_holder">
@@ -212,8 +208,10 @@
 							</div>
 						</header>
 						<div id="reactor_wrapper">
-							<div id="reactor" class="subpanel">
+							<div id="tile_wrapper" class="subpanel">
+								<div id="reactor"></div>
 							</div>
+							<div id="reactor_background"></div>
 						</div>
 					</section>
 
@@ -247,24 +245,27 @@
 						<div id="options" class="subpanel explanitory cms">
 							<p><button id="enable_google_drive_save">Enable Google Drive Online Save</button></p>
 							<p><button id="enable_local_save">Enable Local Save Only</button></p>
-							<p><button id="trigger_save">Save game</button>
-							<button id="export_save">Export save</button>
-							<button id="download_save">Download save</button>
-							<button id="import_save">Import save</button>
-							<button id="reset_game">Reset game</button></p>
-							<dialog id="Import_Export_dialog" style="padding: 0; border: none;">
-								<div class="panel">
-									<form method="dialog" class="subpanel">
-										<menu style="float: right">
-											<button id="Import_Export_close_button" type="reset">Cancel</button>
-											<button id="import_button" type="submit">Import</button>
-										</menu>
-										<section>
-											<textarea id="txtImportExport" rows="10" cols="75"></textarea>
-										</section>
-									</form>
-								</div>
-							</dialog>
+							<div>
+								<p><button id="trigger_save">Save game</button>
+								<button id="export_save">Export save</button>
+								<button id="download_save">Download save</button>
+								<button id="import_save">Import save</button>
+								<button id="reset_game">Reset game</button></p>
+								<dialog id="Import_Export_dialog" style="padding: 0; border: none;">
+									<div class="panel">
+										<form method="dialog" class="subpanel">
+											<menu style="float: right">
+												<button id="Import_Export_close_button" type="reset">Cancel</button>
+												<button id="import_button" type="submit">Import</button>
+											</menu>
+											<section>
+												<textarea id="txtImportExport" rows="10" cols="75"></textarea>
+											</section>
+										</form>
+									</div>
+								</dialog>
+							</div>
+							<p><button id="speed_hack"></button></p>
 						</div>
 					</section>
 

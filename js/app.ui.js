@@ -17,6 +17,7 @@ window.ui = ui;
 // DOM nodes
 var $main = $('#main');
 var $reactor = $('#reactor');
+var $reactor_background = $('#reactor_background');
 var $reactor_section = $('#reactor_section');
 var $refund_exotic_particles = $('#refund_exotic_particles');
 var $reboot_exotic_particles = $('#reboot_exotic_particles');
@@ -39,11 +40,14 @@ var perc = function(numerator, denominator, dom) {
 
 var update_heat_background = function (current_heat, max_heat) {
 	if ( current_heat <= max_heat ) {
-		$reactor.style.backgroundColor = 'transparent';
+		$reactor_background.style['will-change'] = '';
+		$reactor_background.style.backgroundColor = 'transparent';
 	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
-		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
+		$reactor_background.style['will-change'] = 'opacity';
+		$reactor_background.style.backgroundColor = 'rgba(255, 0, 0, ' + round_percentage((current_heat - max_heat) / max_heat, 2)/100 + ')';
 	} else {
-		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
+		$reactor_background.style['will-change'] = 'opacity';
+		$reactor_background.style.backgroundColor = 'rgb(255, 0, 0)';
 	}
 }
 
@@ -541,13 +545,16 @@ var create_toggle_button = function(button, enable_text, disable_text) {
 	var $button = $(button);
 	// Initiate with some text in the button so it isn't empty when something goes wrong when starting
 	$button.textContent = enable_text;
-	return (state, enable_callback, disable_callback) => {
+	return (state, enable_callback, disable_callback, always_update_text) => {
 		var update_text = () => $button.textContent = !state() ? enable_text : disable_text;
 		toggle_buttons[button] = {update_text: update_text, state: state,
 		                          enable: enable_callback, disable: disable_callback};
 		$button.onclick = (event) => {
 			event.preventDefault();
 			state() ? enable_callback() : disable_callback();
+			if (always_update_text){
+				update_text();
+			}
 		};
 	};
 };
@@ -607,6 +614,22 @@ create_toggle_button('#heat_control_toggle', 'Disable Heat Controller', 'Enable 
 
 evts.heat_control_disabled = update_button('#heat_control_toggle');
 evts.heat_control_enabled = update_button('#heat_control_toggle');
+
+var speed_hack = false;
+create_toggle_button('#speed_hack', 'Disable Speed Hack', 'Enable Speed Hack')(
+	()=>!speed_hack,
+	function() {
+		speed_hack = true;
+		$main.classList.add('speed_hack');
+		$reactor.classList.add('speed_hack');
+	},
+	function() {
+		speed_hack = false;
+		$main.classList.remove('speed_hack');
+		$reactor.classList.remove('speed_hack');
+	},
+	true
+)
 
 /////////////////////////////
 // Misc UI
