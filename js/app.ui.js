@@ -199,44 +199,54 @@ var Update_vars = function() {
 	update_vars.clear();
 };
 
+// width of percentage bar is about 28pt
+var percentage_interval = Math.round(100/28);
+
+var round_percentage = function(perc, step) {
+	return Math.round(perc*100/step)*step
+}
+
 // Update Interface
 // TODO: configurable interval
 var update_interface_interval = 100;
 var unaffordable_replace = /[\s\b]unaffordable\b/;
 var locked_find = /[\b\s]locked\b/;
 var do_check_upgrades_affordability = false;
+var update_interface_task = null;
+
 var update_interface = function() {
 	var start_ui_loop = performance.now();
 
 	window.updateProperty();
 	Update_vars();
-	setTimeout(update_interface, update_interface_interval);
+
+	clearTimeout(update_interface_task);
+	update_interface_task = setTimeout(update_interface, update_interface_interval);
 
 	if ( $reactor_section.classList.contains('showing') ) {
-		for ( var ri = 0, row, ci, tile; ri < ui.game.max_rows; ri++ ) {
-			row = ui.game.tiles[ri];
-
-			for ( ci = 0; ci < ui.game.max_cols; ci++ ) {
-				tile = row[ci];
-				if ( tile.ticksUpdated ) {
-					if ( tile.part ) {
-						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
-					} else {
-						tile.$percent.style.width = '0';
-					}
-
-					tile.ticksUpdated = false;
+		for ( var tile of ui.game.active_tiles_2d ) {
+			if ( tile.ticksUpdated ) {
+				if ( tile.part ) {
+					// width of percentage bar is about 28pt
+					var width = round_percentage(tile.ticks/tile.part.ticks, Math.round(100/28));
+					tile.$percent.style.width = width + '%';
+				} else {
+					tile.$percent.style.width = '0';
 				}
 
-				if ( tile.heat_containedUpdated ) {
-					if ( tile.part && tile.part.containment ) {
-						tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
-					} else {
-						tile.$percent.style.width = '0';
-					}
+				tile.ticksUpdated = false;
+			}
 
-					tile.heat_containedUpdated = false;
+			if ( tile.heat_containedUpdated ) {
+				if ( tile.part && tile.part.containment ) {
+					// width of percentage bar is about 28pt
+					var width = round_percentage(tile.heat_contained/tile.part.containment, Math.round(100/28));
+					tile.$percent.style.width = width + '%';
+				} else {
+					tile.$percent.style.width = '0';
 				}
+
+				tile.heat_containedUpdated = false;
 			}
 		}
 	}
@@ -292,11 +302,6 @@ ui.say = function(type, name, val) {
 
 		if ( var_objs[name] && var_objs[name].instant === true ) {
 			update_var(name, var_objs[name]);
-		}
-
-		if ( name === 'game_loop_speed' ) {
-			//console.log(arguments);
-			//update_interface_interval = val * 1;
 		}
 	} else if ( type === 'evt' ) {
 		if ( evts[name] ) {
