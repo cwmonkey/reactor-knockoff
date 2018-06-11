@@ -325,7 +325,6 @@ var supgrade_object;
 var loads = function(rks) {
 	game.save_debug && console.log('save_game.load', rks);
 
-	ui.update_interface();
 	if ( rks ) {
 		try {
 			rks = JSON.parse(window.atob(rks));
