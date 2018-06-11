@@ -54,7 +54,7 @@ var google_loaded = false;
 var google_auth_called = false;
 
 window.set_google_loaded = function() {
-	game.save_debug && console.log('set_google_loaded');
+	save_manager.game.save_debug && console.log('set_google_loaded');
 	google_loaded = true;
 
 	if ( google_auth_called ) {
