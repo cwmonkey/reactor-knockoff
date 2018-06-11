@@ -6,7 +6,7 @@
 	<title>Reactor Knockoff</title>
 
 	<script>
-		if ( window.location.hostname === 'cwmonkey.github.io' && window.location.protocol !== 'https:' ) {
+		if ( window.location.hostname.indexOf('.github.io') !== -1 && window.location.protocol !== 'https:' ) {
 			window.location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
 		}
 	</script>
