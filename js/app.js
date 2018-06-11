@@ -505,6 +505,7 @@ var pi;
 var pl;
 var ci;
 var row;
+var col;
 var tile;
 var upgrade;
 
@@ -1332,7 +1333,6 @@ game.epart_onclick = function(upgrade) {
 var upgrades = window.upgrades(game);
 window.upgrades = null;
 
-
 // More stuff I guess
 
 var upgrade_locations = {
@@ -1422,10 +1422,8 @@ if ( game.debug ) {
 	});
 }
 
-var check_upgrades_affordability_timeout;
-window.check_upgrades_affordability = function( /* do_timeout */ ) {
-	for ( var i = 0, l = game.upgrade_objects_array.length, upgrade; i < l; i++ ) {
-		upgrade = game.upgrade_objects_array[i];
+window.check_upgrades_affordability = function( ) {
+	for ( var upgrade of game.upgrade_objects_array ) {
 
 		if (
 			upgrade.level < upgrade.upgrade.levels
@@ -1449,21 +1447,7 @@ window.check_upgrades_affordability = function( /* do_timeout */ ) {
 			upgrade.setAffordable(false);
 		}
 	}
-
-	/*if ( do_timeout === true ) {
-		check_upgrades_affordability_timeout = setTimeout(function() {
-			check_upgrades_affordability(true);
-		}, 200);
-	}*/
 };
-
-/* window.start_check_upgrades_affordability = function() {
-	check_upgrades_affordability(true);
-};
-
-window.stop_check_upgrades_affordability = function() {
-	clearTimeout(check_upgrades_affordability_timeout);
-}; */
 
 // Select part
 var active_replace = /[\b\s]part_active\b/;
@@ -1522,9 +1506,6 @@ var apply_to_tile = function(tile, part, force) {
 		if ( !tile.ticks ) {
 			tile.$el.className += ' spent';
 		}
-
-		//tile.$percent.style.width = tile.ticks / part.ticks * 100 + '%';
-		tile.updated = true;
 	}
 
 	if ( !tile.activated ) {
@@ -1556,7 +1537,6 @@ var remove_part = function(remove_tile, skip_update, sell) {
 	remove_tile.part = null;
 	remove_tile.setTicks(0);
 	remove_tile.setHeat_contained(0);
-	//remove_tile.$percent.style.width = 0;
 	remove_tile.updated = true;
 	remove_tile.$el.className = remove_tile.$el.className
 		.replace(part_replace, '')
@@ -1570,7 +1550,7 @@ var remove_part = function(remove_tile, skip_update, sell) {
 	}
 
 	rpl = tile_queue.length;
-	if ( rpl ) { 
+	if ( rpl ) {
 		for ( rpqi = 0; rpqi < rpl; rpqi++ ) {
 			tile2 = tile_queue[rpqi];
 			if ( !tile2.part ) {
@@ -2311,7 +2291,7 @@ window.check_affordability = function() {
 		) {
 			part.setAffordable(false);
 		} else if ( !part.affordable ) {
-			if ( 
+			if (
 				part.cost <= game.current_money
 				&& (!part.erequires || game.upgrade_objects[part.erequires].level)
 			) {
