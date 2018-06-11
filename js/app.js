@@ -887,17 +887,18 @@ var tooltip_update = null;
 var tooltip_showing;
 
 var tooltip_show = function(part, tile, update) {
-	if ( !part ) return;
-
 	clearTimeout(tooltip_task);
+	if ( !part ) {
+		tooltip_task = setTimeout(_tooltip_hide, 200);
+		return;
+	}
+
 	if ( !tooltip_showing )	{
 		$main.classList.add('tooltip_showing');
 		tooltip_showing = true;
-		part.showTooltip(tile);
-	} else {
-		part.updateTooltip(tile)
 	}
-	
+
+	part.showTooltip(tile);
 	tooltip_update = update;
 }
 
@@ -907,7 +908,8 @@ var _tooltip_hide = function() {
 	tooltip_showing = false;
 }
 
-var tooltip_hide = function() {
+var tooltip_hide = function(e) {
+	clearTimeout(tooltip_task);
 	tooltip_task = setTimeout(_tooltip_hide, 200);
 }
 
