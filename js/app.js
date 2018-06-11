@@ -62,64 +62,106 @@ console.log
 var ui = window.ui;
 window.ui = null;
 
-var Game = function() {
-	this.ui;
+var Game = class {
+	constructor() {
+		this.ui;
 
-	// settings
-	this.version = '1.2.0';
-	this.base_cols = 14;
-	this.base_rows = 11;
-	this.max_cols = 35;
-	this.max_rows = 32;
-	this.debug = false;
-	this.save_debug = false;
-	this.base_loop_wait = 1000;
-	this.base_power_multiplier = 1;
-	this.base_heat_multiplier = 4;
-	this.base_manual_heat_reduce = 1;
-	this.upgrade_max_level = 32;
-	this.base_max_heat = 1000;
-	this.base_max_power = 100;
-	this.base_money = 10;
-	this.save_interval = 60000;
+		// settings
+		this.version = '1.3.0';
+		this.base_cols = 14;
+		this.base_rows = 11;
+		this.max_cols = 35;
+		this.max_rows = 32;
+		this.debug = false;
+		this.save_debug = false;
+		this.base_loop_wait = 1000;
+		this.base_power_multiplier = 1;
+		this.base_heat_multiplier = 4;
+		this.base_manual_heat_reduce = 1;
+		this.upgrade_max_level = 32;
+		this.base_max_heat = 1000;
+		this.base_max_power = 100;
+		this.base_money = 10;
+		this.save_interval = 60000;
 
-	// Current
-	this.current_heat;
-	this.rows;
-	this.cols;
-	this.tiles = [];
-	this.loop_wait;
-	this.heat_power_multiplier;
-	this.heat_controlled;
-	this.manual_heat_reduce;
-	this.auto_sell_multiplier;
-	this.transfer_plating_multiplier;
-	this.transfer_capacitor_multiplier;
-	this.vent_plating_multiplier;
-	this.vent_capacitor_multiplier;
-	this.altered_max_power;
-	this.altered_max_heat;
-	this.stats_power;
-	this.stats_cash = 0;
-	this.paused = false;
-	this.auto_sell_disabled = false;
-	this.auto_buy_disabled = false;
-	this.has_melted_down = false;
-	this.current_money = 0;
-	this.exotic_particles = 0;
-	this.current_exotic_particles = 0;
+		// Current
+		this.current_heat;
+		this.tiles = [];
+		this.tiles_2d = [];
+		this.active_tiles = [];
+		this.active_tiles_2d = [];
+		this.loop_wait;
+		this.heat_power_multiplier;
+		this.heat_controlled;
+		this.manual_heat_reduce;
+		this.auto_sell_multiplier;
+		this.transfer_plating_multiplier;
+		this.transfer_capacitor_multiplier;
+		this.vent_plating_multiplier;
+		this.vent_capacitor_multiplier;
+		this.altered_max_power;
+		this.altered_max_heat;
+		this.stats_power;
+		this.stats_cash = 0;
+		this.paused = false;
+		this.auto_sell_disabled = false;
+		this.auto_buy_disabled = false;
+		this.has_melted_down = false;
+		this.current_money = 0;
+		this.exotic_particles = 0;
+		this.current_exotic_particles = 0;
 
-	// Displayed
+		// Displayed
 
 
-	this.part_objects_array = [];
-	this.part_objects = {};
-	this.upgrade_objects_array = [];
-	this.upgrade_objects = {};
+		this.part_objects_array = [];
+		this.part_objects = {};
+		this.upgrade_objects_array = [];
+		this.upgrade_objects = {};
 
-	// Objectives
-	this.sold_power = false;
-	this.sold_heat = false;
+		// Objectives
+		this.sold_power = false;
+		this.sold_heat = false;
+	}
+
+	update_active_tiles() {
+		var arow;
+		this.active_tiles.length = 0;
+		this.active_tiles_2d.length = 0;
+		for ( ri = 0; ri < this.rows; ri++ ) {
+			row = this.tiles[ri]
+			arow = [];
+
+			for ( ci = 0; ci < this.cols; ci++ ) {
+				tile = row[ci];
+				arow.push(tile);
+				this.active_tiles_2d.push(tile);
+			}
+			this.active_tiles.push(row);
+		}
+	}
+
+	set_active_tiles(row, col) {
+		this._rows = row;
+		this._cols = col;
+		this.update_active_tiles();
+	}
+
+	get rows() {
+		return this._rows;
+	}
+	set rows(length) {
+		this._rows = length;
+		this.update_active_tiles();
+	}
+
+	get cols() {
+		return this._cols;
+	}
+	set cols(length) {
+		this._cols = length;
+		this.update_active_tiles();
+	}
 };
 
 Game.prototype.addProperty = addProperty;
@@ -509,28 +551,40 @@ var multi_cell_description = 'Acts as %count %type cells. Produces %power power 
 // Tiles
 /////////////////////////////
 
-var Tile = function(row, col) {
-	this.part = null;
-	this.heat = 0;
-	this.display_power = null;
-	this.display_heat = null;
-	this.power = 0;
-	this.containments = [];
-	this.cells = [];
-	this.reflectors = [];
-	this.activated = false;
-	this.row = row;
-	this.col = col;
-	this.enabled = false;
-	this.updated = false;
+var Tile = class {
+	constructor(row, col) {
+		this.part = null;
+		this.heat = 0;
+		this.display_power = null;
+		this.display_heat = null;
+		this.power = 0;
+		this.containments = [];
+		this.cells = [];
+		this.reflectors = [];
+		this.activated = false;
+		this.row = row;
+		this.col = col;
+		this.enabled = false;
+		this.updated = false;
 
-	this.display_chance = 0;
-	this.display_chance_percent_of_total = 0;
+		this.display_chance = 0;
+		this.display_chance_percent_of_total = 0;
 
-	this.addProperty('heat_contained', 0);
-	this.addProperty('ticks', 0);
+		this.addProperty('heat_contained', 0);
+		this.addProperty('ticks', 0);
+	}
 
-	Object.defineProperty(this, 'vent', { get: () => this.part.vent ? this.part.vent * (1 + vent_multiplier / 100) : undefined });
+	get vent() {
+		if ( this.part.vent ) {
+			return this.part.vent * (1 + vent_multiplier / 100);
+		}
+	}
+
+	get transfer() {
+		if ( this.part.transfer ) {
+			return this.part.transfer * (1 + transfer_multiplier / 100);
+		}
+	}
 };
 
 Tile.prototype.addProperty = addProperty;
@@ -988,188 +1042,196 @@ $all_upgrades.delegate('upgrade', 'blur', tooltip_hide);
 var parts = window.parts();
 window.parts = null;
 
-var Part = function(part) {
-	this.part = part;
-	this.id = part.id;
-	this.category = part.category;
-	this.heat = part.base_heat;
-	this.power = part.base_power;
-	this.heat_multiplier = part.base_heat_multiplier;
-	this.power_multiplier = part.base_power_multiplier;
-	this.power_increase = part.base_power_increase;
-	this.heat_increase = part.base_heat_increase;
-	this.ticks = part.base_ticks;
-	this.containment = part.base_containment;
-	this.vent = part.base_vent;
-	this.reactor_power = part.base_reactor_power;
-	this.reactor_heat = part.base_reactor_heat;
-	this.transfer = part.base_transfer;
-	this.range = part.base_range;
-	this.ep_heat = part.base_ep_heat;
-	this.erequires = part.erequires || null;
-	this.cost = part.base_cost;
-	this.perpetual = false;
-	this.description = '';
-	this.sells = 0;
-	this.auto_sell = 0;
-	this.cell_count = part.cell_count || 0;
-	this.pulse_multiplier = part.pulse_multiplier || 0;
+game.parts = parts;
 
-	this.addProperty('affordable', false);
-};
+var Part = class {
+	constructor(part) {
+		this.part = part;
+		this.id = part.id;
+		this.category = part.category;
+		this.heat = part.heat;
+		this.power = part.power;
+		this.base_heat = part.base_heat;
+		this.base_power = part.base_power;
+		this.heat_multiplier = part.base_heat_multiplier;
+		this.power_multiplier = part.base_power_multiplier;
+		this.power_increase = part.base_power_increase;
+		this.heat_increase = part.base_heat_increase;
+		this.ticks = part.base_ticks;
+		this.containment = part.base_containment;
+		this.vent = part.base_vent;
+		this.reactor_power = part.base_reactor_power;
+		this.reactor_heat = part.base_reactor_heat;
+		this.transfer = part.base_transfer;
+		this.range = part.base_range;
+		this.ep_heat = part.base_ep_heat;
+		this.erequires = part.erequires || null;
+		this.cost = part.base_cost;
+		this.perpetual = false;
+		this.description = '';
+		this.sells = 0;
+		this.auto_sell = 0;
+		this.cell_count = part.cell_count || 0;
+		this.cell_multiplier = part.cell_multiplier || 0;
+		this.pulse_multiplier = part.pulse_multiplier || 0;
+		this.pulses = part.cell_count * part.pulse_multiplier;
 
-Part.prototype.addProperty = addProperty;
-
-Part.prototype.updateDescription = function(tile) {
-	var description = this.part.base_description
-		.replace(/%single_cell_description/, single_cell_description)
-		.replace(/%multi_cell_description/, multi_cell_description)
-		.replace(/%power_increase/, fmt(this.power_increase))
-		.replace(/%heat_increase/, fmt(this.heat_increase))
-		.replace(/%reactor_power/, fmt(this.reactor_power))
-		.replace(/%reactor_heat/, fmt(this.reactor_heat))
-		.replace(/%ticks/, fmt(this.ticks))
-		.replace(/%containment/, fmt(this.containment))
-		.replace(/%ep_heat/, fmt(this.ep_heat))
-		.replace(/%range/, fmt(this.range))
-		.replace(/%count/, [1, 2, 4][this.part.level - 1])
-		.replace(/%power/, fmt(this.power))
-		.replace(/%heat/, fmt(this.heat))
-		;
-
-	if ( tile ) {
-		description = description
-			.replace(/%transfer/, fmt(this.transfer * (1 + transfer_multiplier / 100)))
-			.replace(/%vent/, fmt(this.vent * (1 + vent_multiplier / 100) ))
-			;
-	} else {
-		description = description
-			.replace(/%transfer/, fmt(this.transfer))
-			.replace(/%vent/, fmt(this.vent))
-			;
+		this.addProperty('affordable', false);
 	}
 
-	if ( this.part.level > 1 ) {
-		description = description.replace(/%type/, game.part_objects[this.part.type + 1].part.title);
+	updateDescription(tile) {
+		var description = this.part.base_description
+			.replace(/%single_cell_description/, single_cell_description)
+			.replace(/%multi_cell_description/, multi_cell_description)
+			.replace(/%power_increase/, fmt(this.power_increase))
+			.replace(/%heat_increase/, fmt(this.heat_increase))
+			.replace(/%reactor_power/, fmt(this.reactor_power))
+			.replace(/%reactor_heat/, fmt(this.reactor_heat))
+			.replace(/%ticks/, fmt(this.ticks))
+			.replace(/%containment/, fmt(this.containment))
+			.replace(/%ep_heat/, fmt(this.ep_heat))
+			.replace(/%range/, fmt(this.range))
+			.replace(/%count/, [1, 2, 4][this.part.level - 1])
+			.replace(/%power/, fmt(this.power))
+			.replace(/%heat/, fmt(this.heat))
+			;
+
+		if ( tile ) {
+			description = description
+				.replace(/%transfer/, fmt(this.transfer * (1 + transfer_multiplier / 100)))
+				.replace(/%vent/, fmt(this.vent * (1 + vent_multiplier / 100) ))
+				;
+		} else {
+			description = description
+				.replace(/%transfer/, fmt(this.transfer))
+				.replace(/%vent/, fmt(this.vent))
+				;
+		}
+
+		if ( this.part.level > 1 ) {
+			description = description.replace(/%type/, game.part_objects[this.part.type + 1].part.title);
+		}
+
+		this.description = description;
 	}
 
-	this.description = description;
-};
+	showTooltip(tile) {
+		$tooltip_name.textContent = this.part.title;
 
-Part.prototype.showTooltip = function(tile) {
-	$tooltip_name.textContent = this.part.title;
+		if ( tile ) {
+			this.updateDescription(tile);
+			$tooltip_cost.style.display = 'none';
 
-	if ( tile ) {
-		this.updateDescription(tile);
-		$tooltip_cost.style.display = 'none';
+			if ( tile.activated && tile.part.containment ) {
+				$tooltip_heat_wrapper.style.display = null;
+			} else {
+				$tooltip_heat_wrapper.style.display = 'none';
+			}
 
-		if ( tile.activated && tile.part.containment ) {
-			$tooltip_heat_wrapper.style.display = null;
+			if ( tile.activated && tile.part.ticks ) {
+				$tooltip_ticks_wrapper.style.display = null;
+			} else {
+				$tooltip_ticks_wrapper.style.display = 'none';
+			}
+
+			if ( tile.activated && tile.part.heat ) {
+				$tooltip_heat_per_wrapper.style.display = null;
+			} else {
+				$tooltip_heat_per_wrapper.style.display = 'none';
+			}
+
+			if ( tile.activated && tile.part.power ) {
+				$tooltip_power_per_wrapper.style.display = null;
+			} else {
+				$tooltip_power_per_wrapper.style.display = 'none';
+			}
+
+			if ( tile.activated && tile.part.power ) {
+				$tooltip_power_per_wrapper.style.display = null;
+			} else {
+				$tooltip_power_per_wrapper.style.display = 'none';
+			}
+
+			if ( tile.activated && tile.part.category === 'cell' ) {
+				$tooltip_sells_wrapper.style.display = 'none';
+			} else {
+				$tooltip_sells_wrapper.style.display = null;
+			}
+
+			if ( tile.activated && tile.part.category === 'particle_accelerator' ) {
+				$tooltip_chance_wrapper.style.display = null;
+			} else {
+				$tooltip_chance_wrapper.style.display = 'none';
+			}
 		} else {
-			$tooltip_heat_wrapper.style.display = 'none';
-		}
 
-		if ( tile.activated && tile.part.ticks ) {
-			$tooltip_ticks_wrapper.style.display = null;
-		} else {
-			$tooltip_ticks_wrapper.style.display = 'none';
-		}
-
-		if ( tile.activated && tile.part.heat ) {
-			$tooltip_heat_per_wrapper.style.display = null;
-		} else {
-			$tooltip_heat_per_wrapper.style.display = 'none';
-		}
-
-		if ( tile.activated && tile.part.power ) {
-			$tooltip_power_per_wrapper.style.display = null;
-		} else {
-			$tooltip_power_per_wrapper.style.display = 'none';
-		}
-
-		if ( tile.activated && tile.part.power ) {
-			$tooltip_power_per_wrapper.style.display = null;
-		} else {
-			$tooltip_power_per_wrapper.style.display = 'none';
-		}
-
-		if ( tile.activated && tile.part.category === 'cell' ) {
+			this.updateDescription();
+			$tooltip_cost.style.display = null;
 			$tooltip_sells_wrapper.style.display = 'none';
-		} else {
-			$tooltip_sells_wrapper.style.display = null;
-		}
 
-		if ( tile.activated && tile.part.category === 'particle_accelerator' ) {
-			$tooltip_chance_wrapper.style.display = null;
-		} else {
+			$tooltip_heat_wrapper.style.display = 'none';
+			$tooltip_ticks_wrapper.style.display = 'none';
+
+			$tooltip_heat_per_wrapper.style.display = 'none';
+			$tooltip_power_per_wrapper.style.display = 'none';
+
 			$tooltip_chance_wrapper.style.display = 'none';
 		}
-	} else {
 
-		this.updateDescription();
-		$tooltip_cost.style.display = null;
-		$tooltip_sells_wrapper.style.display = 'none';
-
-		$tooltip_heat_wrapper.style.display = 'none';
-		$tooltip_ticks_wrapper.style.display = 'none';
-
-		$tooltip_heat_per_wrapper.style.display = 'none';
-		$tooltip_power_per_wrapper.style.display = 'none';
-
-		$tooltip_chance_wrapper.style.display = 'none';
+		this.updateTooltip(tile);
 	}
 
-	this.updateTooltip(tile);
-};
+	updateTooltip(tile) {
+		if ( tile ) {
+			if ( $tooltip_description.textContent !== tile.part.description ) {
+				$tooltip_description.textContent = tile.part.description;
+			}
 
-Part.prototype.updateTooltip = function(tile) {
-	if ( tile ) {
-		if ( $tooltip_description.textContent !== tile.part.description ) {
-			$tooltip_description.textContent = tile.part.description;
-		}
+			if ( tile.activated && tile.part.containment ) {
+				$tooltip_heat.textContent = fmt(tile.heat_contained);
+				$tooltip_max_heat.textContent = fmt(tile.part.containment);
+			}
 
-		if ( tile.activated && tile.part.containment ) {
-			$tooltip_heat.textContent = fmt(tile.heat_contained);
-			$tooltip_max_heat.textContent = fmt(tile.part.containment);
-		}
+			if ( tile.activated && tile.part.ticks ) {
+				$tooltip_ticks.textContent = fmt(tile.ticks);
+				$tooltip_max_ticks.textContent = fmt(tile.part.ticks);
+			}
 
-		if ( tile.activated && tile.part.ticks ) {
-			$tooltip_ticks.textContent = fmt(tile.ticks);
-			$tooltip_max_ticks.textContent = fmt(tile.part.ticks);
-		}
+			if ( tile.activated && tile.part.heat ) {
+				$tooltip_heat_per.textContent = fmt(tile.display_heat);
+			}
 
-		if ( tile.activated && tile.part.heat ) {
-			$tooltip_heat_per.textContent = fmt(tile.display_heat);
-		}
+			if ( tile.activated && tile.part.power ) {
+				$tooltip_power_per.textContent = fmt(tile.display_power);
+			}
 
-		if ( tile.activated && tile.part.power ) {
-			$tooltip_power_per.textContent = fmt(tile.display_power);
-		}
+			if ( tile.activated && tile.part.category !== 'cell' ) {
+				if ( tile.part.ticks ) {
+					$tooltip_sells.textContent = fmt(Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost));
+				} else if ( tile.part.containment ) {
+					$tooltip_sells.textContent = fmt(tile.part.cost - Math.ceil(tile.heat_contained / tile.part.containment * tile.part.cost));
+				} else {
+					$tooltip_sells.textContent = fmt(tile.part.cost);
+				}
+			}
 
-		if ( tile.activated && tile.part.category !== 'cell' ) {
-			if ( tile.part.ticks ) {
-				$tooltip_sells.textContent = fmt(Math.ceil(tile.ticks / tile.part.ticks * tile.part.cost));
-			} else if ( tile.part.containment ) {
-				$tooltip_sells.textContent = fmt(tile.part.cost - Math.ceil(tile.heat_contained / tile.part.containment * tile.part.cost));
+			if ( tile.activated && tile.part.category === 'particle_accelerator' ) {
+				$tooltip_chance.textContent = fmt(tile.display_chance);
+				$tooltip_chance_percent_of_total.textContent = fmt(tile.display_chance_percent_of_total);
+			}
+		} else {
+			$tooltip_description.textContent = this.description;
+
+			if ( this.erequires && !game.upgrade_objects[this.erequires].level ) {
+				$tooltip_cost.textContent = 'LOCKED';
 			} else {
-				$tooltip_sells.textContent = fmt(tile.part.cost);
+				$tooltip_cost.textContent = fmt(this.cost);
 			}
 		}
-
-		if ( tile.activated && tile.part.category === 'particle_accelerator' ) {
-			$tooltip_chance.textContent = fmt(tile.display_chance);
-			$tooltip_chance_percent_of_total.textContent = fmt(tile.display_chance_percent_of_total);
-		}
-	} else {
-		$tooltip_description.textContent = this.description;
-
-		if ( this.erequires && !game.upgrade_objects[this.erequires].level ) {
-			$tooltip_cost.textContent = 'LOCKED';
-		} else {
-			$tooltip_cost.textContent = fmt(this.cost);
-		}
 	}
-};
+}
+
+Part.prototype.addProperty = addProperty;
 
 var part_obj;
 var part_settings;
