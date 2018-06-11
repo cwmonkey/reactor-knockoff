@@ -410,6 +410,8 @@ var adjust_primary_size = function() {
 	// so we have to temporary restore the display to get it's real offsetWidth
 	var original_display = $reactor_section.style.display;
 	$reactor_section.style.display = 'inherit';
+	// We also have to unset the width or else the offsetWidth would be capped to the primary width
+	$primary.style.width = '';
 	$primary.style.width = $reactor_section.offsetWidth + 32 + 'px';
 	$reactor_section.style.display = original_display;
 };
