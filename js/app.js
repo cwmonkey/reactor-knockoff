@@ -564,6 +564,27 @@ Tile.prototype.enable = function() {
 	ui.say('evt', 'tile_enabled', this);
 };
 
+// create tiles
+for ( ri = 0; ri < game.max_rows; ri++ ) {
+	ui.say('evt', 'row_added', ri);
+	row = [];
+
+	for ( ci = 0; ci < game.max_cols; ci++ ) {
+		tile = new Tile(ri, ci);
+		row.push(tile);
+		game.tiles_2d.push(tile);
+		ui.say('evt', 'tile_added', {
+			row: ri,
+			column: ci,
+			tile: tile
+		});
+
+		tile.disable();
+	}
+
+	game.tiles.push(row);
+}
+
 // Operations
 var tile_containment;
 var tile_cell;
@@ -890,28 +911,6 @@ if ( game.debug ) {
 
 ui.say('var', 'max_heat', max_heat);
 ui.say('var', 'max_power', max_power);
-
-// create tiles
-for ( ri = 0; ri < game.max_rows; ri++ ) {
-	ui.say('evt', 'row_added', ri);
-	row = [];
-
-	for ( ci = 0; ci < game.max_cols; ci++ ) {
-		tile = new Tile(ri, ci);
-		row.push(tile);
-		ui.say('evt', 'tile_added', {
-			row: ri,
-			column: ci,
-			tile: tile
-		});
-
-		if ( ci <= game.cols || ri <= game.rows ) {
-			tile.disable();
-		}
-	}
-
-	game.tiles.push(row);
-}
 
 /////////////////////////////
 // Tooltip
