@@ -564,7 +564,6 @@ create_toggle_button('#pause_toggle', 'Pause', 'Unpause')(
 );
 
 evts.paused = update_button('#pause_toggle');
-
 evts.unpaused = update_button('#pause_toggle');
 
 // Enable/Disable auto sell
@@ -579,7 +578,6 @@ create_toggle_button('#auto_sell_toggle', 'Disable Auto Sell', 'Enable Auto Sell
 );
 
 evts.auto_sell_disabled = update_button('#auto_sell_toggle');
-
 evts.auto_sell_enabled = update_button('#auto_sell_toggle');
 
 // Enable/Disable auto buy
@@ -594,10 +592,9 @@ create_toggle_button('#auto_buy_toggle', 'Disable Auto Buy', 'Enable Auto Buy')(
 );
 
 evts.auto_buy_disabled = update_button('#auto_buy_toggle');
-
 evts.auto_buy_enabled = update_button('#auto_buy_toggle');
 
-
+// Enable/Disable heat control
 create_toggle_button('#heat_control_toggle', 'Disable Heat Controller', 'Enable Heat Controller')(
 	()=>!ui.game.heat_controlled,
 	function() {
