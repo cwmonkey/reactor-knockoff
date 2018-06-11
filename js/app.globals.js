@@ -1,4 +1,5 @@
 (function() {
+'use strict';
 
 /////////////////////////////
 // Delegate
@@ -111,17 +112,33 @@ performance.now = (function() {
 // Objects
 /////////////////////////////
 
+// Buffer to reduce unneeded updates
+// as the set function can be called mulitple times per tick
+// eg: heat_contained updates where tile heat resetted back to original (0) at the end of the tick
+var property_buffer = new Map();
+
 // Function to add setter, updated and property to object
 window.addProperty = function(name, value) {
 	this[name] = value;
 	this[name + 'Updated'] = true;
 
-	this['set' + name.charAt(0).toUpperCase() + name.slice(1)] = function(value) {
+	this['set' + name.charAt(0).toUpperCase() + name.slice(1)] = (value) => {
 		if ( value !== this[name] ) {
 			this[name] = value;
-			this[name + 'Updated'] = true;
+			property_buffer.set(this, [name, value])
 		}
 	};
 };
+
+window.updateProperty = function() {
+	for ( var [tile, [name, value] ] of property_buffer ) {
+		if ( value !== tile[name + 'Last'] ) {
+			tile[name + 'Last'] = value;
+			tile[name + 'Updated'] = true;
+		}
+	}
+
+	property_buffer.clear();
+}
 
 })();

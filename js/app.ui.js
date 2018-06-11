@@ -207,6 +207,8 @@ var locked_find = /[\b\s]locked\b/;
 var do_check_upgrades_affordability = false;
 var update_interface = function() {
 	var start_ui_loop = performance.now();
+
+	window.updateProperty();
 	Update_vars();
 	setTimeout(update_interface, update_interface_interval);
 
