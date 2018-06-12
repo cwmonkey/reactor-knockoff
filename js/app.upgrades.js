@@ -367,7 +367,8 @@ window.upgrades = function(game) {
 				for ( var i = 0, l = game.part_objects_array.length; i < l; i++ ) {
 					part = game.part_objects_array[i];
 					if ( part.category === 'cell' ) {
-						part.heat = part.part.base_heat * Math.pow(2, upgrade.level);
+						part.base_heat = part.part.base_heat * Math.pow(2, upgrade.level);
+						part.heat = part.part.heat * Math.pow(2, upgrade.level);
 					}
 				}
 
@@ -672,6 +673,84 @@ window.upgrades = function(game) {
 				}
 			})(i)
 		});
+	}
+
+	var types = [
+		{
+			type: 'cell_power',
+			title: 'Potent ',
+			description: ' cells produce 100% more power per level of upgrade.',
+			onclick: function(upgrade) {
+				var part;
+				for ( var i = 1; i <= 3; i++ ) {
+					part = game.part_objects[upgrade.part.type + i];
+					part.power = (
+						part.part.base_power * (upgrade.level + 1)
+						+ part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1)
+					) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+					part.updateDescription();
+				}
+			}
+		},
+		{
+			type: 'cell_tick',
+			title: 'Enriched ',
+			description: ' cells last twice as long per level of upgrade.',
+			onclick: function(upgrade) {
+				var part;
+				for ( var i = 1; i <= 3; i++ ) {
+					part = game.part_objects[upgrade.part.type + i];
+					part.ticks = part.part.base_ticks * Math.pow(2, upgrade.level);
+					part.updateDescription();
+				}
+			}
+		},
+		{
+			type: 'cell_perpetual',
+			title: 'Perpetual ',
+			description: ' cells are automatically replaced when they become depleted. The replacement cell will cost 1.5 times the normal cost.',
+			levels: 1,
+			onclick: function(upgrade) {
+				var part;
+				for ( var i = 1; i <= 3; i++ ) {
+					part = game.part_objects[upgrade.part.type + i];
+					if ( upgrade.level ) {
+						part.perpetual = true;
+					} else {
+						part.perpetual = false;
+					}
+					part.updateDescription();
+				}
+			}
+		}
+	];
+
+	var type;
+	var part;
+
+	for ( var i = 0, l = types.length; i < l; i++ ) {
+		type = types[i];
+
+		for ( var pi = 0, pl = game.parts.length; pi < pl; pi++ ) {
+			part = game.parts[pi];
+
+			if ( part.cell_tick_upgrade_cost ) {
+				upgrade = {
+					id: type.type + '_' + part.type,
+					type: type.type + '_upgrades',
+					title: type.title + ' ' + part.title,
+					description: part.title + ' ' + type.description,
+					levels: type.levels,
+					cost: part[type.type + '_upgrade_cost'],
+					multiplier: part[type.type + '_upgrade_multiplier'],
+					onclick: type.onclick,
+					className: part.type + ' ' + type.type,
+					part: part
+				};
+
+				upgrades.push(upgrade);
+			}
+		}
 	}
 
 	return upgrades;

@@ -17,10 +17,14 @@ html {
 	-webkit-user-select: none;
 }
 
+html {
+	background: #000204;
+	z-index: -2;
+}
+
 body {
 	font-size: 16px;
 	font-family: sans-serif;
-	background: #000204;
 	color: #fff;
 	height: 100%;
 	display: table;
@@ -149,9 +153,11 @@ menu {
 
 #main_header,
 #stats_section .stats_section_heading,
-#parts_section .heading {
-	position: absolute;
-	clip: rect(1px, 1px, 1px, 1px);
+#parts_section .heading,
+#reactor_section .heading,
+.part .description,
+#all_upgrades .upgrade .description {
+	display: none;
 }
 
 #stats_section {
@@ -254,8 +260,6 @@ menu {
 	border: 10px solid #eee;
 	border-image: url("../img/border_bg.png") 10 10 stretch;
 	margin: 2px 0 0 2px;
-	background: #76809b;
-	background-clip: padding-box;
 }
 
 #more_stats {
@@ -316,18 +320,6 @@ menu {
 	width: 100%;
 }
 
-#parts_section .part {
-	background: transparent;
-	margin-right: 4px;
-	transition: all .1s linear;
-}
-
-#parts_section .part:hover,
-#parts_section .part:focus {
-	box-shadow: 0px 0px 2px 1px #76809b;
-	background: #76809b;
-}
-
 #parts_section .part:nth-child(6n) {
 	margin-right: 0;
 }
@@ -341,24 +333,11 @@ menu {
 	background: #59c435;
 }
 
-#parts_section .part .image:after,
-#all_upgrades .image:before,
-#all_upgrades .image:after,
-#reactor .tile:after {
-	height: 32px;
-	width: 32px;
-	content: " ";
-	position: absolute;
-	top: 0;
-	left: 0;
-	display: block;
-	background-position: left top;
+#parts_section .part .image,
+#all_upgrades .image,
+#all_upgrades .image,
+#reactor .tile {
 	background-repeat: no-repeat;
-}
-
-#parts_section .part:after {
-	top: 0;
-	left: 0;
 }
 
   /* //////////////////////////
@@ -490,17 +469,11 @@ menu {
 	background-image: url("../img/icon_cash.gif");
 }
 
-#reactor_section .heading {
-	position: absolute;
-	clip: rect(1px, 1px, 1px, 1px);
-}
-
 #reactor .row {
 	white-space: nowrap;
 }
 
 #reactor .tile {
-	background: transparent url("../img/tile.png") left top no-repeat;
 	display: none;
 }
 
@@ -514,7 +487,7 @@ menu {
 	display: inline-block;
 }
 
-#reactor .tile.disabled:after {
+#reactor .tile.disabled {
 	opacity: .5;
 }
 
@@ -538,6 +511,10 @@ menu {
 	bottom: 1px;
 	left: 1px;
 	right: 1px;
+}
+#reactor .tile.spent {
+	-webkit-filter: grayscale(100%);
+	filter: grayscale(100%);
 }
 
 #reactor .tile.spent .percent_wrapper {
@@ -581,7 +558,7 @@ menu {
   100% { background: url('../img/explosion_map.gif') -192px 0 no-repeat; }
 }
 
-#reactor .tile.exploding:after {
+#reactor .tile.exploding {
   background: url('../img/explosion_map.gif') -192px 0 no-repeat;
   animation: explosion .6s steps(7);
 }
@@ -606,23 +583,6 @@ menu {
 
 #nav button {
 	margin-right: .25em;
-}
-
-/* preload */
-body:before {
-	background:
-		url("../img/button_border_alt_active.png"),
-		url("../img/button_border_alt_down_active.png"),
-		url("../img/inner_border_alt_active.png"),
-		url("../img/inner_border_alt_down.png"),
-		url("../img/inner_border_alt_flip_active.png"),
-		url("../img/inner_border_alt_flip_down.png"),
-		url("../img/small_button_on.png"),
-		url("../img/small_button_down.png")
-	;
-	content: " ";
-	position: absolute;
-	visibility: hidden;
 }
 
 #reactor_upgrades .explanitory button:hover,
@@ -685,10 +645,6 @@ body:before {
 
 #main .page {
 	display: none;
-	position: absolute;
-	clip: rect(1px, 1px, 1px, 1px);
-	left: 0;
-	top: 0;
 }
 
 #main .page .heading {
@@ -751,11 +707,6 @@ body:before {
 	display: none;
 }
 
-.part .description {
-	position: absolute;
-	clip: rect(1px 1px 1px 1px);
-}
-
 #reactor_section {
 	/* for ie */
 	display: table;
@@ -766,132 +717,127 @@ body:before {
 	float: left;
 }
 
-#reactor .tile.spent:after {
-	-webkit-filter: grayscale(100%);
-	filter: grayscale(100%);
-}
-
 /* uranium */
-#parts .part.part_uranium1 .image:after,
-#reactor .tile.part_uranium1:after,
-#upgrades .uranium .image:after,
-#forceful_fusion .image:after {
+#parts .part.part_uranium1 .image,
+#reactor .tile.part_uranium1,
+#upgrades .uranium .image,
+#forceful_fusion .image {
 	background-image: url("../img/cell_1_1.gif");
 }
 
-#parts .part.part_uranium2 .image:after,
-#reactor .tile.part_uranium2:after {
+#parts .part.part_uranium2 .image,
+#reactor .tile.part_uranium2 {
 	background-image: url("../img/cell_1_2.gif");
 }
 
-#parts .part.part_uranium3 .image:after,
-#reactor .tile.part_uranium3:after {
+#parts .part.part_uranium3 .image,
+#reactor .tile.part_uranium3 {
 	background-image: url("../img/cell_1_4.gif");
 }
 
 /* plutonium */
-#parts .part.part_plutonium1 .image:after,
-#reactor .tile.part_plutonium1:after,
-#upgrades .plutonium .image:after {
+#parts .part.part_plutonium1 .image,
+#reactor .tile.part_plutonium1,
+#upgrades .plutonium .image {
 	background-image: url("../img/cell_2_1.gif");
 }
 
-#parts .part.part_plutonium2 .image:after,
-#reactor .tile.part_plutonium2:after {
+#parts .part.part_plutonium2 .image,
+#reactor .tile.part_plutonium2 {
 	background-image: url("../img/cell_2_2.gif");
 }
 
-#parts .part.part_plutonium3 .image:after,
-#reactor .tile.part_plutonium3:after {
+#parts .part.part_plutonium3 .image,
+#reactor .tile.part_plutonium3 {
 	background-image: url("../img/cell_2_4.gif");
 }
 
 /* thorium */
-#parts .part.part_thorium1 .image:after,
-#reactor .tile.part_thorium1:after,
-#upgrades .thorium .image:after {
+#parts .part.part_thorium1 .image,
+#reactor .tile.part_thorium1,
+#upgrades .thorium .image {
 	background-image: url("../img/cell_3_1.gif");
 }
 
-#parts .part.part_thorium2 .image:after,
-#reactor .tile.part_thorium2:after {
+#parts .part.part_thorium2 .image,
+#reactor .tile.part_thorium2 {
 	background-image: url("../img/cell_3_2.gif");
 }
 
-#parts .part.part_thorium3 .image:after,
-#reactor .tile.part_thorium3:after {
+#parts .part.part_thorium3 .image,
+#reactor .tile.part_thorium3 {
 	background-image: url("../img/cell_3_4.gif");
 }
 
 /* seaborgium */
-#parts .part.part_seaborgium1 .image:after,
-#reactor .tile.part_seaborgium1:after,
-#upgrades .seaborgium .image:after {
+#parts .part.part_seaborgium1 .image,
+#reactor .tile.part_seaborgium1,
+#upgrades .seaborgium .image {
 	background-image: url("../img/cell_4_1.gif");
 }
 
-#parts .part.part_seaborgium2 .image:after,
-#reactor .tile.part_seaborgium2:after {
+#parts .part.part_seaborgium2 .image,
+#reactor .tile.part_seaborgium2 {
 	background-image: url("../img/cell_4_2.gif");
 }
 
-#parts .part.part_seaborgium3 .image:after,
-#reactor .tile.part_seaborgium3:after {
+#parts .part.part_seaborgium3 .image,
+#reactor .tile.part_seaborgium3 {
 	background-image: url("../img/cell_4_4.gif");
 }
 
 /* dolorium */
-#parts .part.part_dolorium1 .image:after,
-#reactor .tile.part_dolorium1:after,
-#upgrades .dolorium .image:after {
+#parts .part.part_dolorium1 .image,
+#reactor .tile.part_dolorium1,
+#upgrades .dolorium .image {
 	background-image: url("../img/cell_5_1.gif");
 }
 
-#parts .part.part_dolorium2 .image:after,
-#experimental_upgrades #infused_cells .image:after,
-#reactor .tile.part_dolorium2:after {
+#parts .part.part_dolorium2 .image,
+#experimental_upgrades #infused_cells .image,
+#reactor .tile.part_dolorium2 {
 	background-image: url("../img/cell_5_2.gif");
 }
 
-#parts .part.part_dolorium3 .image:after,
-#reactor .tile.part_dolorium3:after {
+#parts .part.part_dolorium3 .image,
+#reactor .tile.part_dolorium3 {
 	background-image: url("../img/cell_5_4.gif");
 }
 
 /* nefastium */
-#parts .part.part_nefastium1 .image:after,
-#reactor .tile.part_nefastium1:after,
-#upgrades .nefastium .image:after {
+#parts .part.part_nefastium1 .image,
+#reactor .tile.part_nefastium1,
+#upgrades .nefastium .image {
 	background-image: url("../img/cell_6_1.gif");
 }
 
-#parts .part.part_nefastium2 .image:after,
-#reactor .tile.part_nefastium2:after {
+#parts .part.part_nefastium2 .image,
+#reactor .tile.part_nefastium2 {
 	background-image: url("../img/cell_6_2.gif");
 }
 
-#parts .part.part_nefastium3 .image:after,
-#experimental_upgrades #unleashed_cells .image:after,
-#reactor .tile.part_nefastium3:after {
+#parts .part.part_nefastium3 .image,
+#experimental_upgrades #unleashed_cells .image,
+#reactor .tile.part_nefastium3 {
 	background-image: url("../img/cell_6_4.gif");
 }
 
 /* protium */
-#parts_section .part.part_protium1 .image:after,
-#reactor .tile.part_protium1:after,
-#experimental_upgrades #protium_cells .image:after,
-#upgrades .protium .image:after {
+#parts_section .part.part_protium1 .image,
+#reactor .tile.part_protium1,
+#experimental_upgrades #protium_cells .image,
+#upgrades .protium .image {
 	background-image: url("../img/xcell_1_1.gif");
 }
 
-#parts_section .part.part_protium2 .image:after,
-#experimental_upgrades #unstable_protium .image:after,
-#reactor .tile.part_protium2:after {
+#parts_section .part.part_protium2 .image,
+#experimental_upgrades #unstable_protium .image,
+#reactor .tile.part_protium2 {
 	background-image: url("../img/xcell_1_2.gif");
 }
 
-#parts_section .part.part_protium3 .image:after,
-#reactor .tile.part_protium3:after {
+#parts_section .part.part_protium3 .image,
+#reactor .tile.part_protium3 {
 	background-image: url("../img/xcell_1_4.gif");
 }
 
@@ -899,38 +845,38 @@ body:before {
  // Reflectors
 ////////////////////////// */
 
-#improved_neutron_reflection .image:after,
-#improved_reflector_density .image:after,
-#perpetual_reflectors .image:after,
-#parts .part.part_reflector1 .image:after,
-#reactor .tile.part_reflector1:after {
+#improved_neutron_reflection .image,
+#improved_reflector_density .image,
+#perpetual_reflectors .image,
+#parts .part.part_reflector1 .image,
+#reactor .tile.part_reflector1 {
 	background-image: url("../img/reflector_1.gif");
 }
 
-#parts .part.part_reflector2 .image:after,
-#reactor .tile.part_reflector2:after {
+#parts .part.part_reflector2 .image,
+#reactor .tile.part_reflector2 {
 	background-image: url("../img/reflector_2.gif");
 }
 
-#parts .part.part_reflector3 .image:after,
-#reactor .tile.part_reflector3:after {
+#parts .part.part_reflector3 .image,
+#reactor .tile.part_reflector3 {
 	background-image: url("../img/reflector_3.gif");
 }
 
-#parts .part.part_reflector4 .image:after,
-#reactor .tile.part_reflector4:after {
+#parts .part.part_reflector4 .image,
+#reactor .tile.part_reflector4 {
 	background-image: url("../img/reflector_4.gif");
 }
 
-#parts .part.part_reflector5 .image:after,
-#experimental_upgrades #full_spectrum_reflectors .image:after,
-#reactor .tile.part_reflector5:after {
+#parts .part.part_reflector5 .image,
+#experimental_upgrades #full_spectrum_reflectors .image,
+#reactor .tile.part_reflector5 {
 	background-image: url("../img/reflector_5.gif");
 }
 
-#parts .part.part_reflector6 .image:after,
-#experimental_upgrades #heat_reflection .image:after,
-#reactor .tile.part_reflector6:after {
+#parts .part.part_reflector6 .image,
+#experimental_upgrades #heat_reflection .image,
+#reactor .tile.part_reflector6 {
 	background-image: url("../img/reflector_6.gif");
 }
 
@@ -938,40 +884,40 @@ body:before {
  // Capacitors
 ////////////////////////// */
 
-#parts .part.part_capacitor1 .image:after,
-#reactor .tile.part_capacitor1:after,
-#perpetual_capacitors .image:after,
-#active_venting .image:after,
-#active_exchangers .image:after,
-#improved_power_lines .image:after,
-#improved_wiring .image:after {
+#parts .part.part_capacitor1 .image,
+#reactor .tile.part_capacitor1,
+#perpetual_capacitors .image,
+#active_venting .image,
+#active_exchangers .image,
+#improved_power_lines .image,
+#improved_wiring .image {
 	background-image: url("../img/capacitor_1.gif");
 }
 
-#parts .part.part_capacitor2 .image:after,
-#reactor .tile.part_capacitor2:after{
+#parts .part.part_capacitor2 .image,
+#reactor .tile.part_capacitor2{
 	background-image: url("../img/capacitor_2.gif");
 }
 
-#parts .part.part_capacitor3 .image:after,
-#reactor .tile.part_capacitor3:after{
+#parts .part.part_capacitor3 .image,
+#reactor .tile.part_capacitor3{
 	background-image: url("../img/capacitor_3.gif");
 }
 
-#parts .part.part_capacitor4 .image:after,
-#reactor .tile.part_capacitor4:after{
+#parts .part.part_capacitor4 .image,
+#reactor .tile.part_capacitor4{
 	background-image: url("../img/capacitor_4.gif");
 }
 
-#parts .part.part_capacitor5 .image:after,
-#experimental_upgrades #quantum_buffering .image:after,
-#reactor .tile.part_capacitor5:after {
+#parts .part.part_capacitor5 .image,
+#experimental_upgrades #quantum_buffering .image,
+#reactor .tile.part_capacitor5 {
 	background-image: url("../img/capacitor_5.gif");
 }
 
-#parts .part.part_capacitor6 .image:after,
-#experimental_upgrades #experimental_capacitance .image:after,
-#reactor .tile.part_capacitor6:after{
+#parts .part.part_capacitor6 .image,
+#experimental_upgrades #experimental_capacitance .image,
+#reactor .tile.part_capacitor6{
 	background-image: url("../img/capacitor_6.gif");
 }
 
@@ -980,250 +926,250 @@ body:before {
 ////////////////////////// */
 
 /* Vents */
-#parts .part.part_vent1 .image:after,
-#reactor .tile.part_vent1:after,
-#improved_heat_vents .image:after {
+#parts .part.part_vent1 .image,
+#reactor .tile.part_vent1,
+#improved_heat_vents .image {
 	background-image: url("../img/vent_1.gif");
 }
 
-#parts .part.part_vent2 .image:after,
-#reactor .tile.part_vent2:after {
+#parts .part.part_vent2 .image,
+#reactor .tile.part_vent2 {
 	background-image: url("../img/vent_2.gif");
 }
 
-#parts .part.part_vent3 .image:after,
-#reactor .tile.part_vent3:after {
+#parts .part.part_vent3 .image,
+#reactor .tile.part_vent3 {
 	background-image: url("../img/vent_3.gif");
 }
 
-#parts .part.part_vent4 .image:after,
-#reactor .tile.part_vent4:after {
+#parts .part.part_vent4 .image,
+#reactor .tile.part_vent4 {
 	background-image: url("../img/vent_4.gif");
 }
 
-#parts .part.part_vent5 .image:after,
-#experimental_upgrades #fluid_hyperdynamics .image:after,
-#reactor .tile.part_vent5:after {
+#parts .part.part_vent5 .image,
+#experimental_upgrades #fluid_hyperdynamics .image,
+#reactor .tile.part_vent5 {
 	background-image: url("../img/vent_5.gif");
 }
 
-#parts .part.part_vent6 .image:after,
-#experimental_upgrades #vortex_cooling .image:after,
-#reactor .tile.part_vent6:after {
+#parts .part.part_vent6 .image,
+#experimental_upgrades #vortex_cooling .image,
+#reactor .tile.part_vent6 {
 	background-image: url("../img/vent_6.gif");
 }
 
 /* Heat Exchangers */
-#parts .part.part_heat_exchanger1 .image:after,
-#reactor .tile.part_heat_exchanger1:after,
-#improved_heat_exchangers .image:after {
+#parts .part.part_heat_exchanger1 .image,
+#reactor .tile.part_heat_exchanger1,
+#improved_heat_exchangers .image {
 	background-image: url("../img/exchanger_1.gif");
 }
 
-#parts .part.part_heat_exchanger2 .image:after,
-#reactor .tile.part_heat_exchanger2:after {
+#parts .part.part_heat_exchanger2 .image,
+#reactor .tile.part_heat_exchanger2 {
 	background-image: url("../img/exchanger_2.gif");
 }
 
-#parts .part.part_heat_exchanger3 .image:after,
-#reactor .tile.part_heat_exchanger3:after {
+#parts .part.part_heat_exchanger3 .image,
+#reactor .tile.part_heat_exchanger3 {
 	background-image: url("../img/exchanger_3.gif");
 }
 
-#parts .part.part_heat_exchanger4 .image:after,
-#reactor .tile.part_heat_exchanger4:after {
+#parts .part.part_heat_exchanger4 .image,
+#reactor .tile.part_heat_exchanger4 {
 	background-image: url("../img/exchanger_4.gif");
 }
 
-#parts .part.part_heat_exchanger5 .image:after,
-#experimental_upgrades #fractal_piping .image:after,
-#reactor .tile.part_heat_exchanger5:after {
+#parts .part.part_heat_exchanger5 .image,
+#experimental_upgrades #fractal_piping .image,
+#reactor .tile.part_heat_exchanger5 {
 	background-image: url("../img/exchanger_5.gif");
 }
 
-#parts .part.part_heat_exchanger6 .image:after,
-#experimental_upgrades #underground_heat_extraction .image:after,
-#reactor .tile.part_heat_exchanger6:after {
+#parts .part.part_heat_exchanger6 .image,
+#experimental_upgrades #underground_heat_extraction .image,
+#reactor .tile.part_heat_exchanger6 {
 	background-image: url("../img/exchanger_6.gif");
 }
 
 /* Heat Inlets */
-#parts .part.part_heat_inlet1 .image:after,
-#reactor .tile.part_heat_inlet1:after {
+#parts .part.part_heat_inlet1 .image,
+#reactor .tile.part_heat_inlet1 {
 	background-image: url("../img/inlet_1.gif");
 }
 
-#parts .part.part_heat_inlet2 .image:after,
-#reactor .tile.part_heat_inlet2:after {
+#parts .part.part_heat_inlet2 .image,
+#reactor .tile.part_heat_inlet2 {
 	background-image: url("../img/inlet_2.gif");
 }
 
-#parts .part.part_heat_inlet3 .image:after,
-#reactor .tile.part_heat_inlet3:after {
+#parts .part.part_heat_inlet3 .image,
+#reactor .tile.part_heat_inlet3 {
 	background-image: url("../img/inlet_3.gif");
 }
 
-#parts .part.part_heat_inlet4 .image:after,
-#reactor .tile.part_heat_inlet4:after {
+#parts .part.part_heat_inlet4 .image,
+#reactor .tile.part_heat_inlet4 {
 	background-image: url("../img/inlet_4.gif");
 }
 
-#parts .part.part_heat_inlet5 .image:after,
-#reactor .tile.part_heat_inlet5:after {
+#parts .part.part_heat_inlet5 .image,
+#reactor .tile.part_heat_inlet5 {
 	background-image: url("../img/inlet_5.gif");
 }
 
-#parts .part.part_heat_inlet6 .image:after,
-#experimental_upgrades #vortex_extraction .image:after,
-#reactor .tile.part_heat_inlet6:after {
+#parts .part.part_heat_inlet6 .image,
+#experimental_upgrades #vortex_extraction .image,
+#reactor .tile.part_heat_inlet6 {
 	background-image: url("../img/inlet_6.gif");
 }
 
 /* Heat Outlets */
-#parts .part.part_heat_outlet1 .image:after,
-#reactor .tile.part_heat_outlet1:after {
+#parts .part.part_heat_outlet1 .image,
+#reactor .tile.part_heat_outlet1 {
 	background-image: url("../img/outlet_1.gif");
 }
 
-#parts .part.part_heat_outlet2 .image:after,
-#reactor .tile.part_heat_outlet2:after {
+#parts .part.part_heat_outlet2 .image,
+#reactor .tile.part_heat_outlet2 {
 	background-image: url("../img/outlet_2.gif");
 }
 
-#parts .part.part_heat_outlet3 .image:after,
-#reactor .tile.part_heat_outlet3:after {
+#parts .part.part_heat_outlet3 .image,
+#reactor .tile.part_heat_outlet3 {
 	background-image: url("../img/outlet_3.gif");
 }
 
-#parts .part.part_heat_outlet4 .image:after,
-#reactor .tile.part_heat_outlet4:after {
+#parts .part.part_heat_outlet4 .image,
+#reactor .tile.part_heat_outlet4 {
 	background-image: url("../img/outlet_4.gif");
 }
 
-#parts .part.part_heat_outlet5 .image:after,
-#reactor .tile.part_heat_outlet5:after {
+#parts .part.part_heat_outlet5 .image,
+#reactor .tile.part_heat_outlet5 {
 	background-image: url("../img/outlet_5.gif");
 }
 
-#parts .part.part_heat_outlet6 .image:after,
-#experimental_upgrades #explosive_ejection .image:after,
-#reactor .tile.part_heat_outlet6:after {
+#parts .part.part_heat_outlet6 .image,
+#experimental_upgrades #explosive_ejection .image,
+#reactor .tile.part_heat_outlet6 {
 	background-image: url("../img/outlet_6.gif");
 }
 
 /* Coolant Cells */
-#improved_coolant_cells .image:after,
-#parts .part.part_coolant_cell1 .image:after,
-#reactor .tile.part_coolant_cell1:after {
+#improved_coolant_cells .image,
+#parts .part.part_coolant_cell1 .image,
+#reactor .tile.part_coolant_cell1 {
 	background-image: url("../img/coolant_1.gif");
 }
 
-#parts .part.part_coolant_cell2 .image:after,
-#reactor .tile.part_coolant_cell2:after {
+#parts .part.part_coolant_cell2 .image,
+#reactor .tile.part_coolant_cell2 {
 	background-image: url("../img/coolant_2.gif");
 }
 
-#parts .part.part_coolant_cell3 .image:after,
-#reactor .tile.part_coolant_cell3:after {
+#parts .part.part_coolant_cell3 .image,
+#reactor .tile.part_coolant_cell3 {
 	background-image: url("../img/coolant_3.gif");
 }
 
-#parts .part.part_coolant_cell4 .image:after,
-#reactor .tile.part_coolant_cell4:after {
+#parts .part.part_coolant_cell4 .image,
+#reactor .tile.part_coolant_cell4 {
 	background-image: url("../img/coolant_4.gif");
 }
 
-#parts .part.part_coolant_cell5 .image:after,
-#experimental_upgrades #ultracryonics .image:after,
-#reactor .tile.part_coolant_cell5:after {
+#parts .part.part_coolant_cell5 .image,
+#experimental_upgrades #ultracryonics .image,
+#reactor .tile.part_coolant_cell5 {
 	background-image: url("../img/coolant_5.gif");
 }
 
-#parts .part.part_coolant_cell6 .image:after,
-#experimental_upgrades #thermionic_conversion .image:after,
-#reactor .tile.part_coolant_cell6:after {
+#parts .part.part_coolant_cell6 .image,
+#experimental_upgrades #thermionic_conversion .image,
+#reactor .tile.part_coolant_cell6 {
 	background-image: url("../img/coolant_6.gif");
 }
 
 /* Platings */
-#parts .part.part_reactor_plating1 .image:after,
-#reactor .tile.part_reactor_plating1:after,
-#improved_heatsinks .image:after,
-#reinforced_heat_exchangers .image:after,
-#upgrades #improved_piping .image:after,
-#upgrades #improved_alloys .image:after {
+#parts .part.part_reactor_plating1 .image,
+#reactor .tile.part_reactor_plating1,
+#improved_heatsinks .image,
+#reinforced_heat_exchangers .image,
+#upgrades #improved_piping .image,
+#upgrades #improved_alloys .image {
 	background-image: url("../img/plating_1.gif");
 }
 
-#parts .part.part_reactor_plating2 .image:after,
-#reactor .tile.part_reactor_plating2:after {
+#parts .part.part_reactor_plating2 .image,
+#reactor .tile.part_reactor_plating2 {
 	background-image: url("../img/plating_2.gif");
 }
 
-#parts .part.part_reactor_plating3 .image:after,
-#reactor .tile.part_reactor_plating3:after {
+#parts .part.part_reactor_plating3 .image,
+#reactor .tile.part_reactor_plating3 {
 	background-image: url("../img/plating_3.gif");
 }
 
-#parts .part.part_reactor_plating4 .image:after,
-#reactor .tile.part_reactor_plating4:after {
+#parts .part.part_reactor_plating4 .image,
+#reactor .tile.part_reactor_plating4 {
 	background-image: url("../img/plating_4.gif");
 }
 
-#parts .part.part_reactor_plating5 .image:after,
-#experimental_upgrades #phlembotinum_core .image:after,
-#reactor .tile.part_reactor_plating5:after {
+#parts .part.part_reactor_plating5 .image,
+#experimental_upgrades #phlembotinum_core .image,
+#reactor .tile.part_reactor_plating5 {
 	background-image: url("../img/plating_5.gif");
 }
 
-#parts .part.part_reactor_plating6 .image:after,
-#experimental_upgrades #micro_capacitance .image:after,
-#reactor .tile.part_reactor_plating6:after {
+#parts .part.part_reactor_plating6 .image,
+#experimental_upgrades #micro_capacitance .image,
+#reactor .tile.part_reactor_plating6 {
 	background-image: url("../img/plating_6.gif");
 }
 
 /* Particle Accelerators */
-#parts .part.part_particle_accelerator1 .image:after,
-#upgrades #improved_particle_accelerators .image:after,
-#experimental_upgrades #improved_particle_accelerators1 .image:after,
-#reactor .tile.part_particle_accelerator1:after {
+#parts .part.part_particle_accelerator1 .image,
+#upgrades #improved_particle_accelerators .image,
+#experimental_upgrades #improved_particle_accelerators1 .image,
+#reactor .tile.part_particle_accelerator1 {
 	background-image: url("../img/accelerator_1.gif");
 }
 
-#parts .part.part_particle_accelerator2 .image:after,
-#experimental_upgrades #improved_particle_accelerators2 .image:after,
-#reactor .tile.part_particle_accelerator2:after {
+#parts .part.part_particle_accelerator2 .image,
+#experimental_upgrades #improved_particle_accelerators2 .image,
+#reactor .tile.part_particle_accelerator2 {
 	background-image: url("../img/accelerator_2.gif");
 }
 
-#parts .part.part_particle_accelerator3 .image:after,
-#experimental_upgrades #improved_particle_accelerators3 .image:after,
-#reactor .tile.part_particle_accelerator3:after {
+#parts .part.part_particle_accelerator3 .image,
+#experimental_upgrades #improved_particle_accelerators3 .image,
+#reactor .tile.part_particle_accelerator3 {
 	background-image: url("../img/accelerator_3.gif");
 }
 
-#parts .part.part_particle_accelerator4 .image:after,
-#experimental_upgrades #improved_particle_accelerators4 .image:after,
-#reactor .tile.part_particle_accelerator4:after {
+#parts .part.part_particle_accelerator4 .image,
+#experimental_upgrades #improved_particle_accelerators4 .image,
+#reactor .tile.part_particle_accelerator4 {
 	background-image: url("../img/accelerator_4.gif");
 }
 
-#parts .part.part_particle_accelerator5 .image:after,
-#experimental_upgrades #improved_particle_accelerators5 .image:after,
-#reactor .tile.part_particle_accelerator5:after {
+#parts .part.part_particle_accelerator5 .image,
+#experimental_upgrades #improved_particle_accelerators5 .image,
+#reactor .tile.part_particle_accelerator5 {
 	background-image: url("../img/accelerator_5.gif");
 }
 
-#parts .part.part_particle_accelerator6 .image:after,
-#experimental_upgrades #improved_particle_accelerators6 .image:after,
-#experimental_upgrades #singularity_harnessing .image:after,
-#reactor .tile.part_particle_accelerator6:after {
+#parts .part.part_particle_accelerator6 .image,
+#experimental_upgrades #improved_particle_accelerators6 .image,
+#experimental_upgrades #singularity_harnessing .image,
+#reactor .tile.part_particle_accelerator6 {
 	background-image: url("../img/accelerator_6.gif");
 }
 
 /* Other */
 
-#experimental_upgrades #laboratory .image:after {
+#experimental_upgrades #laboratory .image {
 	background-image: url("../img/lab.gif");
 }
 
@@ -1237,11 +1183,6 @@ body:before {
 	display: inline-block;
 	font-size: inherit;
 	vertical-align: top;
-}
-
-#all_upgrades .upgrade .description {
-	position: absolute;
-	clip: rect(1px 1px 1px 1px);
 }
 
 #all_upgrades .image:before {
@@ -1321,20 +1262,20 @@ body:before {
 	height: 32px;
 }*/
 
-#chronometer.upgrade .image:after {
+#chronometer.upgrade .image {
 	background-image: url("../img/upgrade_flux.gif");
 }
 
-#heat_outlet_control_operator.upgrade .image:after,
-#heat_control_operator.upgrade .image:after {
+#heat_outlet_control_operator.upgrade .image,
+#heat_control_operator.upgrade .image {
 	background-image: url("../img/upgrade_computer.gif");
 }
 
-#expand_reactor_cols.upgrade .image:after {
+#expand_reactor_cols.upgrade .image {
 	background-image: url("../img/upgrade_cols.gif");
 }
 
-#expand_reactor_rows.upgrade .image:after {
+#expand_reactor_rows.upgrade .image {
 	background-image: url("../img/upgrade_rows.gif");
 }
 
@@ -1465,7 +1406,6 @@ body:before {
 	top: 4px;
 	right: 4px;
 	bottom: 4px;
-	background-clip: padding-box;
 	z-index: -1;
 }
 

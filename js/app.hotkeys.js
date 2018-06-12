@@ -105,6 +105,10 @@ window.addEventListener("keydown", function(event) {
 	var key;
 	var r = /Digit([2-9])/.exec(event.code);
 	if ( !event.repeat && r && (key = r[1]) ) {
+		if ( event.ctrlKey || event.altKey ) {
+			event.preventDefault();
+		}
+
 		skip = parseInt(key);
 	}
 });
@@ -113,6 +117,10 @@ window.addEventListener("keyup", function(event) {
 	var key;
 	var r = /Digit([2-9])/.exec(event.code);
 	if ( !event.repeat && r && (key = r[1]) ) {
+		if ( event.ctrlKey || event.altKey ) {
+			event.preventDefault();
+		}
+
 		if ( parseInt(key) === skip ){
 			skip = 1;
 		}

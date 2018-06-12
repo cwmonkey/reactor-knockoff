@@ -1,3 +1,4 @@
+.speed_hack,
 #currency,
 #power_indicator,
 #heat_indicator,
@@ -11,3 +12,35 @@
 	*/
 	will-change: transform;
 }
+
+#parts_section .part {
+	margin-right: 4px;
+	transition: all .1s linear;
+}
+/*
+#parts_section .part:hover,
+#parts_section .part:focus {
+	box-shadow: 0px 0px 2px 1px #76809b;
+	background: #76809b;
+}
+*/
+
+#reactor {
+	background: url(../img/tile.png);
+	background-repeat: space;
+}
+
+#reactor_wrapper {
+	position: relative;
+}
+
+#reactor_background {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+

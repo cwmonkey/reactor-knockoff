@@ -17,6 +17,7 @@ window.ui = ui;
 // DOM nodes
 var $main = $('#main');
 var $reactor = $('#reactor');
+var $reactor_background = $('#reactor_background');
 var $reactor_section = $('#reactor_section');
 var $refund_exotic_particles = $('#refund_exotic_particles');
 var $reboot_exotic_particles = $('#reboot_exotic_particles');
@@ -39,11 +40,14 @@ var perc = function(numerator, denominator, dom) {
 
 var update_heat_background = function (current_heat, max_heat) {
 	if ( current_heat <= max_heat ) {
-		$reactor.style.backgroundColor = 'transparent';
+		$reactor_background.style['will-change'] = '';
+		$reactor_background.style.backgroundColor = 'transparent';
 	} else if ( current_heat > max_heat && current_heat <= max_heat * 2 ) {
-		$reactor.style.backgroundColor = 'rgba(255, 0, 0, ' + ((current_heat - max_heat) / max_heat) + ')';
+		$reactor_background.style['will-change'] = 'opacity';
+		$reactor_background.style.backgroundColor = 'rgba(255, 0, 0, ' + round_percentage((current_heat - max_heat) / max_heat, 2)/100 + ')';
 	} else {
-		$reactor.style.backgroundColor = 'rgb(255, 0, 0)';
+		$reactor_background.style['will-change'] = 'opacity';
+		$reactor_background.style.backgroundColor = 'rgb(255, 0, 0)';
 	}
 }
 
@@ -199,44 +203,54 @@ var Update_vars = function() {
 	update_vars.clear();
 };
 
+// width of percentage bar is about 28pt
+var percentage_interval = Math.round(100/28);
+
+var round_percentage = function(perc, step) {
+	return Math.round(perc*100/step)*step
+}
+
 // Update Interface
 // TODO: configurable interval
 var update_interface_interval = 100;
 var unaffordable_replace = /[\s\b]unaffordable\b/;
 var locked_find = /[\b\s]locked\b/;
 var do_check_upgrades_affordability = false;
+var update_interface_task = null;
+
 var update_interface = function() {
 	var start_ui_loop = performance.now();
 
 	window.updateProperty();
 	Update_vars();
-	setTimeout(update_interface, update_interface_interval);
+
+	clearTimeout(update_interface_task);
+	update_interface_task = setTimeout(update_interface, update_interface_interval);
 
 	if ( $reactor_section.classList.contains('showing') ) {
-		for ( var ri = 0, row, ci, tile; ri < ui.game.max_rows; ri++ ) {
-			row = ui.game.tiles[ri];
-
-			for ( ci = 0; ci < ui.game.max_cols; ci++ ) {
-				tile = row[ci];
-				if ( tile.ticksUpdated ) {
-					if ( tile.part ) {
-						tile.$percent.style.width = tile.ticks / tile.part.ticks * 100 + '%';
-					} else {
-						tile.$percent.style.width = '0';
-					}
-
-					tile.ticksUpdated = false;
+		for ( var tile of ui.game.active_tiles_2d ) {
+			if ( tile.ticksUpdated ) {
+				if ( tile.part ) {
+					// width of percentage bar is about 28pt
+					var width = round_percentage(tile.ticks/tile.part.ticks, Math.round(100/28));
+					tile.$percent.style.width = width + '%';
+				} else {
+					tile.$percent.style.width = '0';
 				}
 
-				if ( tile.heat_containedUpdated ) {
-					if ( tile.part && tile.part.containment ) {
-						tile.$percent.style.width = tile.heat_contained / tile.part.containment * 100 + '%';
-					} else {
-						tile.$percent.style.width = '0';
-					}
+				tile.ticksUpdated = false;
+			}
 
-					tile.heat_containedUpdated = false;
+			if ( tile.heat_containedUpdated ) {
+				if ( tile.part && tile.part.containment ) {
+					// width of percentage bar is about 28pt
+					var width = round_percentage(tile.heat_contained/tile.part.containment, Math.round(100/28));
+					tile.$percent.style.width = width + '%';
+				} else {
+					tile.$percent.style.width = '0';
 				}
+
+				tile.heat_containedUpdated = false;
 			}
 		}
 	}
@@ -292,11 +306,6 @@ ui.say = function(type, name, val) {
 
 		if ( var_objs[name] && var_objs[name].instant === true ) {
 			update_var(name, var_objs[name]);
-		}
-
-		if ( name === 'game_loop_speed' ) {
-			//console.log(arguments);
-			//update_interface_interval = val * 1;
 		}
 	} else if ( type === 'evt' ) {
 		if ( evts[name] ) {
@@ -405,6 +414,8 @@ var adjust_primary_size = function() {
 	// so we have to temporary restore the display to get it's real offsetWidth
 	var original_display = $reactor_section.style.display;
 	$reactor_section.style.display = 'inherit';
+	// We also have to unset the width or else the offsetWidth would be capped to the primary width
+	$primary.style.width = '';
 	$primary.style.width = $reactor_section.offsetWidth + 32 + 'px';
 	$reactor_section.style.display = original_display;
 };
@@ -518,7 +529,10 @@ ui.toggle_buttons_saves = toggle_buttons_saves;
 var toggle_buttons_loads = function(buttons) {
 	for (var [button, state] of Object.entries(buttons)) {
 		var button_obj = toggle_buttons[button];
-		!state ? button_obj.enable() : button_obj.disable()
+		if ( button_obj ) {
+			!state ? button_obj.enable() : button_obj.disable();
+			button_obj.update_text();
+		}
 	}
 }
 ui.toggle_buttons_loads = toggle_buttons_loads;
@@ -531,13 +545,16 @@ var create_toggle_button = function(button, enable_text, disable_text) {
 	var $button = $(button);
 	// Initiate with some text in the button so it isn't empty when something goes wrong when starting
 	$button.textContent = enable_text;
-	return (state, enable_callback, disable_callback) => {
+	return (state, enable_callback, disable_callback, always_update_text) => {
 		var update_text = () => $button.textContent = !state() ? enable_text : disable_text;
 		toggle_buttons[button] = {update_text: update_text, state: state,
 		                          enable: enable_callback, disable: disable_callback};
 		$button.onclick = (event) => {
 			event.preventDefault();
 			state() ? enable_callback() : disable_callback();
+			if (always_update_text){
+				update_text();
+			}
 		};
 	};
 };
@@ -554,7 +571,6 @@ create_toggle_button('#pause_toggle', 'Pause', 'Unpause')(
 );
 
 evts.paused = update_button('#pause_toggle');
-
 evts.unpaused = update_button('#pause_toggle');
 
 // Enable/Disable auto sell
@@ -569,7 +585,6 @@ create_toggle_button('#auto_sell_toggle', 'Disable Auto Sell', 'Enable Auto Sell
 );
 
 evts.auto_sell_disabled = update_button('#auto_sell_toggle');
-
 evts.auto_sell_enabled = update_button('#auto_sell_toggle');
 
 // Enable/Disable auto buy
@@ -584,10 +599,9 @@ create_toggle_button('#auto_buy_toggle', 'Disable Auto Buy', 'Enable Auto Buy')(
 );
 
 evts.auto_buy_disabled = update_button('#auto_buy_toggle');
-
 evts.auto_buy_enabled = update_button('#auto_buy_toggle');
 
-
+// Enable/Disable heat control
 create_toggle_button('#heat_control_toggle', 'Disable Heat Controller', 'Enable Heat Controller')(
 	()=>!ui.game.heat_controlled,
 	function() {
@@ -600,6 +614,22 @@ create_toggle_button('#heat_control_toggle', 'Disable Heat Controller', 'Enable 
 
 evts.heat_control_disabled = update_button('#heat_control_toggle');
 evts.heat_control_enabled = update_button('#heat_control_toggle');
+
+var speed_hack = false;
+create_toggle_button('#speed_hack', 'Disable Speed Hack', 'Enable Speed Hack')(
+	()=>!speed_hack,
+	function() {
+		speed_hack = true;
+		$main.classList.add('speed_hack');
+		$reactor.classList.add('speed_hack');
+	},
+	function() {
+		speed_hack = false;
+		$main.classList.remove('speed_hack');
+		$reactor.classList.remove('speed_hack');
+	},
+	true
+)
 
 /////////////////////////////
 // Misc UI
