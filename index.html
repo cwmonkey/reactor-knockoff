@@ -286,6 +286,54 @@
 						<div id="about" class="subpanel explanitory cms">
 							<button id="show_reactor" class="nav" data-section="reactor_upgrades" data-page="reactor_section">Back to Reactor</button>
 							<section class="patch">
+								<h3>v1.3.1 - June 12th, 2018</h3>
+								<ul>
+									<li>New Features:</li>
+									<ul>
+										<li>Save data exporting and importing</li>
+										<li>Additional hotkeys/macro:</li>
+										<ul>
+											<li>Hold keys in bracket and click to use the macro</li>
+											<li>Row (ctrl)</li>
+											<li>Column (alt)</li>
+											<li>Spacing options (number)</li>
+											<li>Don't filter by part (shift)</li>
+											<li>Checkered fill (ctrl+alt+shift)</li>
+
+										</ul>
+										<li>A reset button!</li>
+										<li>New upgrade which prevents outlets from outputting more than what the vent can handle</li>
+										<li>Speed hack toggle, throw more stuff into their own layer and thus reduce paint time (at the cost of memory)</li>
+										<li>Tick catchup (offline tick)</li>
+									</ul>
+									<li>Improvement:</li>
+									<ul>
+										<li>Replacing now works with same category parts, eg: downgrading, switching cell type</li>
+										<li>Replacing tiles is now faster</li>
+										<li>Less cpu usage when not on reactor tile panel</li>
+										<li>Shift/Double click now works on empty tiles</li>
+										<li>Greatly improve performance</li>
+										<ul>
+											<li>Faster repaint time by layering frequently updated ui (Improve fps/lag)</li>
+											<li>Faster tick timing (faster loading after offline)</li>
+											<li>Less lag spike for UI, tooltip</li>
+											<li>Percentage bar and overheating redness are now updated in steps (reduce repainting)</li>
+										</ul>
+										<li>Tile queue now buys as many as possible per tick</li>
+									</ul>
+									<li>Bug fixes:</li>
+									<ul>
+										<li>Right click no longer buy stuff</li>
+										<li>Fixes Heat Control Operator adding heat</li>
+										<li>Left+right click triggering double click function and deleting tiles</li>
+										<li>Replacing tiles with another now reimburse the amount for the part</li>
+										<li>Fixes reflector ui load bug</li>
+										<li>Fixes heat outlet heat distribution bug with multi-tier setup</li>
+										<li>Fixes extreme plating adding to max power despite not being bought yet</li>
+										<li>Make sure background get updated when placing plating so it doesn't get stuck on red</li>
+									</ul>
+								</ul>
+
 								<h3>v1.2.0 - February 7th, 2015</h3>
 								<ul>
 									<li>Signific code changes that shouldn't (but may) affect gameplay</li>
