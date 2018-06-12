@@ -1176,8 +1176,7 @@ var cell_power_multipliers = [1, 4, 12];
 var cell_heat_multipliers = [1, 8, 36];
 var cell_counts = [1, 2, 4, 9, 16];
 
-var create_part = function(part, level) {
-	level = level || part.level;
+var create_part = function(part, level=part.level) {
 	if ( level ) {
 		part = Object.assign({}, part);
 		part.level = level;
@@ -1515,10 +1514,7 @@ var apply_to_tile = function(tile, part, force) {
 
 var rpl;
 var rpqi;
-var remove_part = function(remove_tile, skip_update, sell) {
-	skip_update = skip_update || false;
-	sell = sell || false;
-
+var remove_part = function(remove_tile, skip_update=false, sell=false) {
 	if ( sell ) {
 		if ( remove_tile.activated && remove_tile.part && remove_tile.part.category !== 'cell' ) {
 			if ( remove_tile.part.ticks ) {
@@ -1582,8 +1578,7 @@ var tile_replaceable = function(tile) {
 }
 
 // Tile click
-var mouse_apply_to_tile = function(e, skip_update, part_replacement_result) {
-	skip_update = skip_update || false;
+var mouse_apply_to_tile = function(e, skip_update=false, part_replacement_result) {
 	var skip_replaceable_check = part_replacement_result !== undefined;
 	tile = this.tile;
 
@@ -2349,8 +2344,7 @@ var check_objectives = function() {
 	}
 };
 
-var set_objective = function(objective_key, skip_wait) {
-	skip_wait = skip_wait || false;
+var set_objective = function(objective_key, skip_wait=false) {
 	var wait = skip_wait ? 0 : objective_wait;
 
 	if ( objectives[current_objective] ) {

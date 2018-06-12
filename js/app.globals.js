@@ -9,9 +9,7 @@ Element.prototype.delegate = function(className, type, fn) {
 	var test = new RegExp('\\b' + className + '\\b');
 	var $self = this;
 
-	var onfn = function(event) {
-		event = event || window.event;
-
+	var onfn = function(event = window.event) {
 		var $target = event.target || event.srcElement;
 
 		while( $target != $self ) {
@@ -59,9 +57,7 @@ var find_exponent = /(([1-9])(\.([0-9]+))?)e\+([0-9]+)/;
 var fmt_parts;
 var floor_num;
 
-window.fmt = function(num, places) {
-	places = places || null;
-
+window.fmt = function(num, places = null) {
 	// Math.floor returns exponents quicker for some reason
 	floor_num = Math.floor(num).toString();
 

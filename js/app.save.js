@@ -135,9 +135,8 @@ var GoogleSaver = function() {
 	/**
 	 * Check if the current user has authorized the application.
 	 */
-	this.checkAuth = function(callback, immediate) {
+	this.checkAuth = function(callback, immediate=false) {
 		save_manager.game.save_debug && console.log('GoogleSaver.checkAuth');
-		immediate = immediate || false;
 
 		gapi.auth.authorize(
 			{
@@ -180,9 +179,8 @@ var GoogleSaver = function() {
 		);
 	};
 
-	var update_file = function(data, callback) { 
+	var update_file = function(data='{}', callback) { 
 		save_manager.game.save_debug && console.log('GoogleSaver update_file', data);
-		data = data || '{}';
 		var boundary = '-------314159265358979323846';
 		var delimiter = "\r\n--" + boundary + "\r\n";
 		var close_delim = "\r\n--" + boundary + "--";
