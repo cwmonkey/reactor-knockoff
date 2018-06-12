@@ -1821,7 +1821,28 @@ var active_exchangers = [];
 var active_outlets = [];
 var active_extreme_capacitor = [];
 
+var dtime = 0;
+var dlast = new Date().getTime();
 var game_loop = function() {
+	let now = new Date().getTime();
+
+	let tick = game.loop_wait;
+
+	dtime += now - dlast;
+	dlast = now;
+
+	while (dtime >= tick) {
+		_game_loop();
+		dtime -= tick;
+	}
+
+	if ( !game.paused ) {
+		clearTimeout(loop_timeout);
+		loop_timeout = setTimeout(game_loop, tick);
+	}
+}
+
+var _game_loop = function() {
 	let power_add = 0;
 	let heat_add = 0;
 	let heat_remove = 0;
@@ -2265,11 +2286,6 @@ var game_loop = function() {
 		was_melting_down = true;
 	} else {
 		was_melting_down = false;
-	}
-
-	if ( !game.paused ) {
-		clearTimeout(loop_timeout);
-		loop_timeout = setTimeout(game_loop, game.loop_wait);
 	}
 };
 
