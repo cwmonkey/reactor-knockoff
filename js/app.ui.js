@@ -33,7 +33,7 @@ var current_vars = new Map();
 var update_vars = new Map();
 
 var perc = function(numerator, denominator, dom) {
-	var percent = current_vars.get(numerator) / current_vars.get(denominator) * 100;
+	var percent = round_percentage(current_vars.get(numerator) / current_vars.get(denominator));
 	if ( percent > 100 ) percent = 100;
 	dom.style.width = percent + '%';
 };
@@ -205,7 +205,7 @@ var Update_vars = function() {
 // width of percentage bar is about 28pt
 var percentage_interval = Math.round(100/28);
 
-var round_percentage = function(perc, step) {
+var round_percentage = function(perc, step=1) {
 	return Math.round(perc*100/step)*step
 }
 
