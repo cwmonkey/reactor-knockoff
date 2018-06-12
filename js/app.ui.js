@@ -431,9 +431,12 @@ evts.tile_enabled = function(tile) {
 
 // Game
 
+evts.game_inited = function() {
+	ui.update_interface();
+}
+
 evts.game_loaded = function() {
 	$parts.scrollTop = $parts.scrollHeight;
-	ui.update_interface();
 };
 
 evts.game_updated = function() {

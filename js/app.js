@@ -2391,8 +2391,9 @@ if ( localStorage.getItem('google_drive_save') ) {
 	$enable_local_save.style.display = 'none';
 }
 
-save_game.enable();
+ui.say('evt', 'game_inited');
 
+save_game.enable();
 save_game.load(game.loads);
 
 })();
