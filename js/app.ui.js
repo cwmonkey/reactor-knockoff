@@ -70,7 +70,6 @@ var var_objs = {
 	current_power: {
 		dom: $('#current_power'),
 		num: true,
-		instant: true,
 		onupdate: function() {
 			perc('current_power', 'max_power', $power_percentage);
 		}
@@ -303,10 +302,6 @@ ui.say = function(type, name, val) {
 		if ( val === current_vars.get(name) ) return;
 		current_vars.set(name, val);
 		update_vars.set(name, val);
-
-		if ( var_objs[name] && var_objs[name].instant === true ) {
-			update_var(name, var_objs[name]);
-		}
 	} else if ( type === 'evt' ) {
 		if ( evts[name] ) {
 			evts[name](val);
