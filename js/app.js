@@ -315,6 +315,7 @@ var saves = function() {
 			buttons_state: game.ui.toggle_buttons_saves(),
 			protium_particles: protium_particles,
 			current_objective: current_objective,
+			last_tick_time: last_tick_time,
 			version: game.version
 		}))
 };
@@ -352,6 +353,7 @@ var loads = function(rks) {
 		current_objective = rks.current_objective || current_objective;
 
 		protium_particles = rks.protium_particles || protium_particles;
+		last_tick_time = rks.last_tick_time || last_tick_time;
 
 		var save_version = rks.version || null;
 
@@ -1817,14 +1819,14 @@ var active_outlets = [];
 var active_extreme_capacitor = [];
 
 var dtime = 0;
-var dlast = new Date().getTime();
+var last_tick_time = new Date().getTime();
 var game_loop = function() {
 	let now = new Date().getTime();
 
 	let tick = game.loop_wait;
 
-	dtime += now - dlast;
-	dlast = now;
+	dtime += now - last_tick_time;
+	last_tick_time = now;
 
 	while (dtime >= tick) {
 		_game_loop();
