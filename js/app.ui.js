@@ -706,8 +706,7 @@ $('#Import_Export_close_button').onclick = function() {
 // Show Pages
 var showing_find = /[\b\s]showing\b/;
 
-var _show_page = function(section, id, notrack) {
-	notrack = notrack || false;
+var _show_page = function(section, id) {
 	var $page = $('#' + id);
 	var $section = $('#' + section);
 	var pages = $section.getElementsByClassName('page');
@@ -724,10 +723,6 @@ var _show_page = function(section, id, notrack) {
 		do_check_upgrades_affordability = true;
 	} else {
 		do_check_upgrades_affordability = false;
-	}
-
-	if ( !notrack ) {
-		ga('send', 'event', 'click', 'show_page', 'id');
 	}
 };
 
