@@ -744,7 +744,7 @@ window.upgrades = function(game) {
 					cost: part[type.type + '_upgrade_cost'],
 					multiplier: part[type.type + '_upgrade_multiplier'],
 					onclick: type.onclick,
-					className: part.type + ' ' + type.type,
+					classList: [part.type, type.type],
 					part: part
 				};
 

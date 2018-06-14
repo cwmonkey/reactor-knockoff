@@ -6,14 +6,13 @@
 /////////////////////////////
 
 Element.prototype.delegate = function(className, type, fn) {
-	var test = new RegExp('\\b' + className + '\\b');
 	var $self = this;
 
 	var onfn = function(event = window.event) {
 		var $target = event.target || event.srcElement;
 
 		while( $target != $self ) {
-			if ( $target.className.match(test) ) {
+			if ( $target.classList.contains(className) ) {
 				event.preventDefault();
 				return fn.call($target, event);
 			}

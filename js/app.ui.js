@@ -212,8 +212,6 @@ var round_percentage = function(perc, step=1) {
 // Update Interface
 // TODO: configurable interval
 var update_interface_interval = 100;
-var unaffordable_replace = /[\s\b]unaffordable\b/;
-var locked_find = /[\b\s]locked\b/;
 var do_check_upgrades_affordability = false;
 var update_interface_task = null;
 
@@ -261,9 +259,9 @@ var update_interface = function() {
 
 			if ( upgrade.affordableUpdated === true ) {
 				if ( upgrade.affordable === true ) {
-					upgrade.$el.className = upgrade.$el.className.replace(unaffordable_replace, '');
+					upgrade.$el.classList.remove('unaffordable');
 				} else {
-					upgrade.$el.className += ' unaffordable';
+					upgrade.$el.classList.add('unaffordable');
 				}
 
 				upgrade.affordableUpdated = false;
@@ -278,9 +276,9 @@ var update_interface = function() {
 
 		if ( part.affordableUpdated === true ) {
 			if ( part.affordable === true ) {
-				part.$el.className = part.$el.className.replace(unaffordable_replace, '').replace(locked_find, '');
+				part.$el.classList.remove('unaffordable', 'locked');
 			} else {
-				part.$el.className += ' unaffordable';
+				part.$el.classList.add('unaffordable');
 			}
 
 			part.affordableUpdated = false;
@@ -367,7 +365,7 @@ evts.part_added = function(val) {
 
 	part_obj.className = 'part_' + part.id;
 	part_obj.$el = document.createElement('BUTTON');
-	part_obj.$el.className = 'part locked ' + part_obj.className;
+	part_obj.$el.classList.add('part', 'locked', part_obj.className);
 	part_obj.$el.part = part_obj;
 
 	var $image = $('<div class="image">');
@@ -399,10 +397,6 @@ evts.part_added = function(val) {
 };
 
 // Tile height/width change
-
-var enabled_class = 'enabled';
-var enabled_find = new RegExp('[\\s\\b]' + enabled_class + '\\b');
-
 var adjust_primary_size_timeout;
 var adjust_primary_size = function() {
 	// If an element has display:none, it's offsetWidth would be 0
@@ -416,14 +410,14 @@ var adjust_primary_size = function() {
 };
 
 evts.tile_disabled = function(tile) {
-	tile.$el.className = tile.$el.className.replace(enabled_find, '');
+	tile.$el.classList.remove('enabled');
 
 	clearTimeout(adjust_primary_size_timeout);
 	adjust_primary_size_timeout = setTimeout(adjust_primary_size, 10);
 };
 
 evts.tile_enabled = function(tile) {
-	tile.$el.className += ' ' + enabled_class;
+	tile.$el.classList.add('enabled');
 
 	clearTimeout(adjust_primary_size_timeout);
 	adjust_primary_size_timeout = setTimeout(adjust_primary_size, 10);
@@ -446,21 +440,17 @@ evts.game_updated = function() {
 // Objectives
 
 var $objectives_section = $('#objectives_section');
-var objectives_unloading_class = 'unloading';
-var objectives_unloading_find = new RegExp('[\\s\\b]' + objectives_unloading_class + '\\b');
-var objectives_loading_class = 'loading';
-var objectives_loading_find = new RegExp('[\\s\\b]' + objectives_loading_class + '\\b');
 var objective_timeout;
 
 var $objective_title = $('#objective_title');
 var $objective_reward = $('#objective_reward');
 
 evts.objective_unloaded = function() {
-	$objectives_section.className += ' ' + objectives_unloading_class;
+	$objectives_section.classList.add('unloading');
 };
 
 evts.objective_loaded = function(val) {
-	$objectives_section.className += ' ' + objectives_loading_class;
+	$objectives_section.classList.add('loading');
 	$objective_title.textContent = val.title;
 	if ( val.reward ) {
 		$objective_reward.textContent = '$' + fmt(val.reward);
@@ -469,11 +459,11 @@ evts.objective_loaded = function(val) {
 	} else {
 		$objective_reward.textContent = '';
 	}
-	$objectives_section.className = $objectives_section.className.replace(objectives_unloading_find, '');
+	$objectives_section.classList.remove('unloading');
 
 	clearTimeout(objective_timeout);
 	objective_timeout = setTimeout(function() {
-		$objectives_section.className = $objectives_section.className.replace(objectives_loading_find, '');
+		$objectives_section.classList.remove('loading');
 	}, 100);
 };
 
@@ -704,8 +694,6 @@ $('#Import_Export_close_button').onclick = function() {
 /////////////////////////////
 
 // Show Pages
-var showing_find = /[\b\s]showing\b/;
-
 var _show_page = function(section, id) {
 	var $page = $('#' + id);
 	var $section = $('#' + section);
@@ -713,10 +701,10 @@ var _show_page = function(section, id) {
 
 	for ( var i = 0, length = pages.length, $p; i < length; i++ ) {
 		$p = pages[i];
-		$p.className = $p.className.replace(showing_find, '');
+		$p.classList.remove('showing')
 	}
 
-	$page.className += ' showing';
+	$page.classList.add('showing');
 
 	// Page specific stuff
 	if ( id == 'upgrades_section' || id == 'experimental_upgrades_section' ) {
@@ -752,14 +740,12 @@ create_toggle_button('#more_stats_toggle', '[+]', '[-]')(
 update_button('#more_stats_toggle')();
 
 // Show spoilers
-var has_spoiler_find = /\bhas_spoiler\b/;
-var show_find = /[\s\b]show\b/;
 $('#help_section').delegate('show_spoiler', 'click', function() {
 	var has_spoiler = this;
 	var found = false;
 
 	while ( has_spoiler ) {
-		if ( has_spoiler.className.match(has_spoiler_find) ) {
+		if ( has_spoiler.classList.contains('has_spoiler') ) {
 			found = true;
 			break;
 		} else {
@@ -771,11 +757,7 @@ $('#help_section').delegate('show_spoiler', 'click', function() {
 		return;
 	}
 
-	if ( has_spoiler.className.match(show_find) ) {
-		has_spoiler.className = has_spoiler.className.replace(' show', '');
-	} else {
-		has_spoiler.className += ' show';
-	}
+	has_spoiler.classList.toggle('show');
 });
 
 })();

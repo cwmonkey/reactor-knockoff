@@ -876,7 +876,7 @@ var $tooltip_chance = $('#tooltip_chance');
 var $tooltip_chance_percent_of_total = $('#tooltip_chance_percent_of_total');
 
 if ( game.debug ) {
-	$main.className += ' debug';
+	$main.classList.add('debug');
 }
 
 ui.say('var', 'max_heat', max_heat);
@@ -1356,8 +1356,8 @@ var create_upgrade = function(u) {
 	var upgrade = new window.Upgrade(u);
 	upgrade.$el.upgrade = upgrade;
 
-	if ( u.className ) {
-		upgrade.$el.className += ' ' + u.className;
+	if ( u.classList ) {
+		upgrade.$el.classList.add(...u.classList);
 	}
 
 	upgrade_locations[u.type].appendChild(upgrade.$el);
@@ -1451,36 +1451,32 @@ window.check_upgrades_affordability = function( ) {
 };
 
 // Select part
-var active_replace = /[\b\s]part_active\b/;
 var clicked_part = null;
 
 $all_parts.delegate('part', 'click', function(e) {
 	if ( clicked_part && clicked_part === this.part ) {
 		clicked_part = null;
-		this.className = this.className.replace(active_replace, '');
-		$main.className = $main.className.replace(active_replace, '');
+		this.classList.remove('part_active');
+		$main.classList.remove('part_active');
 		part_tooltip_hide();
 	} else {
 		part_tooltip_show.apply(this, e);
 
 		if ( clicked_part ) {
-			clicked_part.$el.className = clicked_part.$el.className.replace(active_replace, '');
-			$main.className = $main.className.replace(active_replace, '');
+			clicked_part.$el.classList.remove('part_active');
+			$main.classList.remove('part_active');
 		}
 
 		clicked_part = this.part;
 		// TODO: DRY
-		this.className += ' part_active';
-		$main.className += ' part_active';
+		this.classList.add('part_active');
+		$main.classList.add(' part_active');
 	}
 });
 
 // Add part to tile
 var part_replace = /[\b\s]part_[a-z0-9_]+\b/;
 var category_replace = /[\b\s]category_[a-z_]+\b/;
-var spent_replace = /[\b\s]spent\b/;
-var disabled_replace = /[\b\s]disabled\b/;
-var exploding_replace = /[\b\s]exploding\b/;
 var tile_mousedown = false;
 var tile_mousedown_right = false;
 var tile_queue = [];
@@ -1493,24 +1489,22 @@ var apply_to_tile = function(tile, part, force) {
 	}
 
 	tile.part = part;
+	tile.$el.classList.remove('spent','disabled','exploding');
 	tile.$el.className = tile.$el.className
 		.replace(part_replace, '')
 		.replace(category_replace, '')
-		.replace(spent_replace, '')
-		.replace(disabled_replace, '')
-		.replace(exploding_replace, '')
 		+ ' ' + part.className
 		+ ' category_' + part.category
 		;
 
 	if ( part.ticks ) {
 		if ( !tile.ticks ) {
-			tile.$el.className += ' spent';
+			tile.$el.classList.add('spent');
 		}
 	}
 
 	if ( !tile.activated ) {
-		tile.$el.className += ' disabled';
+		tile.$el.classList.add('disabled');
 	}
 };
 
@@ -1536,11 +1530,10 @@ var remove_part = function(remove_tile, skip_update=false, sell=false) {
 	remove_tile.setTicks(0);
 	remove_tile.setHeat_contained(0);
 	remove_tile.updated = true;
+	remove_tile.$el.classList.remove('spent','disabled');
 	remove_tile.$el.className = remove_tile.$el.className
 		.replace(part_replace, '')
 		.replace(category_replace, '')
-		.replace(spent_replace, '')
-		.replace(disabled_replace, '')
 		;
 
 	if ( !skip_update ) {
@@ -1878,7 +1871,7 @@ var _game_loop = function() {
 									ui.say('var', 'current_money', game.current_money);
 									tile_reflector.setTicks(tile_reflector.part.ticks);
 								} else {
-									tile_reflector.$el.className += ' exploding';
+									tile_reflector.$el.classList.add('exploding');
 									remove_part(tile_reflector, true);
 								}
 							}
@@ -1897,7 +1890,7 @@ var _game_loop = function() {
 							ui.say('var', 'current_money', game.current_money);
 							tile.setTicks(tile_part.ticks);
 						} else {
-							tile.$el.className += ' spent';
+							tile.$el.classList.add('spent');
 							do_update = true;
 						}
 					}
@@ -2168,7 +2161,7 @@ var _game_loop = function() {
 				game.current_money -= tile.part.cost;
 				ui.say('var', 'current_money', game.current_money);
 				tile.activated = true;
-				tile.$el.className = tile.$el.className.replace(disabled_replace, '');
+				tile.$el.classList.remove('disabled');
 			} else {
 				if ( processed ) {
 					tile_queue.splice(0, processed);
@@ -2204,7 +2197,7 @@ var _game_loop = function() {
 						meltdown = true;
 					}
 
-					tile.$el.className += ' exploding';
+					tile.$el.classList.add('exploding');
 
 					do_update = true;
 					remove_part(tile, true);
@@ -2256,7 +2249,7 @@ var _game_loop = function() {
 		for ( tile of game.active_tiles_2d ) {
 			if ( tile.part ) {
 				do_update = true;
-				tile.$el.className += ' exploding';
+				tile.$el.classList.add('exploding');
 				remove_part(tile, true);
 			}
 		}
@@ -2310,7 +2303,7 @@ window.check_affordability = function() {
 			) {
 				part.setAffordable(true);
 			} else if ( prev_part && prev_part.affordable ) {
-				part.$el.className = part.$el.className.replace(locked_find, '');
+				part.$el.classList.removed('locked');
 			}
 		}
 	}
