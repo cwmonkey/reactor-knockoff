@@ -537,8 +537,10 @@ window.upgrades = function(game) {
 			onclick: function(upgrade) {
 				for ( var i = 1; i <= 3; i++ ) {
 					part = game.part_objects['protium' + i];
-					part.heat = part.part.base_heat * Math.pow(2, upgrade.level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
-					part.power = part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade.level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+					part.base_heat = part.part.base_heat * Math.pow(2, upgrade.level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+					part.heat = part.part.heat * Math.pow(2, upgrade.level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+					part.base_power = part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade.level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
+					part.power = part.part.power * (game.upgrade_objects['infused_cells'].level + 1) * Math.pow(2, upgrade.level) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 					part.ticks = Math.ceil(part.part.base_ticks / Math.pow(2, upgrade.level));
 					part.updateDescription();
 				}
