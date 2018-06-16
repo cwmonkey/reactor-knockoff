@@ -1374,9 +1374,7 @@ for ( var i = 0, l = game.upgrade_objects_array.length; i < l; i++ ) {
 }
 
 // Upgrade delegate event
-$all_upgrades.delegate('upgrade', 'click', function(event) {
-	var upgrade = this.upgrade;
-
+var upgrade_func = function(upgrade) {
 	if ( upgrade.level >= upgrade.upgrade.levels ) {
 		return;
 	} else if (
@@ -1386,22 +1384,26 @@ $all_upgrades.delegate('upgrade', 'click', function(event) {
 	) {
 		game.current_exotic_particles -= upgrade.ecost;
 		ui.say('var', 'current_exotic_particles', game.current_exotic_particles);
-		upgrade.setLevel(upgrade.level + 1);
-		if ( tooltip_showing ) {
-			upgrade.updateTooltip();
-		}
 	} else if ( upgrade.cost && game.current_money >= upgrade.cost ) {
 		game.current_money -= upgrade.cost;
 		ui.say('var', 'current_money', game.current_money);
-		upgrade.setLevel(upgrade.level + 1);
-		if ( tooltip_showing ) {
-			upgrade.updateTooltip();
-		}
 	} else {
 		return;
 	}
 
+	upgrade.setLevel(upgrade.level + 1);
+	if ( tooltip_showing ) {
+		upgrade.updateTooltip();
+	}
 	update_tiles();
+	return true
+}
+
+$all_upgrades.delegate('upgrade', 'click', function(event){
+	let result;
+	do {
+		result = upgrade_func(this.upgrade);
+	} while ( event.shiftKey && result )
 });
 
 if ( game.debug ) {
