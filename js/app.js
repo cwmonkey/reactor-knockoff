@@ -1660,7 +1660,9 @@ window.enable_heat_control = function() {
 // Tile clicks
 /////////////////////////////
 
+var tile_mouseup = false;
 var tile_mouseup_fn = function(e) {
+	tile_mouseup = true;
 	tile_mousedown = false;
 	tile_mousedown_right = false;
 };
@@ -1672,7 +1674,12 @@ document.oncontextmenu = function(e) {
 };
 
 $reactor.delegate('tile', 'click', function(e) {
-	if ( !tile_mousedown ) {
+	// Mouse up get trigger before click,
+	// So we check if the event was actually mouse related
+	if ( tile_mouseup ) {
+		tile_mouseup = false;
+	// TODO: check if we can remove this check
+	} else if ( !tile_mousedown ) {
 		mouse_apply_to_tile.call(this, e);
 	}
 });
@@ -1684,6 +1691,7 @@ hotkeys.init(game);
 game.hotkeys = hotkeys;
 
 var last_click = null;
+var last_tile = null;
 var double_click_tile = null;
 var double_click_tile_part = null;
 var double_click_tile_ticks = null;
@@ -1748,6 +1756,7 @@ $reactor.delegate('tile', 'mousedown', function(e) {
 	}
 
 	last_click = e.which;
+	last_tile = this.tile;
 
 	if (clear_double_click_task){
 		clearTimeout(clear_double_click_task)
@@ -1759,7 +1768,8 @@ $reactor.onmouseup = tile_mouseup_fn;
 $reactor.onmouseleave = tile_mouseup_fn;
 
 $reactor.delegate('tile', 'mousemove', function(e) {
-	if ( tile_mousedown && double_click_tile != this.tile ) {
+	if ( tile_mousedown && last_tile != this.tile ) {
+		last_tile = this.tile;
 		if ( tiles = click_func.call(this, e) ) {
 			for ( const tile of tiles ) {
 				mouse_apply_to_tile.call(tile.$el, e, true, part_replacement_result);
