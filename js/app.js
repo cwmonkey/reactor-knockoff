@@ -1826,6 +1826,66 @@ var active_extreme_capacitor = [];
 
 var dtime = 0;
 var last_tick_time;
+var last_data_set = [];
+var current_data_set = [];
+
+var check_offline_tick_safe = function() {
+	current_data_set.length = 0;
+	for ( tile of game.active_tiles_2d ) {
+		current_data_set.push(tile.heat_contained)
+	}
+
+	// Swap the array object
+	[last_data_set, current_data_set] = [current_data_set, last_data_set];
+
+	console.log((game_stat_prediction.heat_remove + game_stat_prediction.reduce_heat) >= (game_stat_prediction.heat_add + game_stat_prediction.heat_add_next_loop), game_stat_prediction.heat_remove+game_stat_prediction.reduce_heat, (game_stat_prediction.heat_add + game_stat_prediction.heat_add_next_loop))
+
+	if (
+	     last_data_set.length === current_data_set.length &&
+	     // Check the heat values, if they are the same or lesser, it should be safe to assume nothing will explode.
+	     last_data_set.every((v,i) => current_data_set[i] >= v) &&
+	     // Check reactor heat changes, if the removed heat is more than the added heat, the reactor shouldn't explode
+	     (game_stat_prediction.heat_remove + game_stat_prediction.reduce_heat) >= (game_stat_prediction.heat_add + game_stat_prediction.heat_add_next_loop)
+	     ) {
+		return true
+	}
+}
+
+var offline_ticks = function(ticks) {
+	game.current_heat += game_stat_prediction.heat_add*ticks;
+	game.current_heat += game_stat_prediction.heat_add_next_loop*ticks;
+	game.current_heat -= game_stat_prediction.heat_remove*ticks;
+	game.current_heat -= game_stat_prediction.reduce_heat*ticks;
+	current_power += game_stat_prediction.power_add*ticks;
+	current_power -= game_stat_prediction.sell_amount*ticks;
+	game.current_money += game_stat_prediction.sell_amount*ticks;
+
+	let ep_chance = game_stat_prediction.ep_chance_add*ticks;
+	let ep_gain;
+
+	if ( ep_chance > 1 ) {
+		ep_gain = Math.floor(ep_chance);
+		ep_chance -= ep_gain;
+	}
+
+	if ( ep_chance > Math.random() ) {
+		ep_gain++;
+	}
+
+	if ( ep_gain > 0 ) {
+		game.exotic_particles += ep_gain;
+		ui.say('var', 'exotic_particles', game.exotic_particles);
+	}
+
+	if ( current_power > max_power ) {
+		current_power = max_power;
+	}
+
+	if ( game.current_heat < 0 ) {
+		game.current_heat = 0;
+	}
+}
+
 var game_loop = function() {
 	if ( !last_tick_time ) {
 		last_tick_time = new Date().getTime();
@@ -1838,9 +1898,32 @@ var game_loop = function() {
 	dtime += now - last_tick_time;
 	last_tick_time = now;
 
-	while (dtime >= tick) {
-		_game_loop();
-		dtime -= tick;
+	if ( dtime >= tick ) {
+		let pticks = 0;
+		let amount_of_loop_per_5sec;
+		if ( loop_timing !== 0 ) {
+			amount_of_loop_per_5sec = (5000/loop_timing);
+		} else {
+			// If loop duration isn't known yet,
+			// assume the machine is at least able to run at 30 loops per second (base on the targeted fps)
+			amount_of_loop_per_5sec = 30*5;
+		}
+		let amount_of_ticks = dtime/tick;
+		if ( amount_of_ticks > 100 ){
+			console.log(`[Offline tick] ${amount_of_ticks} ticks processing`)
+		}
+		while ( dtime >= tick ) {
+			if ( amount_of_ticks > amount_of_loop_per_5sec && check_offline_tick_safe() ) {
+				pticks = Math.min(game_stat_prediction.no_change_ticks, amount_of_ticks) ;
+				offline_ticks(pticks);
+				amount_of_ticks -= pticks;
+				dtime -= pticks*tick;
+			} else {
+				_game_loop();
+				amount_of_ticks -= 1;
+				dtime -= tick;
+			}
+		}
 	}
 
 	if ( !game.paused ) {
@@ -1849,13 +1932,28 @@ var game_loop = function() {
 	}
 }
 
+var game_stat_prediction = {};
+game_stat_prediction.heat_add = 0;
+game_stat_prediction.heat_add_next_loop = 0;
+game_stat_prediction.heat_remove = 0;
+game_stat_prediction.reduce_heat = 0;
+game_stat_prediction.power_add = 0;
+game_stat_prediction.sell_amount = 0;
+
+var loop_timing;
 var _game_loop = function() {
+	let loop_start = performance.now()
 	let power_add = 0;
 	let heat_add = 0;
 	let heat_remove = 0;
+	let reduce_heat = 0;
+	let sell_amount = 0;
+	let ep_chance_add = 0;
 	let meltdown = false;
 	let do_update = false;
 	let melting_down = false;
+	// For storing the amount of ticks which we can assume nothing will change.
+	let no_change_ticks = Infinity;
 
 	active_inlets.length = 0;
 	active_exchangers.length = 0;
@@ -1869,6 +1967,10 @@ var _game_loop = function() {
 
 	for ( let tile of game.active_tiles_2d ) {
 		if ( tile.activated && tile.part ) {
+			// Get the smallest amount of ticks where we can assume nothing will change.
+			if ( tile.ticks !== 0 && tile.ticks < no_change_ticks ){
+				no_change_ticks = tile.ticks;
+			}
 			let tile_part = tile.part;
 			if ( tile_part.category === 'cell' ) {
 				if ( tile.ticks !== 0 ) {
@@ -1934,6 +2036,8 @@ var _game_loop = function() {
 					let ep_gain = 0;
 					tile.display_chance = ep_chance * 100;
 					tile.display_chance_percent_of_total = lower_heat / tile_part.ep_heat * 100;
+
+					ep_chance_add += ep_chance;
 
 					if ( ep_chance > 1 ) {
 						ep_gain = Math.floor(ep_chance);
@@ -2126,7 +2230,6 @@ var _game_loop = function() {
 
 	// Auto heat reduction
 	if ( game.current_heat > 0 ) {
-		let reduce_heat;
 		// TODO: Set these variables up in update tiles
 		if ( game.current_heat <= max_heat ) {
 			// Heat Control Operator should not interfere with passive heat loss
@@ -2225,7 +2328,7 @@ var _game_loop = function() {
 
 	// Auto Sell
 	if ( !game.auto_sell_disabled ) {
-		let sell_amount = Math.ceil(max_power * game.auto_sell_multiplier);
+		sell_amount = Math.ceil(max_power * game.auto_sell_multiplier);
 		if ( sell_amount ) {
 			let power_sell_percent;
 			if ( sell_amount > current_power ) {
@@ -2294,6 +2397,18 @@ var _game_loop = function() {
 	} else {
 		was_melting_down = false;
 	}
+
+	game_stat_prediction.heat_add = heat_add;
+	game_stat_prediction.heat_add_next_loop = heat_add_next_loop;
+	game_stat_prediction.heat_remove = heat_remove;
+	game_stat_prediction.reduce_heat = reduce_heat;
+	game_stat_prediction.power_add = power_add;
+	game_stat_prediction.sell_amount = sell_amount;
+	game_stat_prediction.ep_chance_add = ep_chance_add;
+	// Minus 1 because the last tick might change some stuff
+	game_stat_prediction.no_change_ticks = no_change_ticks - 1;
+
+	loop_timing = performance.now() - loop_start;
 };
 
 var prev_part;
