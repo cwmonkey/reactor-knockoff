@@ -1611,6 +1611,7 @@ var mouse_apply_to_tile = function(e, skip_update=false, part_replacement_result
 // Pause (Decoupled)
 window.pause = function() {
 	clearTimeout(loop_timeout);
+	last_tick_time = null;
 
 	game.paused = true;
 	ui.say('evt', 'paused');
@@ -1824,8 +1825,12 @@ var active_outlets = [];
 var active_extreme_capacitor = [];
 
 var dtime = 0;
-var last_tick_time = new Date().getTime();
+var last_tick_time;
 var game_loop = function() {
+	if ( !last_tick_time ) {
+		last_tick_time = new Date().getTime();
+	}
+
 	let now = new Date().getTime();
 
 	let tick = game.loop_wait;
