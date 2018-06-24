@@ -1293,7 +1293,7 @@ game.update_cell_power = function() {
 // Reduce Heat Manually (Decoupled)
 /////////////////////////////
 
-window.reduce_heat = function() {
+window.manual_reduce_heat = function() {
 	if ( game.current_heat ) {
 		game.current_heat -= game.manual_heat_reduce;
 

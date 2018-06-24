@@ -496,7 +496,7 @@ $('#refund').onclick = function(event) {
 $('#reduce_heat').onclick = function(event) {
 	event.preventDefault();
 
-	window.reduce_heat();
+	window.manual_reduce_heat();
 };
 
 /////////////////////////////
