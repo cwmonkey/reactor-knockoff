@@ -362,7 +362,6 @@ var loads = function(rks) {
 		} else {
 			last_tick_time = rks.last_tick_time || last_tick_time;
 		}
-		game.offline_tick = rks.offline_tick || game.offline_tick;
 
 		var save_version = rks.version || null;
 

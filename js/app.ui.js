@@ -518,7 +518,11 @@ var toggle_buttons_loads = function(buttons) {
 	for (var [button, state] of Object.entries(buttons)) {
 		var button_obj = toggle_buttons[button];
 		if ( button_obj ) {
-			!state ? button_obj.enable() : button_obj.disable();
+			if ( button_obj.load_func ){
+				button_obj.load_func(state);
+			} else {
+				!state ? button_obj.enable() : button_obj.disable();
+			}
 			button_obj.update_text();
 		}
 	}
@@ -533,10 +537,11 @@ var create_toggle_button = function(button, enable_text, disable_text) {
 	var $button = $(button);
 	// Initiate with some text in the button so it isn't empty when something goes wrong when starting
 	$button.textContent = enable_text;
-	return (state, enable_callback, disable_callback, always_update_text) => {
+	return (state, enable_callback, disable_callback, always_update_text, load_func) => {
 		var update_text = () => $button.textContent = !state() ? enable_text : disable_text;
 		toggle_buttons[button] = {update_text: update_text, state: state,
-		                          enable: enable_callback, disable: disable_callback};
+		                          enable: enable_callback, disable: disable_callback,
+		                          load_func: load_func};
 		$button.onclick = (event) => {
 			event.preventDefault();
 			state() ? enable_callback() : disable_callback();
@@ -627,7 +632,10 @@ create_toggle_button('#offline_tick', 'Disable Offline Tick', 'Enable Offline Ti
 	function() {
 		ui.game.offline_tick = false;
 	},
-	true
+	true,
+	function(state) {
+		ui.game.offline_tick = state || ui.game.offline_tick;
+	}
 )
 
 /////////////////////////////
