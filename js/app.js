@@ -1815,7 +1815,7 @@ $scrounge.onclick = function() {
 // Game Loop
 /////////////////////////////
 
-var loop_timeout;
+var loop_timeout = 0;
 var was_melting_down = false;
 var heat_add_next_loop = 0;
 
