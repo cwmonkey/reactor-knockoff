@@ -74,6 +74,7 @@ var Game = class {
 		this.max_rows = 32;
 		this.debug = false;
 		this.save_debug = false;
+		this.offline_tick =true;
 		this.base_loop_wait = 1000;
 		this.base_power_multiplier = 1;
 		this.base_heat_multiplier = 4;
@@ -316,6 +317,7 @@ var saves = function() {
 			protium_particles: protium_particles,
 			current_objective: current_objective,
 			last_tick_time: last_tick_time,
+			offline_tick: game.offline_tick,
 			version: game.version
 		}))
 };
@@ -353,7 +355,14 @@ var loads = function(rks) {
 		current_objective = rks.current_objective || current_objective;
 
 		protium_particles = rks.protium_particles || protium_particles;
-		last_tick_time = rks.last_tick_time || last_tick_time;
+		// If ether offline tick been disabled in the save or game
+		// Skip offline tick
+		if ( rks.offline_tick === false || !game.offline_tick ){
+			last_tick_time = null;
+		} else {
+			last_tick_time = rks.last_tick_time || last_tick_time;
+		}
+		game.offline_tick = rks.offline_tick || game.offline_tick;
 
 		var save_version = rks.version || null;
 

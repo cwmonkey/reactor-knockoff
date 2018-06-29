@@ -619,6 +619,17 @@ create_toggle_button('#speed_hack', 'Disable Speed Hack', 'Enable Speed Hack')(
 	true
 )
 
+create_toggle_button('#offline_tick', 'Disable Offline Tick', 'Enable Offline Tick')(
+	()=>!ui.game.offline_tick,
+	function() {
+		ui.game.offline_tick = true;
+	},
+	function() {
+		ui.game.offline_tick = false;
+	},
+	true
+)
+
 /////////////////////////////
 // Misc UI
 /////////////////////////////
