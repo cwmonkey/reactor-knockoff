@@ -1846,8 +1846,6 @@ var check_offline_tick_safe = function() {
 	// Swap the array object
 	[last_data_set, current_data_set] = [current_data_set, last_data_set];
 
-	console.log((game_stat_prediction.heat_remove + game_stat_prediction.reduce_heat) >= (game_stat_prediction.heat_add + game_stat_prediction.heat_add_next_loop), game_stat_prediction.heat_remove+game_stat_prediction.reduce_heat, (game_stat_prediction.heat_add + game_stat_prediction.heat_add_next_loop))
-
 	if (
 	     last_data_set.length === current_data_set.length &&
 	     // Check the heat values, if they are the same or lesser, it should be safe to assume nothing will explode.
