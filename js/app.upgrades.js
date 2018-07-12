@@ -683,13 +683,10 @@ window.upgrades = function(game) {
 			title: 'Potent ',
 			description: ' cells produce 100% more power per level of upgrade.',
 			onclick: function(upgrade) {
+				game.update_cell_power();
 				var part;
 				for ( var i = 1; i <= 3; i++ ) {
 					part = game.part_objects[upgrade.part.type + i];
-					part.power = (
-						part.part.base_power * (upgrade.level + 1)
-						+ part.part.base_power * (game.upgrade_objects['infused_cells'].level + 1)
-					) * Math.pow(2, game.upgrade_objects['unleashed_cells'].level);
 					part.updateDescription();
 				}
 			}
