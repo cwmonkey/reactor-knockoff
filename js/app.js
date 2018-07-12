@@ -1468,7 +1468,7 @@ $all_parts.delegate('part', 'click', function(e) {
 		clicked_part = null;
 		this.classList.remove('part_active');
 		$main.classList.remove('part_active');
-		part_tooltip_hide();
+		_tooltip_hide();
 	} else {
 		part_tooltip_show.apply(this, e);
 
