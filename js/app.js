@@ -2094,7 +2094,7 @@ var _game_loop = function() {
 
 	let max_shared_heat;
 	// Reduce reactor heat parts
-	if ( game.heat_controlled ) {
+	if ( game.heat_controlled && game.upgrade_objects['heat_control_operator'].level > 0 ) {
 		if (game.current_heat > max_heat) {
 			max_shared_heat = (game.current_heat - max_heat) / stat_outlet;
 		} else {

@@ -33,7 +33,6 @@ window.upgrades = function(game) {
 			cost: 1000000,
 			levels: 1,
 			onclick: function(upgrade) {
-				game.heat_controlled = upgrade.level;
 			}
 		},
 		{
