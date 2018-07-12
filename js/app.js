@@ -1480,7 +1480,7 @@ $all_parts.delegate('part', 'click', function(e) {
 		clicked_part = this.part;
 		// TODO: DRY
 		this.classList.add('part_active');
-		$main.classList.add(' part_active');
+		$main.classList.add('part_active');
 	}
 });
 
