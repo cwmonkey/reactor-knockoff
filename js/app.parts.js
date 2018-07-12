@@ -33,8 +33,8 @@ window.parts = [
 			pulse_multiplier: 1,
 			base_cost: 25,
 			base_ticks: 15,
-			base_power: 4,
-			base_heat: 8
+			base_power: 1,
+			base_heat: 1
 		},
 		{
 			id: 'uranium3',
@@ -47,8 +47,8 @@ window.parts = [
 			pulse_multiplier: 1,
 			base_cost: 60,
 			base_ticks: 15,
-			base_power: 12,
-			base_heat: 36
+			base_power: 1,
+			base_heat: 1
 		},
 		{
 			id: 'plutonium',
