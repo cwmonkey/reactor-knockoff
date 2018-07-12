@@ -2290,6 +2290,7 @@ var _game_loop = function() {
 				ui.say('var', 'current_money', game.current_money);
 				tile.activated = true;
 				tile.$el.classList.remove('disabled');
+				do_update = true;
 			} else {
 				if ( processed ) {
 					tile_queue.splice(0, processed);
