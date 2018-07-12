@@ -1823,7 +1823,7 @@ $scrounge.onclick = function() {
 // Game Loop
 /////////////////////////////
 
-var loop_timeout = 0;
+var loop_timeout;
 var was_melting_down = false;
 var heat_add_next_loop = 0;
 
@@ -1948,7 +1948,7 @@ game_stat_prediction.reduce_heat = 0;
 game_stat_prediction.power_add = 0;
 game_stat_prediction.sell_amount = 0;
 
-var loop_timing;
+var loop_timing = 0;
 var _game_loop = function() {
 	let loop_start = performance.now()
 	let power_add = 0;
