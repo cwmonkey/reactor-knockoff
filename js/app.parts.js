@@ -404,7 +404,7 @@ window.parts = [
 			//category: 'singularity_harnessing',
 			category: 'particle_accelerator',
 			experimental: true,
-			erequires: '',
+			erequires: 'singularity_harnessing',
 			level: 6,
 			base_cost: 100000000000000,
 			base_containment: 100000000000000000000000000000000,
