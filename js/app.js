@@ -936,7 +936,7 @@ $reactor.delegate('tile', 'blur', tooltip_hide);
 
 // Part tooltips
 var part_tooltip_show = function(e) {
-	tooltip_show(this.part, undefined, ()=>{this.part.updateTooltip()});
+	tooltip_show(this._part, undefined, ()=>{this._part.updateTooltip()});
 }
 
 $all_parts.delegate('part', 'mouseover', part_tooltip_show);
@@ -1464,7 +1464,7 @@ window.check_upgrades_affordability = function( ) {
 var clicked_part = null;
 
 $all_parts.delegate('part', 'click', function(e) {
-	if ( clicked_part && clicked_part === this.part ) {
+	if ( clicked_part && clicked_part === this._part ) {
 		clicked_part = null;
 		this.classList.remove('part_active');
 		$main.classList.remove('part_active');
@@ -1477,7 +1477,7 @@ $all_parts.delegate('part', 'click', function(e) {
 			$main.classList.remove('part_active');
 		}
 
-		clicked_part = this.part;
+		clicked_part = this._part;
 		// TODO: DRY
 		this.classList.add('part_active');
 		$main.classList.add('part_active');

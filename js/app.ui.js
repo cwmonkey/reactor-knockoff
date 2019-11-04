@@ -366,7 +366,7 @@ evts.part_added = function(val) {
 	part_obj.className = 'part_' + part.id;
 	part_obj.$el = document.createElement('BUTTON');
 	part_obj.$el.classList.add('part', 'locked', part_obj.className);
-	part_obj.$el.part = part_obj;
+	part_obj.$el._part = part_obj;
 
 	var $image = $('<div class="image">');
 	$image.textContent = 'Click to Select';
