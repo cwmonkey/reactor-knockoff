@@ -406,6 +406,7 @@ window.parts = [
 			experimental: true,
 			erequires: 'singularity_harnessing',
 			level: 6,
+			base_transfer: 1000000000000000000000000000000,
 			base_cost: 100000000000000,
 			base_containment: 100000000000000000000000000000000,
 			base_ep_heat: 1600000000000000000000000000000

@@ -2300,6 +2300,7 @@ var _game_loop = function() {
 	}
 
 	// Apply heat to containment parts
+
 	for ( let tile of game.active_tiles_2d ){
 		if ( tile.activated && tile.part && tile.part.containment ) {
 			if ( tile.part.vent ) {
@@ -2312,6 +2313,17 @@ var _game_loop = function() {
 				}
 
 				tile.setHeat_contained(tile.heat_contained - vent_reduce);
+			}
+
+			// Particle Accelerator 6 - take heat and power from reactor
+			if ( tile.part.id === 'particle_accelerator6' ) {
+				var pa_transfer = Math.min(tile.part.transfer, current_power, game.current_heat);
+
+				if ( pa_transfer && pa_transfer > 0 ) {
+					current_power -= pa_transfer;
+					game.current_heat -= pa_transfer;
+					tile.setHeat_contained(tile.heat_contained + pa_transfer);
+				}
 			}
 
 			if ( tile.heat_contained > tile.part.containment ) {
