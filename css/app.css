@@ -68,7 +68,7 @@ button:before {
 button,
 #parts_nav_top,
 #parts_nav_bottom {
-	font-family: 'Play', sans-serif;
+	font-family: monospace;
 	font-weight: 400;
 	font-size: 13.5px;
 	text-shadow: 1px 1px 0 #000;
@@ -101,7 +101,7 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: 'Quantico', sans-serif;
+	font-family: sans-serif;
 	font-weight: 400;
 	text-shadow: 1px 1px 3px rgba(0, 0, 0, 1);
 	font-size: 18px;
