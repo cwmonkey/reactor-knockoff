@@ -1,0 +1,483 @@
+var loop_timing = 0;
+var _game_loop = function() {
+	let loop_start = performance.now()
+	let power_add = 0;
+	let heat_add = 0;
+	let heat_remove = 0;
+	let reduce_heat = 0;
+	let sell_amount = 0;
+	let ep_chance_add = 0;
+	let meltdown = false;
+	let do_update = false;
+	let melting_down = false;
+	// For storing the amount of ticks which we can assume nothing will change.
+	let no_change_ticks = Infinity;
+
+	active_inlets.length = 0;
+	active_exchangers.length = 0;
+	active_outlets.length = 0;
+	active_extreme_capacitor.length = 0;
+
+	if ( heat_add_next_loop > 0 ) {
+		heat_add = heat_add_next_loop;
+		heat_add_next_loop = 0;
+	}
+
+	for ( let tile of game.active_tiles_2d ) {
+		if ( tile.activated && tile.part ) {
+			// Get the smallest amount of ticks where we can assume nothing will change.
+			if ( tile.ticks !== 0 && tile.ticks < no_change_ticks ){
+				no_change_ticks = tile.ticks;
+			}
+			let tile_part = tile.part;
+			if ( tile_part.category === 'cell' ) {
+				if ( tile.ticks !== 0 ) {
+					power_add += tile.power;
+					heat_add += tile.heat;
+					tile.setTicks(tile.ticks - 1);
+
+					if ( tile.reflectors.size ) {
+						for ( let tile_reflector of tile.reflectors ) {
+							tile_reflector.setTicks(tile_reflector.ticks - 1);
+
+							// TODO: dedupe this and cell ticks
+							if ( tile_reflector.ticks === 0 ) {
+								if ( game.auto_buy_disabled !== true && tile_reflector.part.perpetual && game.current_money >= tile_reflector.part.cost ) {
+									// auto replenish reflector
+									game.current_money -= tile_reflector.part.cost;
+									ui.say('var', 'current_money', game.current_money);
+									tile_reflector.setTicks(tile_reflector.part.ticks);
+								} else {
+									tile_reflector.$el.classList.add('exploding');
+									remove_part(tile_reflector, true);
+								}
+							}
+						}
+					}
+
+					if ( tile.ticks === 0 ) {
+						if ( tile_part.part.type === 'protium' ) {
+							protium_particles += tile_part.cell_count;
+							game.update_cell_power();
+						}
+
+						if ( game.auto_buy_disabled !== true && tile_part.perpetual && game.current_money >= tile_part.cost * 1.5 ) {
+							// auto replenish cell
+							game.current_money -= tile_part.cost * 1.5;
+							ui.say('var', 'current_money', game.current_money);
+							tile.setTicks(tile_part.ticks);
+						} else {
+							tile.$el.classList.add('spent');
+							do_update = true;
+						}
+					}
+				}
+			}
+
+			// TODO: Find a better place/logic for this?
+			// Add heat to containment part
+			if ( tile_part.containment ) {
+				if ( tile_part.id === 'coolant_cell6' ) {
+					tile.setHeat_contained(tile.heat_contained + (tile.heat / 2));
+					power_add += tile.heat / 2;
+				} else {
+					tile.setHeat_contained(tile.heat_contained + tile.heat);
+				}
+			}
+
+			if ( tile_part.category === 'particle_accelerator' ) {
+				if ( tile.heat_contained ) {
+					// Which more, tile heat or max heat, get the lesser
+					let lower_heat = Math.min(tile.heat_contained, tile_part.ep_heat);
+					let ep_chance_percent = lower_heat / tile_part.part.base_ep_heat;
+					let ep_chance = Math.log(lower_heat) / Math.pow(10, 5 - tile_part.part.level) * ep_chance_percent;
+					let ep_gain = 0;
+					tile.display_chance = ep_chance * 100;
+					tile.display_chance_percent_of_total = lower_heat / tile_part.ep_heat * 100;
+
+					ep_chance_add += ep_chance;
+
+					if ( ep_chance > 1 ) {
+						ep_gain = Math.floor(ep_chance);
+						ep_chance -= ep_gain;
+					}
+
+					if ( ep_chance > Math.random() ) {
+						ep_gain++;
+					}
+
+					if ( ep_gain > 0 ) {
+						game.exotic_particles += ep_gain;
+						ui.say('var', 'exotic_particles', game.exotic_particles);
+					}
+				}
+			}
+
+			if ( tile_part.transfer && tile.containments.length > 0 ) {
+				if ( tile_part.category === 'heat_inlet' ) {
+					active_inlets.push(tile);
+				} else if ( tile_part.category === 'heat_exchanger' ) {
+					active_exchangers.push(tile);
+				} else if ( tile_part.category === 'heat_outlet' ) {
+					active_outlets.push(tile);
+				}
+			}
+			
+			if ( tile.part.id === 'capacitor6' ) {
+				active_extreme_capacitor.push(tile);
+			}
+
+		}
+	}
+
+	// Inlets
+	for ( let tile of active_inlets ){
+		for ( let tile_containment of tile.containments ){
+			let transfer_heat = Math.min(tile.transfer, tile_containment.heat_contained);
+
+			tile_containment.setHeat_contained(tile_containment.heat_contained - transfer_heat);
+			heat_add += transfer_heat;
+		}
+	}
+
+	game.current_heat += heat_add;
+
+	ui.say('var', 'heat_add', heat_add);
+
+	let max_shared_heat;
+	// Reduce reactor heat parts
+	if ( game.heat_controlled && game.upgrade_objects['heat_control_operator'].level > 0 ) {
+		if (game.current_heat > max_heat) {
+			max_shared_heat = (game.current_heat - max_heat) / stat_outlet;
+		} else {
+			// Don't remove any heat when not in danger of overheating
+			max_shared_heat = 0;
+		}
+	} else {
+		max_shared_heat = game.current_heat / stat_outlet;
+	}
+
+	for ( let tile of active_exchangers ) {
+		// This algo seems pretty sketchy ;p
+		let max_heat_transfer = tile.transfer;
+		let total_containment = tile.part.containment;
+		let total_containment_heat = tile.heat_contained;
+
+		// Figure out total heat and containment
+		for ( let tile_containment of tile.containments ) {
+			// Lie about coolant_cell6's max containment since half will be converted to power
+			if ( tile_containment.part.id === 'coolant_cell6' ) {
+				total_containment += tile_containment.part.containment * 2;
+			// Lie about vent's max containment vented heat goes away
+			} else if ( tile_containment.part.part.category === 'vent' ) {
+				total_containment += tile_containment.part.containment + tile_containment.part.vent;
+			} else {
+				total_containment += tile_containment.part.containment;
+			}
+
+			total_containment_heat += tile_containment.heat_contained;
+		}
+
+		let target_percent = total_containment_heat / total_containment;
+
+		// First try to remove heat
+		for ( let tile_containment of tile.containments ) {
+			let tile_containment_containment;
+			// Lie about coolant_cell6's max containment since half will be converted to power
+			if ( tile_containment.part.id === 'coolant_cell6' ) {
+				tile_containment_containment = tile_containment.part.containment * 2;
+			// Lie about vent's max containment vented heat goes away
+			} else if ( tile_containment.part.part.category === 'vent' ) {
+				tile_containment_containment = tile_containment.part.containment + tile_containment.part.vent;
+			} else {
+				tile_containment_containment = tile_containment.part.containment;
+			}
+
+			let tile_containment_percent = tile_containment.heat_contained / tile_containment_containment;
+
+			if ( tile_containment_percent > target_percent ) {
+				let transfer_heat = Math.min(
+					(tile_containment_percent - target_percent) * total_containment_heat,
+					max_heat_transfer,
+					tile_containment.heat_contained
+				);
+
+				// TODO: skip if vents can handle the heat
+				if ( transfer_heat >= 1 ) {
+					tile_containment.setHeat_contained(tile_containment.heat_contained - transfer_heat);
+					tile.setHeat_contained(tile.heat_contained + transfer_heat);
+				}
+			}
+		}
+
+		// Then try to add heat
+		for ( let tile_containment of tile.containments ) {
+			let tile_percent = tile.heat_contained / tile.part.containment;
+			let transfer_heat = 0;
+			let tile_containment_containment;
+
+			// Lie about coolant_cell6's max containment since half will be converted to power
+			if ( tile_containment.part.id === 'coolant_cell6' ) {
+				tile_containment_containment = tile_containment.part.containment * 2;
+			// Lie about vent's max containment vented heat goes away
+			} else if ( tile_containment.part.part.category === 'vent' ) {
+				tile_containment_containment = tile_containment.part.containment + tile_containment.part.vent;
+			} else {
+				tile_containment_containment = tile_containment.part.containment;
+			}
+
+			let tile_containment_percent = tile_containment.heat_contained / tile_containment_containment;
+
+			if ( tile_containment_percent < target_percent ) {
+				transfer_heat = (target_percent - tile_containment_percent) * tile_containment_containment;
+			}
+
+			// Not sure if the lies above are useful with this
+			// Let the vent take as much heat as it can handle
+			if ( tile_containment.part.part.category === 'vent' && transfer_heat < tile_containment.part.vent - tile_containment.heat_contained ) {
+				transfer_heat = tile_containment.part.vent - tile_containment.heat_contained;
+			}
+
+			transfer_heat = Math.min(
+				transfer_heat,
+				max_heat_transfer,
+				tile.heat_contained
+			);
+
+			if ( transfer_heat >= 1 ) {
+				if ( tile_containment.part.id === 'coolant_cell6' ) {
+					tile_containment.setHeat_contained(tile_containment.heat_contained + (transfer_heat / 2));
+					power_add += transfer_heat / 2;
+				} else {
+					tile_containment.setHeat_contained(tile_containment.heat_contained + transfer_heat);
+				}
+
+				tile.setHeat_contained(tile.heat_contained - transfer_heat);
+			}
+		}
+	}
+
+	for ( let tile of active_outlets ) {
+		let max_heat_transfer = tile.transfer;
+
+		// it's quicker to calculate everything and let Math.min handle getting smallest than if else
+		let shared_heat = Math.min(
+			max_heat_transfer,
+			// Amount to be distribute evenly if the heat in the reactor is less than transfer
+			game.current_heat / stat_outlet * max_heat_transfer,
+			// Limit heat removed to heat_controlled amount
+			max_shared_heat * max_heat_transfer
+		);
+
+		for ( let tile_containment of tile.containments ) {
+			if ( tile_containment.part.id === 'coolant_cell6' ) {
+				tile_containment.setHeat_contained(tile_containment.heat_contained + (shared_heat / 2));
+				power_add += shared_heat / 2;
+			} else {
+				if ( game.heat_outlet_controlled && tile_containment.vent ) {
+					shared_heat = Math.min(shared_heat, tile_containment.vent-tile_containment.heat_contained)
+				}
+				tile_containment.setHeat_contained(tile_containment.heat_contained + shared_heat);
+			}
+
+			heat_remove += shared_heat;
+		}
+	}
+
+	game.current_heat -= heat_remove;
+
+	// Auto heat reduction
+	if ( game.current_heat > 0 ) {
+		// TODO: Set these variables up in update tiles
+		if ( game.current_heat <= max_heat ) {
+			// Heat Control Operator should not interfere with passive heat loss
+			reduce_heat = max_heat / 10000;
+		} else {
+			reduce_heat = (game.current_heat - max_heat) / 20;
+			if ( reduce_heat < max_heat / 10000 ) {
+				reduce_heat = max_heat / 10000;
+			}
+
+			for ( let tile of game.active_tiles_2d ) {
+				if ( tile.activated && tile.part && tile.part.containment ) {
+
+					if ( tile.part.id === 'coolant_cell6' ) {
+						tile.setHeat_contained(tile.heat_contained + (reduce_heat / game.active_tiles_2d.length / 2));
+						power_add += reduce_heat / game.active_tiles_2d.length / 2;
+					} else {
+						tile.setHeat_contained(tile.heat_contained + (reduce_heat / game.active_tiles_2d.length));
+					}
+				}
+			}
+		}
+
+		ui.say('var', 'auto_heat_reduce', reduce_heat);
+		game.current_heat -= reduce_heat;
+	}
+
+	// Forceful Fusion
+	if ( game.heat_power_multiplier && game.current_heat > 1000 ) {
+		power_add *= 1 + (game.heat_power_multiplier * (Math.log(game.current_heat) / Math.log(1000) / 100));
+	}
+
+	// Add power
+	current_power += power_add;
+
+	ui.say('var', 'power_add', power_add);
+
+	// Try to place parts in the queue
+	if ( tile_queue.length ) {
+		let processed = 0;
+		for ( let tile of tile_queue ){
+			if ( !tile.part || tile.activated ) {
+				processed += 1;
+				continue;
+			}
+
+			if ( game.current_money >= tile.part.cost ) {
+				processed += 1
+				game.current_money -= tile.part.cost;
+				ui.say('var', 'current_money', game.current_money);
+				tile.activated = true;
+				tile.$el.classList.remove('disabled');
+				do_update = true;
+			} else {
+				if ( processed ) {
+					tile_queue.splice(0, processed);
+				}
+
+				break;
+			}
+		}
+	}
+
+	// Apply heat to containment parts
+
+	for ( let tile of game.active_tiles_2d ){
+		if ( tile.activated && tile.part && tile.part.containment ) {
+			if ( tile.part.vent ) {
+				let vent_reduce;
+				if ( tile.part.id === 'vent6' ) {
+					vent_reduce = Math.min(tile.vent, tile.heat_contained, current_power);
+					current_power -= vent_reduce;
+				} else {
+					vent_reduce = Math.min(tile.vent, tile.heat_contained);
+				}
+
+				tile.setHeat_contained(tile.heat_contained - vent_reduce);
+			}
+
+			// Particle Accelerator 6 - take heat and power from reactor
+			if ( tile.part.id === 'particle_accelerator6' ) {
+				var pa_transfer = Math.min(tile.part.transfer, current_power, game.current_heat);
+
+				if ( pa_transfer && pa_transfer > 0 ) {
+					current_power -= pa_transfer;
+					game.current_heat -= pa_transfer;
+					tile.setHeat_contained(tile.heat_contained + pa_transfer);
+				}
+			}
+
+			if ( tile.heat_contained > tile.part.containment ) {
+				if ( game.auto_buy_disabled !== true && tile.heat <= 0 && tile.part.category === 'capacitor' && game.upgrade_objects['perpetual_capacitors'].level > 0 && game.current_money >= tile.part.cost * 10 ) {
+					game.current_money -= tile.part.cost * 10;
+					heat_add_next_loop += tile.heat_contained;
+					tile.setHeat_contained(0);
+				} else {
+					if ( tile.part.category === 'particle_accelerator' ) {
+						meltdown = true;
+					}
+
+					tile.$el.classList.add('exploding');
+
+					do_update = true;
+					remove_part(tile, true);
+				}
+			}
+		}
+	}
+
+	// Auto Sell
+	if ( !game.auto_sell_disabled ) {
+		sell_amount = Math.ceil(max_power * game.auto_sell_multiplier);
+		if ( sell_amount ) {
+			let power_sell_percent;
+			if ( sell_amount > current_power ) {
+				power_sell_percent = current_power / sell_amount;
+				sell_amount = current_power;
+			} else {
+				power_sell_percent = 1;
+			}
+
+			current_power -= sell_amount;
+			game.current_money += sell_amount;
+			ui.say('var', 'money_add', sell_amount);
+			ui.say('var', 'current_money', game.current_money);
+
+			// Extreme capacitors frying themselves
+			for ( tile of active_extreme_capacitor ) {
+				tile.setHeat_contained(tile.heat_contained + (sell_amount * game.auto_sell_multiplier * power_sell_percent * .5));
+			}
+		}
+	}
+
+	if ( current_power > max_power ) {
+		current_power = max_power;
+	}
+
+	if ( game.current_heat < 0 ) {
+		game.current_heat = 0;
+	}
+
+	if ( meltdown ) {
+		game.current_heat = max_heat * 2 + 1;
+	}
+
+	if ( meltdown || game.current_heat > max_heat * 2 ) {
+		melting_down = true;
+		game.has_melted_down = true;
+
+		for ( tile of game.active_tiles_2d ) {
+			if ( tile.part ) {
+				do_update = true;
+				tile.$el.classList.add('exploding');
+				remove_part(tile, true);
+			}
+		}
+	}
+
+	if ( do_update ) {
+		update_tiles();
+	}
+
+	update_heat_and_power();
+
+	if ( tooltip_update !== null ) {
+		tooltip_update();
+	}
+
+	if ( !was_melting_down && melting_down ) {
+		save();
+		ui.say('var', 'melting_down', true);
+	} else if ( was_melting_down && !melting_down ) {
+		ui.say('var', 'melting_down', false);
+	}
+
+	if ( melting_down ) {
+		was_melting_down = true;
+	} else {
+		was_melting_down = false;
+	}
+
+	game_stat_prediction.heat_add = heat_add;
+	game_stat_prediction.heat_add_next_loop = heat_add_next_loop;
+	game_stat_prediction.heat_remove = heat_remove;
+	game_stat_prediction.reduce_heat = reduce_heat;
+	game_stat_prediction.power_add = power_add;
+	game_stat_prediction.sell_amount = sell_amount;
+	game_stat_prediction.ep_chance_add = ep_chance_add;
+	// Minus 1 because the last tick might change some stuff
+	game_stat_prediction.no_change_ticks = no_change_ticks - 1;
+
+	loop_timing = performance.now() - loop_start;
+};
