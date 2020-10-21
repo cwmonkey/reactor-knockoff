@@ -1984,7 +1984,7 @@ var _game_loop = function() {
 					heat_add += tile.heat;
 					tile.setTicks(tile.ticks - 1);
 
-					if ( tile.reflectors.size ) {
+					if ( tile.reflectors.length ) {
 						for ( let tile_reflector of tile.reflectors ) {
 							tile_reflector.setTicks(tile_reflector.ticks - 1);
 
