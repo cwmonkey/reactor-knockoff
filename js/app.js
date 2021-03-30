@@ -1904,7 +1904,9 @@ var game_loop = function() {
 	dtime += now - last_tick_time;
 	last_tick_time = now;
 
-	if ( dtime >= tick ) {
+	// Commenting this for now, and just setting the tick speed to 10ms for the duration of the offline ticks
+
+	/*if ( dtime >= tick ) {
 		let pticks = 0;
 		let amount_of_loop_per_5sec;
 		if ( loop_timing !== 0 ) {
@@ -1930,6 +1932,16 @@ var game_loop = function() {
 				dtime -= tick;
 			}
 		}
+	}*/
+
+	let amount_of_ticks = dtime/tick;
+
+	_game_loop();
+	amount_of_ticks -= 1;
+	dtime -= tick;
+
+	if (amount_of_ticks > 1) {
+		tick = 10;
 	}
 
 	if ( !game.paused ) {
