@@ -221,7 +221,7 @@ window.upgrades = function(game) {
 			id: 'reinforced_heat_exchangers',
 			type: 'exchangers',
 			title: 'Reinforced Heat Exchangers',
-			description: 'Each plating increases the amout of heat that exchangers can exchange by 1% per level of upgrade per level of plating.',
+			description: 'Each plating increases the amount of heat that exchangers can exchange by 1% per level of upgrade per level of plating.',
 			cost: 1000,
 			multiplier: 100,
 			onclick: function(upgrade) {
@@ -232,7 +232,7 @@ window.upgrades = function(game) {
 			id: 'active_exchangers',
 			type: 'exchangers',
 			title: 'Active Exchangers',
-			description: 'Each capacitor increases the amout of heat that exchangers can exchange by 1% per level of upgrade per level of capacitor.',
+			description: 'Each capacitor increases the amount of heat that exchangers can exchange by 1% per level of upgrade per level of capacitor.',
 			cost: 1000,
 			multiplier: 100,
 			onclick: function(upgrade) {
