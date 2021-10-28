@@ -2009,7 +2009,7 @@ var _game_loop = function() {
 									tile_reflector.setTicks(tile_reflector.part.ticks);
 								} else {
 									tile_reflector.$el.classList.add('exploding');
-									remove_part(tile_reflector, true);
+									remove_part(tile_reflector, false);
 								}
 							}
 						}
