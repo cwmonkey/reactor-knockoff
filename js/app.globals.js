@@ -89,6 +89,28 @@ window.fmt = function(num, places = null) {
 	return fnum;
 };
 
+window.timestampFmt = function(ts){
+	ts = Math.round(ts / 1000);
+
+	var s = String(ts % 60);
+	if(s.length < 2) s = '0' + s;
+	ts = Math.floor(ts / 60);
+	if(ts === 0) return s;
+
+	var m = String(ts % 60);
+	if(m.length < 2) m = '0' + m;
+	ts = Math.floor(ts / 60);
+	if(ts === 0) return m + ':' + s;
+
+	var h = String(ts % 24);
+	if(h.length < 2) h = '0' + h;
+	ts = Math.floor(ts / 24);
+	if(ts === 0) return h + ':' + m + ':' + s;
+
+	var d = String(ts);
+	return d + ':' + h + ':' + m + ':' + s;
+}
+
 /////////////////////////////
 // Timing
 /////////////////////////////
