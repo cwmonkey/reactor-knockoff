@@ -200,6 +200,7 @@ var set_defaults = function() {
 	game.transfer_plating_multiplier = 0;
 	game.heat_power_multiplier = 0;
 	game.heat_controlled = 0;
+	game.time_flux = true;
 	game.heat_outlet_controlled = 0;
 	game.altered_max_heat = game.base_max_heat;
 	game.altered_max_power = game.base_max_power;
@@ -1667,6 +1668,17 @@ window.enable_heat_control = function() {
 	ui.say('evt', 'heat_control_enabled');
 };
 
+// Enable/Disable time flux
+window.disable_time_flux = function() {
+	game.time_flux = false;
+	ui.say('evt', 'time_flux_disabled');
+};
+
+window.enable_time_flux = function() {
+	game.time_flux = true;
+	ui.say('evt', 'time_flux_enabled');
+};
+
 /////////////////////////////
 // Tile clicks
 /////////////////////////////
@@ -1904,6 +1916,8 @@ var game_loop = function() {
 	dtime += now - last_tick_time;
 	last_tick_time = now;
 
+	document.getElementById('time_flux').textContent = timestampFmt(dtime);
+
 	// Commenting this for now, and just setting the tick speed to 10ms for the duration of the offline ticks
 
 	/*if ( dtime >= tick ) {
@@ -1940,7 +1954,7 @@ var game_loop = function() {
 	amount_of_ticks -= 1;
 	dtime -= tick;
 
-	if (amount_of_ticks > 1) {
+	if (amount_of_ticks > 1 && game.time_flux) {
 		tick = 10;
 	}
 
