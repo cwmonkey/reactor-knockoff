@@ -605,8 +605,22 @@ create_toggle_button('#heat_control_toggle', 'Disable Heat Controller', 'Enable 
 	}
 )
 
+// Enable/Disable time flux
+create_toggle_button('#time_flux_toggle', 'Disable Time Flux', 'Enable Time Flux')(
+	()=>!ui.game.time_flux,
+	function() {
+		window.enable_time_flux();
+	},
+	function() {
+		window.disable_time_flux();
+	}
+)
+
 evts.heat_control_disabled = update_button('#heat_control_toggle');
 evts.heat_control_enabled = update_button('#heat_control_toggle');
+
+evts.time_flux_disabled = update_button('#time_flux_toggle');
+evts.time_flux_enabled = update_button('#time_flux_toggle');
 
 var speed_hack = false;
 create_toggle_button('#speed_hack', 'Disable Speed Hack', 'Enable Speed Hack')(
