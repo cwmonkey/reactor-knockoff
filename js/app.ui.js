@@ -27,6 +27,7 @@ var $power_percentage = $('#power_percentage');
 var $heat_percentage = $('#heat_percentage');
 var $parts = $('#parts');
 var $primary = $('#primary');
+var $time_flux = $('#time_flux');
 
 var rows = [];
 var current_vars = new Map();
@@ -51,6 +52,28 @@ var update_heat_background = function (current_heat, max_heat) {
 	}
 }
 
+var timestampFmt = function(ts) {
+	ts = Math.round(ts / 1000);
+
+	var s = String(ts % 60);
+	if(s.length < 2) s = '0' + s;
+	ts = Math.floor(ts / 60);
+	if(ts === 0) return s;
+
+	var m = String(ts % 60);
+	if(m.length < 2) m = '0' + m;
+	ts = Math.floor(ts / 60);
+	if(ts === 0) return m + ':' + s;
+
+	var h = String(ts % 24);
+	if(h.length < 2) h = '0' + h;
+	ts = Math.floor(ts / 24);
+	if(ts === 0) return h + ':' + m + ':' + s;
+
+	var d = String(ts);
+	return d + ':' + h + ':' + m + ':' + s;
+}
+
 var var_objs = {
 	manual_heat_reduce: {
 		onupdate: function() {
@@ -60,6 +83,13 @@ var var_objs = {
 	auto_heat_reduce: {
 		onupdate: function() {
 			$auto_heat_reduce.textContent = '-' + fmt(current_vars.get('auto_heat_reduce'));
+		}
+	},
+	flux_tick_time: {
+		onupdate: function() {
+			var flux_tick_time = current_vars.get('flux_tick_time');
+			console.log(flux_tick_time);
+			$time_flux.textContent = flux_tick_time > 1000 ? timestampFmt(flux_tick_time) : '-';
 		}
 	},
 	// TODO: Bad naming

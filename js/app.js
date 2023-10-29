@@ -1916,8 +1916,6 @@ var game_loop = function() {
 	dtime += now - last_tick_time;
 	last_tick_time = now;
 
-	document.getElementById('time_flux').textContent = dtime > 1000 ? timestampFmt(dtime) : '-';
-
 	// Commenting this for now, and just setting the tick speed to 10ms for the duration of the offline ticks
 
 	/*if ( dtime >= tick ) {
@@ -1953,6 +1951,8 @@ var game_loop = function() {
 	_game_loop();
 	amount_of_ticks -= 1;
 	dtime -= tick;
+
+	ui.say('var', 'flux_tick_time', dtime);
 
 	if (amount_of_ticks > 1 && game.time_flux) {
 		tick = 10;
