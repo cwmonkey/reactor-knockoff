@@ -742,7 +742,7 @@ $('#import_button').onclick = function() {
 };
 
 $('#reset_game').onclick = function() {
-	if (confirm("confirm reset game?")){
+	if (confirm("Are you sure?")){
 		ui.game.save_manager.active_saver.save("");
 		document.location.reload();
 	}
